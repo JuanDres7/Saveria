@@ -273,9 +273,10 @@ agregan *servicios en ejecución* fuera de la constitución.
     afecta la depuración en el celular. Las migraciones del cliente no dependen de drizzle-kit en
     el dispositivo: se generan en el PC y se empaquetan como SQL. SQLCipher es algo más lento que
     SQLite normal, pero no se nota con el volumen de un usuario.
-  - **Pendiente**: no hay un ejemplo publicado de esta combinación exacta. Por eso la primera tarea
-    de la app sigue siendo un spike que compila la build, crea la base cifrada, escribe y lee con
-    Drizzle, y comprueba que el archivo no se puede leer sin la clave.
+  - **Validado con un spike el 2026-10-22: 7/7** (`spikes/sqlcipher-drizzle/RESULTADO.md`). En un
+    emulador Android 16 se probaron SQLCipher 4.17 activo, migración de Drizzle, transacción y
+    rollback, archivo cifrado (verificado también con `adb`), rechazo con clave equivocada y sin
+    clave, y reapertura con la clave correcta.
 - **Descartado**: AsyncStorage (no es base de datos ni cifra); WatermelonDB (trae su propio
   modelo de sync que choca con la feature 006); MMKV cifrado (clave-valor, no sirve para
   movimientos).
@@ -347,5 +348,6 @@ Revisado en la máquina del desarrollador el 2026-10-22:
 | Docker 29.2 | Instalado |
 | Node 24.14 | Instalado (lo usa la CLI de Expo/Metro por debajo) |
 | Android SDK (`C:\src\Android\Sdk`) | Instalado |
-| Java 25 | Instalado, **pero React Native compila Android con JDK 17**. Hay que instalar JDK 17 (Temurin) o usar el JBR incluido en Android Studio y apuntar `JAVA_HOME` ahí. Confirmarlo en la primera compilación |
-| Bun | **Falta instalarlo** |
+| Java 21 y 25 | Instalados. **Se compila con JDK 21** (validado en el spike): `JAVA_HOME=C:\Program Files\Java\jdk-21` |
+| Bun 1.4.4 | Instalado el 2026-10-22 |
+| Emulador Android 16 (`saveria_spike`) | Instalado el 2026-10-22, con aceleración WHPX |

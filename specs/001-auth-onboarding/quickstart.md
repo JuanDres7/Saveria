@@ -11,8 +11,8 @@ El contrato está en [contracts/openapi.yaml](contracts/openapi.yaml) y el model
 | Bun 1.4 | `powershell -c "irm bun.sh/install.ps1 \| iex"` → `bun --version` |
 | Docker Desktop | `docker --version` (ya instalado) |
 | Node 24 | `node --version` (ya instalado; lo usa la CLI de Expo) |
-| JDK 17 | Instalar Temurin 17, o usar el JBR de Android Studio, y apuntar `JAVA_HOME` ahí. Java 25 no sirve para compilar React Native |
-| Android SDK | `ANDROID_HOME=C:\src\Android\Sdk` (ya configurado) + un emulador o un celular con depuración USB |
+| JDK 21 | Ya instalado: `JAVA_HOME=C:\Program Files\Java\jdk-21` (validado en el spike). Java 25 no se probó |
+| Android SDK | `ANDROID_HOME=C:\src\Android\Sdk` (ya configurado) + emulador `saveria_spike` (Android 16) o un celular con depuración USB |
 
 > **Expo Go no sirve** para esta app: SQLCipher necesita una *development build* propia.
 
