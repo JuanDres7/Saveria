@@ -8,6 +8,16 @@
 
 **Input**: User description: "Registro, inicio de sesión, onboarding y configuración de perfil: el usuario crea su cuenta con correo y contraseña aceptando la política de datos, inicia sesión, responde un onboarding corto (cómo quiere que la IA lo llame, país, ciudad, moneda principal y modo de la IA manual o automático) y puede cambiar todo eso después desde Configuración. Incluye borrar la cuenta y todos sus datos."
 
+## Clarifications
+
+### Session 2026-10-22
+
+- Q: Cuando el usuario abre el enlace de verificación o de recuperación que le llega por correo, ¿dónde ocurre la acción? → A: En una página web mínima servida por el backend; después el usuario vuelve a la app (sin deep links en el MVP).
+- Q: ¿Qué pasa con los movimientos sin sincronizar cuando el usuario cierra sesión a propósito? → A: Se conservan en el dispositivo, cifrados, separados por usuario y sin mostrarse a nadie; se sincronizan cuando ese mismo usuario vuelve a entrar. Al cerrar sesión se muestra un aviso informativo con la cantidad pendiente, sin pedir ninguna decisión.
+- Q: ¿Sobre qué se cuentan los intentos fallidos de inicio de sesión que activan el bloqueo? → A: Sobre la combinación de IP de origen + correo; la cuenta en sí nunca se bloquea, para que un tercero no pueda dejar fuera al dueño.
+- Q: ¿Puede el usuario cambiar su contraseña desde Configuración sabiendo la actual? → A: Sí; pide la contraseña actual y la nueva, cierra todas las demás sesiones y mantiene activa la actual.
+- Q: Pasados los 7 días sin verificar, ¿la app se bloquea también sin conexión? → A: No; el bloqueo solo aparece con conexión, cuando el servidor confirma que el correo sigue sin verificar. Sin conexión la app funciona normal.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Crear una cuenta y entrar (Priority: P1)
@@ -39,6 +49,9 @@ entrar; entrega una identidad persistente para el usuario.
 6. **Given** un usuario con sesión iniciada, **When** cierra sesión, **Then** vuelve a la
    pantalla de inicio y sus datos dejan de estar visibles en el dispositivo hasta que vuelva a
    entrar.
+7. **Given** un usuario con movimientos sin sincronizar, **When** cierra sesión sin conexión,
+   **Then** ve un aviso con la cantidad pendiente, la sesión se cierra y, al volver a entrar con
+   la misma cuenta y conexión, esos movimientos se sincronizan.
 
 ---
 
@@ -98,6 +111,11 @@ el cambio se refleja en la app y se conserva al reiniciarla.
    originales.
 4. **Given** un usuario sin conexión, **When** cambia un ajuste, **Then** el cambio se aplica en el
    dispositivo y se sincroniza al recuperar la conexión.
+5. **Given** un usuario con sesión en dos dispositivos, **When** cambia su contraseña desde
+   Configuración ingresando la actual y una nueva válida, **Then** el cambio se aplica, la sesión
+   del otro dispositivo se cierra y la del dispositivo actual sigue activa.
+6. **Given** un usuario en Configuración, **When** intenta cambiar su contraseña con una
+   contraseña actual incorrecta, **Then** el cambio se rechaza y ninguna sesión se cierra.
 
 ---
 
@@ -175,6 +193,9 @@ comprobando que la cuenta queda verificada.
    el enlace anterior deja de servir.
 4. **Given** un usuario que no verificó en 7 días, **When** abre la app, **Then** debe verificar su
    correo (o cambiarlo, si lo escribió mal) antes de seguir usándola, y sus datos se conservan.
+5. **Given** un usuario que no verificó en 7 días y está sin conexión, **When** abre la app,
+   **Then** puede seguir registrando movimientos con normalidad, y el bloqueo aparece cuando la
+   app recupera la conexión y el servidor confirma que el correo sigue sin verificar.
 
 ---
 
@@ -184,8 +205,9 @@ comprobando que la cuenta queda verificada.
   primer inicio de sesión necesitan internet; nada se guarda a medias.
 - ¿Qué pasa si escribe el correo con mayúsculas o espacios? Se normaliza (minúsculas, sin espacios
   al inicio o al final) antes de registrarlo o compararlo.
-- ¿Qué pasa tras muchos intentos fallidos de inicio de sesión? Tras 5 intentos fallidos seguidos
-  sobre la misma cuenta, se bloquean nuevos intentos por 15 minutos.
+- ¿Qué pasa tras muchos intentos fallidos de inicio de sesión? Tras 5 intentos fallidos en 15 minutos
+  desde la misma IP hacia el mismo correo, se bloquean los intentos de esa IP a ese correo por 15
+  minutos; el dueño puede seguir entrando desde otra red.
 - ¿Qué pasa si el país elegido no tiene una moneda sugerida conocida? No se preselecciona ninguna
   y el usuario debe elegirla de la lista.
 - ¿Qué pasa si el usuario deja vacío el nombre para la IA? La IA usa el nombre de su correo hasta
@@ -221,13 +243,20 @@ comprobando que la cuenta queda verificada.
 - **FR-006**: El sistema MUST permitir iniciar sesión con correo y contraseña, y MUST responder con
   un mensaje genérico cuando las credenciales sean incorrectas.
 - **FR-007**: El sistema MUST bloquear temporalmente (15 minutos) los intentos de inicio de sesión
-  sobre una cuenta tras 5 intentos fallidos seguidos.
+  desde una misma IP hacia un mismo correo tras 5 intentos fallidos en 15 minutos. El bloqueo
+  MUST NOT afectar los intentos de ese correo desde otras IP, y la respuesta durante el bloqueo
+  MUST ser genérica (no revela si el correo existe).
 - **FR-008**: El sistema MUST mantener la sesión del usuario entre aperturas de la app durante 30
   días de inactividad como máximo, sin pedir la contraseña de nuevo.
 - **FR-009**: Los usuarios MUST poder cerrar sesión; al hacerlo, el dispositivo deja de mostrar sus
   datos y su sesión en ese dispositivo deja de ser válida.
 - **FR-010**: El sistema MUST conservar los movimientos registrados sin conexión cuando la sesión
-  expira, y sincronizarlos cuando el mismo usuario vuelva a iniciar sesión.
+  expira o el usuario cierra sesión, y sincronizarlos cuando el mismo usuario vuelva a iniciar
+  sesión. Mientras tanto MUST guardarlos cifrados, separados por usuario y sin mostrarlos a
+  ninguna otra sesión del dispositivo. Si al sincronizar la cuenta ya no existe, se descartan.
+- **FR-010a**: Al cerrar sesión con movimientos pendientes, el sistema MUST mostrar un aviso
+  informativo con la cantidad pendiente (que se enviarán al volver a entrar), sin bloquear el
+  cierre de sesión.
 
 **Onboarding**
 
@@ -251,6 +280,9 @@ comprobando que la cuenta queda verificada.
 
 - **FR-018**: Los usuarios MUST poder cambiar desde Configuración su nombre para la IA, país,
   ciudad, moneda principal y modo de IA en cualquier momento.
+- **FR-018a**: Los usuarios MUST poder cambiar su contraseña desde Configuración ingresando la
+  contraseña actual y una nueva que cumpla FR-003. Requiere conexión. Al cambiarla, el sistema
+  MUST cerrar todas las demás sesiones del usuario y mantener activa la del dispositivo actual.
 - **FR-019**: Al activar el modo automático, el sistema MUST mostrar qué implica y pedir
   confirmación antes de aplicarlo.
 - **FR-020**: Los usuarios MUST poder activar hasta 2 monedas de referencia, distintas de su
@@ -277,6 +309,7 @@ comprobando que la cuenta queda verificada.
   tokens de sesión o relatos en los registros de actividad (logs).
 - **FR-027**: El sistema MUST garantizar que un usuario solo pueda ver y modificar sus propios
   datos.
+
 **Recuperación de contraseña y verificación de correo**
 
 - **FR-028**: El sistema MUST permitir recuperar el acceso con contraseña olvidada enviando al
@@ -288,7 +321,9 @@ comprobando que la cuenta queda verificada.
 - **FR-031**: Al registrarse, el sistema MUST enviar un correo de verificación; el usuario MUST
   poder usar la app mientras no verifique durante 7 días desde el registro.
 - **FR-032**: Pasados 7 días sin verificar, el sistema MUST pedir la verificación antes de permitir
-  seguir usando la app, sin borrar ni bloquear la sincronización de los datos ya registrados.
+  seguir usando la app, sin borrar ni bloquear la sincronización de los datos ya registrados. El
+  bloqueo MUST aplicarse solo cuando hay conexión y el servidor confirma que el correo sigue sin
+  verificar; sin conexión, la app MUST seguir funcionando normalmente.
 - **FR-033**: Los enlaces de verificación MUST vencer a las 24 horas; pedir uno nuevo MUST
   invalidar el anterior.
 - **FR-034**: Los usuarios MUST poder reenviar el correo de verificación y corregir su correo
@@ -296,6 +331,11 @@ comprobando que la cuenta queda verificada.
 - **FR-035**: El sistema MUST limitar a 3 por hora los correos de recuperación o de verificación
   enviados a una misma dirección.
 - **FR-036**: Los correos enviados MUST NOT incluir montos, movimientos ni otros datos financieros.
+- **FR-037**: Los enlaces de verificación y de recuperación MUST abrir una página web mínima de
+  Saveria donde se completa la acción (confirmar el correo o escribir la contraseña nueva), y
+  MUST funcionar desde cualquier navegador, aunque la app no esté instalada en ese dispositivo.
+  Al terminar, la página indica que el usuario puede volver a la app. La app MUST reflejar el
+  correo verificado la próxima vez que consulte el estado de la cuenta.
 
 ### Key Entities *(include if feature involves data)*
 
