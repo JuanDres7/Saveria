@@ -12,6 +12,8 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={group === 'app'}>
         <Stack.Screen name="home" />
+        <Stack.Screen name="settings/index" />
+        <Stack.Screen name="settings/change-password" />
       </Stack.Protected>
       <Stack.Protected guard={group === 'verify-gate'}>
         <Stack.Screen name="verify-email-gate" />

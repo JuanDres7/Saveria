@@ -169,17 +169,17 @@ separado.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T068 [P] [US3] Pruebas unitarias en `apps/api/tests/unit/change-password.test.ts`: contraseña actual incorrecta → `invalid_credentials` sin cerrar sesiones; nueva inválida → `validation_error`; éxito → revoca todas las demás sesiones con `password_changed` y mantiene la actual; limitador `rl:pwd:{userId}:{ip}`
-- [ ] T069 [P] [US3] Pruebas de contrato en `apps/api/tests/contract/auth-us3.test.ts` para `POST /v1/auth/password/change` (204, 400, 401, 429)
-- [ ] T070 [P] [US3] Pruebas de integración en `apps/api/tests/integration/us3-settings.test.ts`: dos sesiones; cambiar la contraseña → la otra recibe 401 de inmediato y la actual sigue (3.5); contraseña actual mala no cierra nada (3.6); cambiar `primary_currency` no cambia `accounts.currency` de "Efectivo" (3.3); hasta 2 monedas de referencia (3.2)
+- [X] T068 [P] [US3] Pruebas unitarias en `apps/api/tests/unit/change-password.test.ts`: contraseña actual incorrecta → `invalid_credentials` sin cerrar sesiones; nueva inválida → `validation_error`; éxito → revoca todas las demás sesiones con `password_changed` y mantiene la actual; limitador `rl:pwd:{userId}:{ip}`
+- [X] T069 [P] [US3] Pruebas de contrato en `apps/api/tests/contract/auth-us3.test.ts` para `POST /v1/auth/password/change` (204, 400, 401, 429)
+- [X] T070 [P] [US3] Pruebas de integración en `apps/api/tests/integration/us3-settings.test.ts`: dos sesiones; cambiar la contraseña → la otra recibe 401 de inmediato y la actual sigue (3.5); contraseña actual mala no cierra nada (3.6); cambiar `primary_currency` no cambia `accounts.currency` de "Efectivo" (3.3); hasta 2 monedas de referencia (3.2)
 
 ### Implementation for User Story 3
 
-- [ ] T071 [US3] Implementar `apps/api/src/application/use-cases/change-password.ts` y la ruta `POST /v1/auth/password/change` en `apps/api/src/interfaces/http/routes/auth.ts`
-- [ ] T072 [P] [US3] Crear `apps/mobile/src/app/(app)/settings/index.tsx` (nombre para la IA, país, ciudad, moneda principal, monedas de referencia hasta 2 distintas de la principal, modo de IA), guardando con `profile-service` (sin conexión aplica local y sincroniza después; 3.4)
-- [ ] T073 [US3] Agregar en la pantalla de Configuración la confirmación del modo automático (explica que las acciones de la IA se guardan sin preguntar y se pueden deshacer desde el historial; envía `autoModeConfirmed: true`) (3.1)
-- [ ] T074 [P] [US3] Crear `apps/mobile/src/app/(app)/settings/change-password.tsx` (contraseña actual + nueva; requiere conexión)
-- [ ] T075 [P] [US3] Pruebas de la app en `apps/mobile/tests/us3-settings.test.tsx`: confirmación del modo automático (3.1), validación de las monedas de referencia (3.2), cambio sin conexión que queda en el outbox y se envía al volver la red (3.4)
+- [X] T071 [US3] Implementar `apps/api/src/application/use-cases/change-password.ts` y la ruta `POST /v1/auth/password/change` en `apps/api/src/interfaces/http/routes/auth.ts`
+- [X] T072 [P] [US3] Crear `apps/mobile/src/app/(app)/settings/index.tsx` (nombre para la IA, país, ciudad, moneda principal, monedas de referencia hasta 2 distintas de la principal, modo de IA), guardando con `profile-service` (sin conexión aplica local y sincroniza después; 3.4)
+- [X] T073 [US3] Agregar en la pantalla de Configuración la confirmación del modo automático (explica que las acciones de la IA se guardan sin preguntar y se pueden deshacer desde el historial; envía `autoModeConfirmed: true`) (3.1)
+- [X] T074 [P] [US3] Crear `apps/mobile/src/app/(app)/settings/change-password.tsx` (contraseña actual + nueva; requiere conexión)
+- [X] T075 [P] [US3] Pruebas de la app en `apps/mobile/tests/us3-settings.test.tsx`: confirmación del modo automático (3.1), validación de las monedas de referencia (3.2), cambio sin conexión que queda en el outbox y se envía al volver la red (3.4)
 
 **Checkpoint**: US3 funciona sola
 

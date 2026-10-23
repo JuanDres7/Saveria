@@ -47,6 +47,14 @@ export function createApiClient(deps: ApiClientDeps) {
     return new Request(request, { headers });
   }
 
+  async function isWrongPassword(response: Response): Promise<boolean> {
+    const body = (await response
+      .clone()
+      .json()
+      .catch(() => null)) as { code?: string } | null;
+    return body?.code === 'invalid_credentials';
+  }
+
   let inflight: Promise<boolean> | null = null;
 
   /** `true` si hay tokens nuevos. Un fallo de red NO cierra la sesión: el usuario sigue dentro. */
@@ -95,6 +103,9 @@ export function createApiClient(deps: ApiClientDeps) {
     const retry = request.clone();
     const response = await baseFetch(withBearer(request));
     if (response.status !== 401 || isPublic(request)) return response;
+    // Una contraseña actual incorrecta (cambiar contraseña, borrar cuenta) también es 401, pero la
+    // sesión está bien: renovarla y reintentar contaría el error dos veces para el límite.
+    if (await isWrongPassword(response)) return response;
 
     if (!(await refreshSession())) return response;
     return baseFetch(withBearer(retry));

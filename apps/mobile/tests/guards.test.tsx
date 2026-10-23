@@ -126,10 +126,13 @@ describe('RootLayout', () => {
   });
 });
 
+/** Pantallas de la app con sesión y onboarding terminado. */
+const APP_SCREENS = ['home', 'settings/index', 'settings/change-password'];
+
 describe('(app)/_layout', () => {
   it('en el uso normal muestra la pantalla principal', async () => {
     setSession({ status: 'signedIn', me: makeMe(), isOnline: true });
-    expect(await screensOf(<AppLayout />)).toEqual(['home']);
+    expect(await screensOf(<AppLayout />)).toEqual(APP_SCREENS);
   });
 
   it('con verificación exigida y conexión muestra solo la puerta de verificación', async () => {
@@ -139,7 +142,7 @@ describe('(app)/_layout', () => {
 
   it('con verificación exigida pero sin conexión sigue mostrando la pantalla principal', async () => {
     setSession({ status: 'signedIn', me: makeMe({ verificationRequired: true }), isOnline: false });
-    expect(await screensOf(<AppLayout />)).toEqual(['home']);
+    expect(await screensOf(<AppLayout />)).toEqual(APP_SCREENS);
   });
 });
 

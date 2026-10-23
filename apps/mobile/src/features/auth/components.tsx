@@ -55,21 +55,23 @@ export function Screen({ title, children }: { title: string; children: ReactNode
   );
 }
 
-/** Opción de una lista de selección única. */
+/** Opción de una lista: selección única (`radio`) o casilla (`checkbox`). */
 export function RadioOption({
   label,
   description,
   checked,
   onPress,
+  role = 'radio',
 }: {
   label: string;
   description?: string;
   checked: boolean;
   onPress(): void;
+  role?: 'radio' | 'checkbox';
 }) {
   return (
     <Pressable
-      role="radio"
+      role={role}
       aria-checked={checked}
       accessibilityLabel={label}
       onPress={onPress}

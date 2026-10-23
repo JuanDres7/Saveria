@@ -142,6 +142,30 @@ export function createAuthService(deps: AuthServiceDeps) {
   }
 
   /**
+   * Cambia la contraseña conociendo la actual (FR-018a). Requiere conexión. El servidor cierra
+   * las demás sesiones; la de este dispositivo sigue activa.
+   */
+  async function changePassword(input: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<void> {
+    let result: Awaited<ReturnType<typeof requestPasswordChange>>;
+    try {
+      result = await requestPasswordChange(input);
+    } catch {
+      throw new AuthError('network_error', NETWORK_MESSAGE);
+    }
+    if (result.response.ok) return;
+    const error = result.error;
+    if (!error) throw new AuthError('internal_error', 'Ocurrió un error inesperado');
+    throw new AuthError(error.code, error.message, error.fields);
+  }
+
+  function requestPasswordChange(body: { currentPassword: string; newPassword: string }) {
+    return deps.client.POST('/v1/auth/password/change', { body });
+  }
+
+  /**
    * Cierra la sesión en el dispositivo de inmediato, con o sin conexión (FR-009, FR-010a):
    * borra el refresh token, cierra la base local SIN borrarla y pasa a `signedOut`. Si hay
    * cambios sin enviar muestra un aviso, sin bloquear. La revocación en el servidor se manda
@@ -172,7 +196,14 @@ export function createAuthService(deps: AuthServiceDeps) {
     });
   }
 
-  return { register, login, logout, sendPendingRevocation, watchPendingRevocation };
+  return {
+    register,
+    login,
+    logout,
+    changePassword,
+    sendPendingRevocation,
+    watchPendingRevocation,
+  };
 }
 
 export type AuthService = ReturnType<typeof createAuthService>;

@@ -28,6 +28,13 @@ function setup(options: { refresh?: () => Response | Promise<Response> | never }
         ? json(200, { ok: true })
         : json(401, { code: 'unauthorized', message: 'x' });
     }
+    if (pathname === '/v1/auth/password/change') {
+      calls.auth.push(request.headers.get('authorization'));
+      // con un token vigente, la contraseña actual es la que está mal
+      return request.headers.get('authorization') === `Bearer ${state.validAccess}`
+        ? json(401, { code: 'invalid_credentials', message: 'x' })
+        : json(401, { code: 'unauthorized', message: 'x' });
+    }
     if (pathname === '/v1/auth/login') {
       calls.auth.push(request.headers.get('authorization'));
       return json(401, { code: 'invalid_credentials', message: 'x' });
@@ -142,6 +149,28 @@ describe('createApiClient', () => {
     expect(response.status).toBe(401);
     expect(t.calls.refresh).toBe(0);
     expect(t.calls.auth).toEqual([null]);
+  });
+
+  it('un 401 invalid_credentials (contraseña actual mala) no renueva la sesión ni reintenta', async () => {
+    const t = setup();
+    t.state.accessToken = 'new';
+    const { response } = await t.client.POST('/v1/auth/password/change', {
+      body: { currentPassword: 'mala1234', newPassword: 'nueva5678' },
+    });
+    expect(response.status).toBe(401);
+    expect(t.calls.refresh).toBe(0);
+    // un solo intento: el reintento contaría dos veces para el límite de 5
+    expect(t.calls.auth).toEqual(['Bearer new']);
+  });
+
+  it('un 401 unauthorized en esa misma ruta sí renueva la sesión y reintenta', async () => {
+    const t = setup();
+    const { response } = await t.client.POST('/v1/auth/password/change', {
+      body: { currentPassword: 'clave1234', newPassword: 'nueva5678' },
+    });
+    expect(t.calls.refresh).toBe(1);
+    expect(t.calls.auth).toEqual(['Bearer old', 'Bearer new']);
+    expect(response.status).toBe(401);
   });
 
   it('reintenta conservando el cuerpo de la petición original', async () => {

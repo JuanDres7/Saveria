@@ -29,14 +29,17 @@ export function outboxFor(db: UserDb): Outbox {
   return current.outbox;
 }
 
+function openOutbox(): Pick<Outbox, 'flush'> | null {
+  const open = getOpenUserDb();
+  return open ? outboxFor(open.db) : null;
+}
+
 /** Envía lo pendiente cada vez que vuelve la conexión con la sesión iniciada (FR-022). */
-export function watchOutbox(): () => void {
+export function watchOutbox(getOutbox: () => Pick<Outbox, 'flush'> | null = openOutbox) {
   return useSession.subscribe((state, previous) => {
     if (!state.isOnline || previous.isOnline || state.status !== 'signedIn') return;
-    const open = getOpenUserDb();
-    if (open)
-      void outboxFor(open.db)
-        .flush()
-        .catch(() => undefined);
+    void getOutbox()
+      ?.flush()
+      .catch(() => undefined);
   });
 }

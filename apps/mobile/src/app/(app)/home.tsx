@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { authService } from '../../features/auth/auth-service';
@@ -27,6 +28,7 @@ export default function Home() {
         <PrimaryButton label="Registrar movimiento" onPress={() => setComingSoon(true)} />
       ) : null}
       {comingSoon ? <Text>Registrar movimientos llega en la próxima versión.</Text> : null}
+      <TextButton label="Configuración" onPress={() => router.push('/settings')} />
       <TextButton label="Cerrar sesión" onPress={() => void authService.logout()} />
     </Screen>
   );
