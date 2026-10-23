@@ -250,8 +250,32 @@ agregan *servicios en ejecución* fuera de la constitución.
 - **Riesgo aceptado**: el aislamiento entre usuarios del mismo celular lo hace la app, no el
   sistema operativo; quien tenga root en el teléfono podría sacar la clave del Keystore. Es
   suficiente para el MVP.
-- **Riesgo a validar en la primera tarea**: confirmar que el driver de Drizzle para expo-sqlite
-  funciona con SQLCipher activo (spike de 1 tarea antes de construir encima).
+- **Compatibilidad Drizzle + SQLCipher (investigado el 2026-10-22)**:
+  - Expo SDK 58 soporta SQLCipher oficialmente en Android, activándolo con `useSQLCipher: true`
+    en el config plugin de expo-sqlite. La clave se pone con `PRAGMA key` justo después de abrir
+    la base.
+  - Se revisó el código fuente de `drizzle-orm@0.45.4/expo-sqlite`. `drizzle(client)` solo guarda
+    la conexión que recibe: no abre conexiones propias y ejecuta todo (consultas, `begin`/`commit`,
+    savepoints, migraciones) con `prepareSync`/`executeSync` sobre esa misma conexión. Si la
+    conexión ya recibió `PRAGMA key`, todo lo que haga Drizzle va cifrado.
+  - Orden obligatorio: `openDatabaseSync(archivo)` → verificar `PRAGMA cipher_version` → `PRAGMA
+    key` → `drizzle(conexión)` → migraciones.
+  - **Guarda contra fallo silencioso**: sin SQLCipher en el binario (Expo Go, o una build sin
+    `prebuild`), `PRAGMA key` no hace nada ni da error, y la base queda **sin cifrar**. Si
+    `PRAGMA cipher_version` no devuelve fila, la app MUST negarse a abrir la base. Hay una prueba
+    para eso.
+  - **Clave perdida**: Android Auto Backup podría restaurar el archivo en otro celular sin la
+    clave del Keystore, y entonces la base no se puede leer ("file is not a database"). Se desactiva
+    el respaldo de esas bases (`android.allowBackup: false`). Si aun así la base no abre con su
+    clave, se descarta y se vuelve a descargar del servidor; solo se pierde lo que no se había
+    sincronizado.
+  - **Limitaciones aceptadas**: Drizzle Studio y drizzle-kit no abren bases cifradas, lo que solo
+    afecta la depuración en el celular. Las migraciones del cliente no dependen de drizzle-kit en
+    el dispositivo: se generan en el PC y se empaquetan como SQL. SQLCipher es algo más lento que
+    SQLite normal, pero no se nota con el volumen de un usuario.
+  - **Pendiente**: no hay un ejemplo publicado de esta combinación exacta. Por eso la primera tarea
+    de la app sigue siendo un spike que compila la build, crea la base cifrada, escribe y lee con
+    Drizzle, y comprueba que el archivo no se puede leer sin la clave.
 - **Descartado**: AsyncStorage (no es base de datos ni cifra); WatermelonDB (trae su propio
   modelo de sync que choca con la feature 006); MMKV cifrado (clave-valor, no sirve para
   movimientos).

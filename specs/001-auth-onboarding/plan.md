@@ -218,9 +218,11 @@ por IA, no en esta.
 
 ## Riesgos y validaciones tempranas
 
-- **SQLCipher + Drizzle en expo-sqlite**: es la primera tarea de la app (spike). Si falla, la
-  alternativa es usar expo-sqlite sin Drizzle en el cliente, con SQL a mano en un repositorio
-  pequeño.
+- **SQLCipher + Drizzle en expo-sqlite**: riesgo **bajo** tras revisar la documentación de Expo
+  y el código de Drizzle (research §7): Drizzle usa la misma conexión ya cifrada. Igual se valida
+  con un spike como primera tarea de la app. Si falla, la alternativa es usar expo-sqlite sin
+  Drizzle en el cliente, con SQL a mano en un repositorio pequeño; solo cambia la carpeta
+  `src/db/`.
 - **JDK**: la máquina tiene Java 25 y React Native necesita JDK 17. Se configura antes de la
   primera compilación.
 - **Resend**: sin dominio verificado solo envía al dueño de la cuenta. Hay que verificar un
