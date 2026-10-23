@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { authService } from '../features/auth/auth-service';
 import { bootstrapSession } from '../features/auth/bootstrap';
 import { routeGroupFor } from '../session/guards';
 import { useSession, watchConnectivity } from '../session/session-store';
@@ -14,11 +15,17 @@ export default function RootLayout() {
 
   useEffect(() => {
     const stopWatching = watchConnectivity();
+    // Un cierre de sesión hecho sin conexión se revoca en el servidor cuando vuelve la red.
+    const stopRevocation = authService.watchPendingRevocation();
     void bootstrapSession();
+    void authService.sendPendingRevocation();
     if (__DEV__ && process.env.EXPO_PUBLIC_SMOKE === '1') {
       void import('../dev/smoke').then((smoke) => smoke.runSmoke());
     }
-    return stopWatching;
+    return () => {
+      stopWatching();
+      stopRevocation();
+    };
   }, []);
 
   const group = routeGroupFor({ status, me, isOnline });

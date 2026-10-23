@@ -14,6 +14,7 @@ export async function bootstrapSession(): Promise<void> {
     useSession.getState().setSignedOut();
     return;
   }
-  // Todavía no existe el inicio de sesión (historia 1): no puede haber un token guardado.
+  // Hay una sesión guardada, pero retomarla es de la historia 5 (T096). Mientras tanto se pide
+  // entrar de nuevo; la base local y su outbox se conservan para cuando el usuario vuelva.
   useSession.getState().setSignedOut();
 }

@@ -101,7 +101,8 @@ export function createApiClient(deps: ApiClientDeps) {
   }
 
   const client = createClient<paths>({ baseUrl: deps.baseUrl, fetch: authFetch });
-  return { client, refreshSession };
+  // `fetch` sirve para peticiones armadas fuera del contrato tipado (por ejemplo, el outbox).
+  return { client, refreshSession, fetch: authFetch };
 }
 
 export type ApiClient = ReturnType<typeof createApiClient>['client'];

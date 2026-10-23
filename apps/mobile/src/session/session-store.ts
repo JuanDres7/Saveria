@@ -13,11 +13,14 @@ interface SessionState {
   /** Solo en memoria: nunca se guarda en disco. El refresh token vive en SecureStore. */
   accessToken: string | null;
   isOnline: boolean;
+  /** Aviso para mostrar fuera de la sesión (por ejemplo, cambios pendientes al cerrar sesión). */
+  notice: string | null;
   setSignedIn(session: { me: Me; accessToken: string }): void;
   setSignedOut(): void;
   setMe(me: Me): void;
   setAccessToken(accessToken: string): void;
   setOnline(isOnline: boolean): void;
+  setNotice(notice: string | null): void;
 }
 
 export const useSession = create<SessionState>((set) => ({
@@ -25,11 +28,13 @@ export const useSession = create<SessionState>((set) => ({
   me: null,
   accessToken: null,
   isOnline: false,
+  notice: null,
   setSignedIn: ({ me, accessToken }) => set({ status: 'signedIn', me, accessToken }),
   setSignedOut: () => set({ status: 'signedOut', me: null, accessToken: null }),
   setMe: (me) => set({ me }),
   setAccessToken: (accessToken) => set({ accessToken }),
   setOnline: (isOnline) => set({ isOnline }),
+  setNotice: (notice) => set({ notice }),
 }));
 
 /** Hay red y, si el sistema lo sabe, llega a internet. */
