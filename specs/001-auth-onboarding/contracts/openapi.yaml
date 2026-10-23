@@ -89,8 +89,11 @@ paths:
       tags: [auth]
       summary: Renovar tokens (rotación del refresh token, FR-008)
       description: |
-        Cada refresh token sirve una sola vez. Si llega uno ya usado, la sesión se revoca.
+        Cada refresh token sirve una sola vez. Si llega el token anterior dentro de los 60 s
+        siguientes a la rotación (respuesta perdida en la red), se emite un par nuevo; después
+        de esa ventana se considera reutilización y la sesión se revoca.
         El cliente MUST hacer un solo refresh a la vez.
+        Si la cuenta fue borrada responde 401 con `code: account_deleted`.
       requestBody:
         required: true
         content:
@@ -259,7 +262,9 @@ paths:
     post:
       tags: [me]
       summary: Terminar el onboarding y crear la cuenta "Efectivo" (FR-016)
-      description: Idempotente por `defaultAccountId`. Requiere `primaryCurrency` en el perfil.
+      description: |
+        Idempotente por `defaultAccountId`. Requiere `primaryCurrency` en el perfil. Si el último
+        paso se hace sin conexión, la app crea la cuenta localmente y esta llamada va al outbox.
       security: [{ bearerAuth: [] }]
       requestBody:
         required: true
@@ -395,7 +400,9 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
     Unauthorized:
-      description: Falta el token, es inválido o la sesión fue revocada
+      description: |
+        Falta el token, es inválido o la sesión fue revocada. Con `code: account_deleted` la
+        cuenta ya no existe y el cliente MUST borrar los datos locales de ese usuario.
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -433,6 +440,7 @@ components:
             - policy_not_accepted
             - email_already_verified
             - primary_currency_required
+            - account_deleted
             - not_found
             - internal_error
         message: { type: string }
@@ -443,9 +451,10 @@ components:
 
     Email:
       type: string
-      format: email
       maxLength: 254
-      description: El servidor aplica trim y minúsculas antes de usarlo.
+      description: |
+        Se aceptan espacios alrededor y mayúsculas: el servidor aplica trim y minúsculas antes de
+        validar el formato y de usarlo.
 
     NewPassword:
       type: string

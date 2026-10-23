@@ -9,9 +9,9 @@ Convenciones para todo el proyecto:
 - Fechas `timestamptz` (UTC).
 - Montos `numeric(19,4)` + `char(3)` con el código ISO 4217. Nunca `float`.
 - Tablas sincronizables: `created_at`, `updated_at` y `deleted_at` (borrado lógico).
-- Borrado de cuenta: **todas** las tablas con `user_id` usan `ON DELETE CASCADE`. Las features
-  futuras (movimientos, relatos, memoria de conceptos) MUST seguir esta regla para cumplir
-  FR-024.
+- Borrado de cuenta: **todas** las tablas con `user_id` usan `ON DELETE CASCADE`, salvo
+  `sessions` (ver abajo). Las features futuras (movimientos, relatos, memoria de conceptos) MUST
+  seguir esta regla para cumplir FR-024.
 
 ---
 
@@ -35,6 +35,8 @@ Identidad y credenciales. No es sincronizable (solo la modifica el servidor).
 - Índice único sobre `email`. Como el borrado es definitivo (FR-025), el correo queda libre de
   inmediato, sin índice parcial.
 - `verification_deadline` = `created_at + 7 días`; se calcula, no se guarda.
+- El registro crea en la misma transacción la fila de `user_profiles` con
+  `onboarding_step = ai_name`, `ai_mode = manual` y el resto en `null` o vacío.
 
 ### `user_profiles` (sincronizable)
 
@@ -75,17 +77,24 @@ Una fila por dispositivo con sesión iniciada. Es la base para revocar al instan
 | Campo | Tipo | Reglas |
 |---|---|---|
 | `id` | uuid PK | v7; viaja como claim `sid` en el JWT |
-| `user_id` | uuid FK → `users.id` cascade | Índice |
+| `user_id` | uuid null, FK → `users.id` **on delete set null** | Índice. Es `null` cuando se borró la cuenta |
 | `device_id` | uuid | Id aleatorio del dispositivo (SecureStore) |
 | `device_name` | varchar(80) null | Ej. "Samsung A54"; informativo |
 | `refresh_token_hash` | char(64) | SHA-256 del refresh token actual |
-| `previous_refresh_token_hash` | char(64) null | Si vuelve a llegar → reutilización → revocar |
+| `previous_refresh_token_hash` | char(64) null | Si llega dentro de la gracia → par nuevo; si llega después → revocar |
+| `rotated_at` | timestamptz null | Momento de la última rotación; la gracia es de 60 s |
 | `created_at` | timestamptz | |
 | `last_used_at` | timestamptz | Se actualiza en cada refresh |
 | `expires_at` | timestamptz | `last_used_at + 30 días`. FR-008 |
-| `revoked_at` | timestamptz null | Cerrar sesión, cambio o reset de contraseña, reutilización |
+| `revoked_at` | timestamptz null | |
+| `revoke_reason` | enum null | `logout`, `password_changed`, `password_reset`, `reuse_detected`, `replaced`, `account_deleted` |
 
-- Un login nuevo desde el mismo `device_id` revoca la sesión anterior de ese dispositivo.
+- Un login nuevo desde el mismo `device_id` revoca la sesión anterior de ese dispositivo
+  (`replaced`).
+- **Borrado de cuenta**: en la misma transacción, antes de borrar `users`, todas sus sesiones se
+  marcan `revoked_at = now()`, `revoke_reason = account_deleted` y `device_name = null`. Al
+  borrar el usuario, `user_id` queda en `null`. Solo quedan uuids sin datos personales, para que
+  los otros dispositivos reciban `account_deleted` y limpien sus datos locales.
 - Las sesiones vencidas o revocadas se purgan en un job diario (se pueden borrar a los 30 días).
 
 ### `one_time_tokens`

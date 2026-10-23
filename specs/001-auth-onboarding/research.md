@@ -58,7 +58,8 @@ agregan *servicios en ejecución* fuera de la constitución.
 - **Qué es**: define la forma de un dato (`z.object({ email: z.email() })`) y valida entradas en
   tiempo de ejecución, generando también el tipo TypeScript.
 - **Por qué**: valida todo lo que llega a la API y los formularios de la app con las mismas reglas
-  (FR-002, FR-003, FR-017). Integración con Hono vía `@hono/zod-validator` 0.9 y con formularios
+  (FR-002, FR-003, FR-017). El correo se normaliza **antes** de validar el formato:
+  `z.string().trim().toLowerCase().pipe(z.email())`. Integración con Hono vía `@hono/zod-validator` 0.9 y con formularios
   vía `@hookform/resolvers`.
 - **Descartado**: Valibot (más pequeño, menos ecosistema); validar a mano.
 
@@ -92,8 +93,14 @@ agregan *servicios en ejecución* fuera de la constitución.
     recuperar contraseña y borrar la cuenta (FR-009, FR-018a, FR-029, FR-025) cortan el acceso
     **de inmediato**, sin esperar a que venza el JWT.
   - **Refresh token**: opaco, formato `<sid>.<32 bytes aleatorios base64url>`; en la base solo se
-    guarda su SHA-256. Se **rota** en cada uso. Si llega el token anterior al actual (reutilización)
-    se revoca la sesión: indica robo.
+    guarda su SHA-256. Se **rota** en cada uso.
+  - **Ventana de gracia de 60 s**: en redes móviles la respuesta del refresh se puede perder y el
+    cliente reintenta con el token anterior. Si el token anterior llega dentro de los 60 s
+    siguientes a la rotación, se emite un par nuevo. Si llega después, se trata como robo y se
+    revoca la sesión.
+  - **Cuenta borrada**: si la sesión fue revocada por borrado de cuenta, refresh y middleware
+    responden `401` con `code: account_deleted`. La app borra entonces el archivo local y la clave
+    de ese usuario (FR-010, FR-024).
   - **Vencimiento deslizante**: `expires_at = último uso + 30 días` (FR-008).
   - **Cliente**: un solo refresh en vuelo a la vez (*single-flight*); las peticiones que reciben 401
     esperan ese refresh. Evita que dos refresh paralelos parezcan reutilización.

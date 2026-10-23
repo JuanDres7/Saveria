@@ -97,7 +97,7 @@ quickstart.
 | 1.1–1.5 | U + I + C (registro, login, mensajes genéricos) · M (formularios) | — |
 | 1.6 | I (logout revoca la sesión) · M (al cerrar sesión se cierra la base local) | — |
 | 1.7 | M con un ítem genérico del outbox (cambio de perfil) | Con movimientos reales → 003 |
-| 2.1–2.5 | U (transiciones de `onboarding_step`) · I · M (orden de pasos, retomar) | — |
+| 2.1–2.5 | U (transiciones de `onboarding_step`) · I · M (orden de pasos, retomar, terminar sin conexión vía outbox) | — |
 | 2.6 | M (sin moneda principal no aparece la entrada "registrar movimiento") · U (regla en el perfil) | Validación en el caso de uso de movimientos → 003 |
 | 3.1 | M + I (`autoModeConfirmed` obligatorio) | — |
 | 3.2 | U + I (guardar y validar hasta 2 monedas de referencia) | Mostrar equivalentes en los totales → 007/008 |
@@ -105,6 +105,7 @@ quickstart.
 | 3.4 | M (outbox) + I (LWW y 409) | — |
 | 3.5–3.6 | I (cambio de contraseña revoca las demás sesiones; la actual sigue) | — |
 | 4.1–4.3 | I (borrado en cascada, credenciales inválidas, registro nuevo vacío) · M (se borran la base local y la clave) | Cascada de movimientos y relatos → 003/004 (regla en data-model) |
+| 4.2 en otro dispositivo | I (refresh y middleware responden `account_deleted`) · M (al recibirlo se borran el archivo y la clave locales) | — |
 | 5.1 | M (arranque con refresh token guardado) | — |
 | 5.2 | M (sesión vencida → login → el outbox se envía) | Sync de movimientos → 006 |
 | 5.3–5.5 | I (respuesta neutral, uso único, revocación, enlace vencido) · C (páginas HTML) | — |
@@ -133,7 +134,6 @@ specs/001-auth-onboarding/
 package.json                 # workspaces: apps/*, packages/*
 biome.json
 docker-compose.yml           # postgres, redis, api
-
 
 packages/
 └── shared/
@@ -192,7 +192,8 @@ por IA, no en esta.
 
 1. **Revocación inmediata**: el JWT lleva `sid` y el middleware verifica en cada request que la
    sesión siga activa.
-2. **Refresh rotativo con detección de reutilización**; el cliente hace un solo refresh a la vez.
+2. **Refresh rotativo con detección de reutilización** y 60 s de gracia para reintentos por
+   respuestas perdidas en la red. El cliente hace un solo refresh a la vez.
 3. **Enlaces de correo**: el GET muestra el botón o el formulario y el POST consume el token. Sin
    recursos externos, con `no-referrer`, y el token nunca aparece en los logs.
 4. **Límite de intentos** por IP + hash del correo (5 en 15 min) más un límite general generoso
@@ -204,6 +205,16 @@ por IA, no en esta.
 7. **Datos locales**: un SQLite cifrado (SQLCipher) por usuario, con la clave en SecureStore. Al
    cerrar sesión se conserva y al borrar la cuenta se elimina.
 8. **Correo en desarrollo**: se escribe a archivos, sin contenedor extra.
+9. **Cuenta borrada en otro dispositivo**: las sesiones se conservan revocadas con
+   `revoke_reason = account_deleted` y sin datos personales. El otro dispositivo recibe `401` con
+   `code: account_deleted` y borra su archivo local y su clave.
+10. **Cerrar sesión sin conexión** (escenario 1.7, FR-009): el refresh token se borra del
+    dispositivo y el access token solo vivía en memoria, así que el dispositivo queda sin acceso
+    de inmediato. La sesión del servidor muere en el próximo login desde ese `device_id`
+    (`replaced`) o cuando vence a los 30 días. Si hay red, además se llama a `POST /v1/auth/logout`.
+11. **Terminar el onboarding sin conexión** (SC-004): la app crea "Efectivo" localmente con su UUID
+    y encola `POST /v1/me/onboarding/complete` en el outbox. La llamada es idempotente por
+    `defaultAccountId`, así que el usuario puede registrar movimientos de inmediato.
 
 ## Riesgos y validaciones tempranas
 
