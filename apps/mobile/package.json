@@ -35,7 +35,9 @@
   },
   "devDependencies": {
     "@testing-library/react-native": "^14",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.3.0",
+    "drizzle-kit": "^0.31",
     "jest-expo": "~58.0.12",
     "openapi-typescript": "^7.13",
     "typescript": "~6.0.3"
@@ -44,10 +46,17 @@
     "start": "expo start",
     "android": "expo run:android",
     "test": "jest",
-    "api:types": "openapi-typescript ../../specs/001-auth-onboarding/contracts/openapi.yaml -o src/api/schema.d.ts"
+    "api:types": "openapi-typescript ../../specs/001-auth-onboarding/contracts/openapi.yaml -o src/api/schema.d.ts",
+    "db:generate": "drizzle-kit generate && bun scripts/embed-migrations.mjs"
   },
   "private": true,
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "setupFiles": [
+      "<rootDir>/jest.setup.ts"
+    ],
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.{ts,tsx}"
+    ]
   }
 }
