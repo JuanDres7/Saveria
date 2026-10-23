@@ -117,6 +117,15 @@ describe('emailSchema', () => {
   it('rechaza correos de más de 254 caracteres', () => {
     expect(emailSchema.safeParse(`${'a'.repeat(250)}@mail.com`).success).toBe(false);
   });
+
+  it('los mensajes de error están en español (la app los muestra tal cual)', () => {
+    expect(emailSchema.safeParse('sin-arroba').error?.issues[0]?.message).toBe(
+      'Escribe un correo válido',
+    );
+    expect(emailSchema.safeParse(`${'a'.repeat(250)}@mail.com`).error?.issues[0]?.message).toBe(
+      'El correo es demasiado largo',
+    );
+  });
 });
 
 describe('passwordSchema (FR-003)', () => {
