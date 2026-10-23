@@ -5,3 +5,10 @@ node_modules/
 .env.*
 !.env.example
 .DS_Store
+
+# Saveria
+apps/api/.dev-outbox/
+apps/mobile/android/
+apps/mobile/ios/
+.expo/
+*.log
