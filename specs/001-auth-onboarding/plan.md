@@ -170,12 +170,12 @@ apps/
 │       ├── contract/
 │       └── integration/
 └── mobile/
-    ├── app/                 # Expo Router
-    │   ├── (auth)/          # welcome, register, login, forgot-password
-    │   ├── (onboarding)/    # ai-name, country, city, currency, ai-mode
-    │   ├── (app)/           # home (placeholder), settings/, verify-email-gate
-    │   └── _layout.tsx      # guardas: sin sesión / onboarding / verificación / app
     ├── src/
+    │   ├── app/             # Expo Router (convención de Expo SDK 58: rutas en src/app)
+    │   │   ├── (auth)/      # welcome, register, login, forgot-password
+    │   │   ├── (onboarding)/# ai-name, country, city, currency, ai-mode
+    │   │   ├── (app)/       # home (placeholder), settings/, verify-email-gate
+    │   │   └── _layout.tsx  # guardas: sin sesión / onboarding / verificación / app
     │   ├── api/             # cliente openapi-fetch + tipos generados + refresh single-flight
     │   ├── db/              # apertura SQLCipher por usuario, esquema Drizzle local, migraciones
     │   ├── outbox/          # encolar, contar, enviar
