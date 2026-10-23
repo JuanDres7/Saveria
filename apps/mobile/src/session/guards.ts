@@ -24,3 +24,14 @@ export function routeGroupFor({ status, me, isOnline }: GuardState): RouteGroup 
   if (me.verificationRequired && isOnline) return 'verify-gate';
   return 'app';
 }
+
+/**
+ * Pantalla de entrada de cada zona. La ruta `/` usa esta tabla para mandar al usuario al lugar
+ * correcto; los nombres de grupo, como `(auth)`, no forman parte de la URL.
+ */
+export const ENTRY_ROUTE = {
+  auth: '/welcome',
+  onboarding: '/ai-name',
+  'verify-gate': '/verify-email-gate',
+  app: '/home',
+} as const;

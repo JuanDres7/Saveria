@@ -353,4 +353,4 @@ Revisado en la máquina del desarrollador el 2026-10-22:
 | Java 21 y 25 | Instalados. **Se compila con JDK 21** (validado en el spike): `JAVA_HOME=C:\Program Files\Java\jdk-21` |
 | Bun 1.4.4 | Instalado el 2026-10-22 |
 | Emulador Android 16 (`saveria_spike`) | Instalado el 2026-10-22, con aceleración WHPX |
-| Rutas largas de Windows | `LongPathsEnabled=1`, **pero** el `ninja 1.10.2` del CMake 3.22.1 del SDK no lo respeta: compilar la app con librerías nativas con rutas profundas (reanimated, safe-area-context…) falla con "Filename longer than 260 characters". Reanimated, worklets y gesture-handler se excluyen del build con `apps/mobile/react-native.config.js` porque la app no los usa. Pendiente decidir la solución para el resto |
+| Rutas largas de Windows | `LongPathsEnabled=1`, **pero** el `ninja 1.10.2` que trae el SDK no lo respeta y compilar librerías nativas con rutas profundas falla con "Filename longer than 260 characters". **Solución (2026-10-23)**: reemplazar `C:\src\Android\Sdk\cmake\3.22.1\bin\ninja.exe` por **ninja 1.12.1** oficial (el original queda como `ninja.exe.orig`). Cambiar a CMake 3.31.4 no sirve: trae el mismo ninja 1.10.2 |

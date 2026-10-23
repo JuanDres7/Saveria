@@ -11,7 +11,7 @@ export default function AppLayout() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={group === 'app'}>
-        <Stack.Screen name="index" />
+        <Stack.Screen name="home" />
       </Stack.Protected>
       <Stack.Protected guard={group === 'verify-gate'}>
         <Stack.Screen name="verify-email-gate" />

@@ -32,6 +32,8 @@ export default function RootLayout() {
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
+      {/* Siempre disponible: decide a qué zona ir (ver src/app/index.tsx) */}
+      <Stack.Screen name="index" />
       <Stack.Protected guard={group === 'auth'}>
         <Stack.Screen name="(auth)" />
       </Stack.Protected>

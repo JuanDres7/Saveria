@@ -96,8 +96,8 @@ separado.
 - [X] T038 Implementar `apps/mobile/src/db/purge.ts` (`purgeUserData(userId)`: cerrar y borrar `saveria-<userId>.db`, borrar `dbkey:<userId>` y el refresh token) y `apps/mobile/src/outbox/outbox.ts` (`enqueue`, `count`, `flush`: envía en orden de `created_at` cuando hay conexión y sesión, reintenta con backoff y registra `last_error`)
 - [X] T039 Crear `apps/mobile/src/app/_layout.tsx` con las guardas de navegación: `unknown` → splash; `signedOut` → `(auth)`; `signedIn` con `onboardingStep !== "done"` → `(onboarding)`; `verificationRequired && isOnline` → `(app)/verify-email-gate`; en otro caso → `(app)`
 - [X] T040 [P] Pruebas de la app en `apps/mobile/tests/foundation.test.tsx`: guardas de `_layout` para cada estado, single-flight (dos 401 simultáneos → un solo refresh), `outbox.count/flush` con `fetch` simulado, y `purgeUserData` borra archivo y clave (SQLite y SecureStore simulados)
-- [ ] T041 Compilar la development build (`bun run --cwd apps/mobile android`) en el emulador `saveria_spike` y confirmar en el log `cipher_version` y la apertura de la base del usuario
-  - **Estado (2026-10-23)**: el bundle de JavaScript compila con Metro (`expo export`, 2,5 MB). La compilación nativa en Windows falla por el límite de 260 caracteres de las rutas (`ninja 1.10.2` del SDK no respeta `LongPathsEnabled=1`), primero en reanimated y luego en safe-area-context. Pendiente decidir cómo compilar; ver research.md §10.
+- [X] T041 Compilar la development build (`bun run --cwd apps/mobile android`) en el emulador `saveria_spike` y confirmar en el log `cipher_version` y la apertura de la base del usuario
+  - **Resultado (2026-10-23)**: compila en Windows con `ninja 1.12.1` (el del SDK, 1.10.2, no soporta rutas de más de 260 caracteres). El chequeo de humo en el emulador dio **5/5** (SQLCipher 4.17 activo, cola de cambios, persistencia al reabrir, archivo cifrado, borrado) y la app abre en "Bienvenido a Saveria". Encontró dos errores que Jest no veía: `globalThis.crypto` no existe en React Native y faltaba la ruta de entrada `/`.
 
 **Checkpoint**: Base lista. Las historias pueden empezar.
 

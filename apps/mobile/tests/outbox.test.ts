@@ -71,6 +71,20 @@ describe('outbox', () => {
     });
   });
 
+  it('sin generador de ids propio no depende de globalThis.crypto (no existe en React Native)', () => {
+    const original = Object.getOwnPropertyDescriptor(globalThis, 'crypto');
+    Object.defineProperty(globalThis, 'crypto', { value: undefined, configurable: true });
+    try {
+      const store = new MemoryStore();
+      const outbox = createOutbox(store, async () => ({ status: 'sent' }));
+      const id = outbox.enqueue(change('u1'));
+      expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/);
+      expect(store.items[0]?.id).toBe(id);
+    } finally {
+      if (original) Object.defineProperty(globalThis, 'crypto', original);
+    }
+  });
+
   it('flush envía los cambios en el orden en que se hicieron y vacía la cola', async () => {
     const order: string[] = [];
     const { outbox, tick } = setup(async (item) => {

@@ -1,4 +1,5 @@
 import { asc, eq, count as sqlCount } from 'drizzle-orm';
+import * as Crypto from 'expo-crypto';
 import type { UserDb } from '../db/open-user-db';
 import { outbox } from '../db/schema';
 
@@ -97,7 +98,8 @@ export interface OutboxOptions {
 
 export function createOutbox(store: OutboxStore, send: Sender, options: OutboxOptions = {}) {
   const now = options.now ?? (() => Date.now());
-  const newId = options.newId ?? (() => globalThis.crypto.randomUUID());
+  // React Native no tiene `globalThis.crypto`: el UUID sale de expo-crypto.
+  const newId = options.newId ?? (() => Crypto.randomUUID());
   let running: Promise<FlushSummary> | null = null;
 
   async function run(): Promise<FlushSummary> {

@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react-native';
 import type { ReactElement, ReactNode } from 'react';
-import { routeGroupFor } from '../src/session/guards';
+import { ENTRY_ROUTE, routeGroupFor } from '../src/session/guards';
 import { useSession } from '../src/session/session-store';
 import { makeMe } from './support/fixtures';
 
@@ -15,7 +15,9 @@ jest.mock('expo-router', () => {
     ({ children }: { children: ReactNode }) => React.createElement('Stack', null, children),
     { Screen, Protected },
   );
-  return { Stack };
+  // `Redirect` se dibuja como un elemento con su destino, para poder comprobarlo.
+  const Redirect = ({ href }: { href: string }) => React.createElement('Redirect', { href });
+  return { Stack, Redirect };
 });
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(),
@@ -25,6 +27,7 @@ jest.mock('../src/features/auth/bootstrap', () => ({ bootstrapSession: jest.fn()
 
 import RootLayout from '../src/app/_layout';
 import AppLayout from '../src/app/(app)/_layout';
+import Index from '../src/app/index';
 
 type Node = { type: string; props?: { name?: string }; children?: Node[] | null };
 
@@ -109,24 +112,24 @@ describe('RootLayout', () => {
 
   it('signedOut muestra solo (auth)', async () => {
     setSession({ status: 'signedOut' });
-    expect(await screensOf(<RootLayout />)).toEqual(['(auth)']);
+    expect(await screensOf(<RootLayout />)).toEqual(['index', '(auth)']);
   });
 
   it('signedIn con el onboarding pendiente muestra solo (onboarding)', async () => {
     setSession({ status: 'signedIn', me: makeMe({ onboardingStep: 'country' }) });
-    expect(await screensOf(<RootLayout />)).toEqual(['(onboarding)']);
+    expect(await screensOf(<RootLayout />)).toEqual(['index', '(onboarding)']);
   });
 
   it('signedIn con el onboarding terminado muestra solo (app)', async () => {
     setSession({ status: 'signedIn', me: makeMe(), isOnline: true });
-    expect(await screensOf(<RootLayout />)).toEqual(['(app)']);
+    expect(await screensOf(<RootLayout />)).toEqual(['index', '(app)']);
   });
 });
 
 describe('(app)/_layout', () => {
   it('en el uso normal muestra la pantalla principal', async () => {
     setSession({ status: 'signedIn', me: makeMe(), isOnline: true });
-    expect(await screensOf(<AppLayout />)).toEqual(['index']);
+    expect(await screensOf(<AppLayout />)).toEqual(['home']);
   });
 
   it('con verificación exigida y conexión muestra solo la puerta de verificación', async () => {
@@ -136,6 +139,57 @@ describe('(app)/_layout', () => {
 
   it('con verificación exigida pero sin conexión sigue mostrando la pantalla principal', async () => {
     setSession({ status: 'signedIn', me: makeMe({ verificationRequired: true }), isOnline: false });
-    expect(await screensOf(<AppLayout />)).toEqual(['index']);
+    expect(await screensOf(<AppLayout />)).toEqual(['home']);
+  });
+});
+
+/** Destino del <Redirect> que dibuja la ruta de entrada, o null si no redirige. */
+async function redirectTarget(): Promise<string | null> {
+  await render(<Index />);
+  const tree = screen.toJSON() as { type: string; props?: { href?: string } } | null;
+  return tree?.type === 'Redirect' ? (tree.props?.href ?? null) : null;
+}
+
+describe('ruta de entrada (/)', () => {
+  it('sin saber si hay sesión no redirige todavía', async () => {
+    setSession({ status: 'unknown' });
+    expect(await redirectTarget()).toBeNull();
+  });
+
+  it('sin sesión manda a la bienvenida', async () => {
+    setSession({ status: 'signedOut' });
+    expect(await redirectTarget()).toBe('/welcome');
+  });
+
+  it('con el onboarding pendiente manda al onboarding', async () => {
+    setSession({ status: 'signedIn', me: makeMe({ onboardingStep: 'city' }) });
+    expect(await redirectTarget()).toBe('/ai-name');
+  });
+
+  it('con la sesión lista manda a la pantalla principal', async () => {
+    setSession({ status: 'signedIn', me: makeMe(), isOnline: true });
+    expect(await redirectTarget()).toBe('/home');
+  });
+
+  it('con verificación exigida y conexión manda a la puerta de verificación', async () => {
+    setSession({ status: 'signedIn', me: makeMe({ verificationRequired: true }), isOnline: true });
+    expect(await redirectTarget()).toBe('/verify-email-gate');
+  });
+
+  it('todas las zonas tienen una pantalla de entrada que existe como archivo', () => {
+    // evita que ENTRY_ROUTE apunte a una ruta que no existe (lo que daba "Unmatched Route")
+    const fs = require('node:fs');
+    const path = require('node:path');
+    const files: Record<string, string> = {
+      '/welcome': '(auth)/welcome.tsx',
+      '/ai-name': '(onboarding)/ai-name.tsx',
+      '/verify-email-gate': '(app)/verify-email-gate.tsx',
+      '/home': '(app)/home.tsx',
+    };
+    for (const href of Object.values(ENTRY_ROUTE)) {
+      const file = files[href];
+      expect(file).toBeDefined();
+      expect(fs.existsSync(path.join(process.cwd(), 'src', 'app', file as string))).toBe(true);
+    }
   });
 });

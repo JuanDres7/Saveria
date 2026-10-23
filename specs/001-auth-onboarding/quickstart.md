@@ -13,6 +13,7 @@ El contrato está en [contracts/openapi.yaml](contracts/openapi.yaml) y el model
 | Node 24 | `node --version` (ya instalado; lo usa la CLI de Expo) |
 | JDK 21 | Ya instalado: `JAVA_HOME=C:\Program Files\Java\jdk-21` (validado en el spike). Java 25 no se probó |
 | Android SDK | `ANDROID_HOME=C:\src\Android\Sdk` (ya configurado) + emulador `saveria_spike` (Android 16) o un celular con depuración USB |
+| ninja 1.12+ | **Obligatorio en Windows.** El `ninja 1.10.2` del SDK falla con rutas de más de 260 caracteres. Descargar `ninja-win.zip` de https://github.com/ninja-build/ninja/releases (v1.12.1 o más nueva) y reemplazar `%ANDROID_HOME%\cmake\3.22.1\bin\ninja.exe` (guardar antes una copia) |
 
 > **Expo Go no sirve** para esta app: SQLCipher necesita una *development build* propia.
 
