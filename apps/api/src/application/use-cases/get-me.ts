@@ -20,12 +20,17 @@ export function toProfileDto(profile: Profile): ProfileDto {
   };
 }
 
+/** Postgres devuelve `numeric(19,4)` con ceros de relleno ("0.0000"); se quitan: "0", "10.5". */
+export function normalizeDecimal(value: string): string {
+  return value.includes('.') ? value.replace(/\.?0+$/, '') : value;
+}
+
 export function toAccountDto(account: Account): AccountDto {
   return {
     id: account.id,
     name: account.name,
     currency: account.currency,
-    initialBalance: account.initialBalance,
+    initialBalance: normalizeDecimal(account.initialBalance),
     isDefault: account.isDefault,
   };
 }

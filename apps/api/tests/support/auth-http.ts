@@ -46,3 +46,26 @@ export async function registerUser(t: TestApp, overrides: Record<string, unknown
 export function loginBody(overrides: Record<string, unknown> = {}) {
   return { email: 'ana@mail.com', password: TEST_PASSWORD, device: TEST_DEVICE, ...overrides };
 }
+
+export function putJson(t: TestApp, path: string, body: unknown, headers: Record<string, string>) {
+  return t.app.request(path, {
+    method: 'PUT',
+    headers: { 'content-type': 'application/json', ...headers },
+    body: JSON.stringify(body),
+  });
+}
+
+/** Perfil completo para `PUT /v1/me/profile`, con un `updatedAt` posterior al del registro. */
+export function profileBody(overrides: Record<string, unknown> = {}) {
+  return {
+    aiName: null,
+    countryCode: null,
+    city: null,
+    primaryCurrency: null,
+    referenceCurrencies: [],
+    aiMode: 'manual',
+    onboardingStep: 'country',
+    updatedAt: '2026-10-22T12:00:01.000Z',
+    ...overrides,
+  };
+}

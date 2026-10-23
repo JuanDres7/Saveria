@@ -2,11 +2,13 @@ import { fileURLToPath } from 'node:url';
 import { Scalar } from '@scalar/hono-api-reference';
 import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
+import { createCompleteOnboarding } from './application/use-cases/complete-onboarding';
 import { createGetMe } from './application/use-cases/get-me';
 import { createLogin } from './application/use-cases/login';
 import { createLogout } from './application/use-cases/logout';
 import { createRefresh } from './application/use-cases/refresh';
 import { createRegister } from './application/use-cases/register';
+import { createUpdateProfile } from './application/use-cases/update-profile';
 import type { Container } from './container';
 import type { AppEnv } from './interfaces/http/context';
 import { requireAuth } from './interfaces/http/middleware/auth';
@@ -41,7 +43,15 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
       logout: createLogout(deps),
     }),
   );
-  app.route('/v1/me', meRoutes({ auth, getMe: createGetMe(deps) }));
+  app.route(
+    '/v1/me',
+    meRoutes({
+      auth,
+      getMe: createGetMe(deps),
+      updateProfile: createUpdateProfile(deps),
+      completeOnboarding: createCompleteOnboarding(deps),
+    }),
+  );
 }
 
 export interface AppOptions {
