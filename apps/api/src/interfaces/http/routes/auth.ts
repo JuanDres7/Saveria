@@ -1,6 +1,7 @@
 import { emailSchema, passwordSchema } from '@saveria/shared';
-import { Hono } from 'hono';
+import { Hono, type MiddlewareHandler } from 'hono';
 import { z } from 'zod';
+import type { createChangePassword } from '../../../application/use-cases/change-password';
 import type { createLogin } from '../../../application/use-cases/login';
 import type { createLogout } from '../../../application/use-cases/logout';
 import type { createRefresh } from '../../../application/use-cases/refresh';
@@ -14,6 +15,9 @@ export interface AuthRoutesDeps {
   login: ReturnType<typeof createLogin>;
   refresh: ReturnType<typeof createRefresh>;
   logout: ReturnType<typeof createLogout>;
+  changePassword: ReturnType<typeof createChangePassword>;
+  /** Exige sesión; solo lo usan las rutas que la necesitan (las demás son públicas). */
+  auth: MiddlewareHandler<AppEnv>;
 }
 
 const deviceSchema = z.object({
@@ -36,6 +40,12 @@ const loginSchema = z.object({
   // Sin las reglas de contraseña nueva: una contraseña corta y mala es `invalid_credentials`.
   password: z.string().min(1).max(1024),
   device: deviceSchema,
+});
+
+// Solo la forma: la regla de la contraseña nueva (FR-003) la aplica el caso de uso.
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1).max(1024),
+  newPassword: z.string().max(1024),
 });
 
 const refreshTokenSchema = z.string().min(20).max(200);
@@ -75,6 +85,16 @@ export function authRoutes(deps: AuthRoutesDeps) {
     const accessToken = BEARER.exec(c.req.header('authorization') ?? '')?.[1] ?? null;
     const parsed = refreshTokenSchema.safeParse((await readJson(c.req.raw)).refreshToken);
     await deps.logout({ accessToken, refreshToken: parsed.success ? parsed.data : null });
+    return c.body(null, 204);
+  });
+
+  app.post('/password/change', deps.auth, validate('json', changePasswordSchema), async (c) => {
+    await deps.changePassword({
+      ...c.req.valid('json'),
+      userId: c.get('userId'),
+      sessionId: c.get('sessionId'),
+      ip: c.get('clientIp'),
+    });
     return c.body(null, 204);
   });
 

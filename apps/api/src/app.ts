@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { Scalar } from '@scalar/hono-api-reference';
 import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
+import { createChangePassword } from './application/use-cases/change-password';
 import { createCompleteOnboarding } from './application/use-cases/complete-onboarding';
 import { createGetMe } from './application/use-cases/get-me';
 import { createLogin } from './application/use-cases/login';
@@ -41,6 +42,8 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
       login: createLogin(deps),
       refresh: createRefresh(deps),
       logout: createLogout(deps),
+      changePassword: createChangePassword(deps),
+      auth,
     }),
   );
   app.route(
