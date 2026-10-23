@@ -1,0 +1,33 @@
+{
+  "name": "@saveria/api",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/main.ts",
+    "start": "bun src/main.ts",
+    "test": "bun test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.9",
+    "@saveria/shared": "workspace:*",
+    "@scalar/hono-api-reference": "^0.12",
+    "drizzle-orm": "^0.45",
+    "hono": "^4.13",
+    "ioredis": "^6.0",
+    "jose": "^6.2",
+    "pino": "^10.4",
+    "postgres": "^3.4",
+    "resend": "^6.34",
+    "zod": "^4.6"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.4.4",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
+    "drizzle-kit": "^0.31",
+    "yaml": "^2.9.1"
+  }
+}

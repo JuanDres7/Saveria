@@ -1,0 +1,6 @@
+node_modules
+apps/mobile
+spikes
+.git
+*.log
+apps/api/.dev-outbox
