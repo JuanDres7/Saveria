@@ -1,0 +1,573 @@
+openapi: 3.1.0
+info:
+  title: Saveria API — Autenticación, onboarding y perfil
+  version: 0.1.0
+  description: |
+    Contrato de la feature 001-auth-onboarding. Es la fuente de la verdad: el backend se valida
+    contra este archivo con pruebas de contrato y la app genera sus tipos desde aquí.
+
+    Reglas transversales:
+    - Todas las rutas `/v1/*` responden JSON. Los errores usan el esquema `Error`.
+    - Autenticación con `Authorization: Bearer <accessToken>`. En cada request el servidor
+      verifica la firma del JWT y que la sesión (`sid`) siga activa.
+    - Los mensajes de error de autenticación son genéricos y no revelan si un correo existe.
+    - Tamaño máximo del body: 16 KB.
+servers:
+  - url: http://localhost:8000
+    description: Desarrollo local
+
+tags:
+  - name: auth
+  - name: me
+  - name: legal
+  - name: links
+    description: Páginas HTML mínimas abiertas desde los correos (FR-037). No son JSON.
+
+paths:
+  /health:
+    get:
+      summary: Estado del servicio
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: { type: string, const: ok }
+
+  /v1/auth/register:
+    post:
+      tags: [auth]
+      summary: Crear cuenta e iniciar sesión (FR-001 a FR-004, FR-031)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterRequest" }
+      responses:
+        "201":
+          description: Cuenta creada, sesión iniciada y correo de verificación en envío
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "409":
+          description: No se pudo crear la cuenta con ese correo (mensaje genérico)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: Versión de política desconocida o no aceptada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /v1/auth/login:
+    post:
+      tags: [auth]
+      summary: Iniciar sesión (FR-006, FR-007)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginRequest" }
+      responses:
+        "200":
+          description: Sesión iniciada
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/AuthResponse" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/InvalidCredentials" }
+        "429": { $ref: "#/components/responses/TooManyAttempts" }
+
+  /v1/auth/refresh:
+    post:
+      tags: [auth]
+      summary: Renovar tokens (rotación del refresh token, FR-008)
+      description: |
+        Cada refresh token sirve una sola vez. Si llega uno ya usado, la sesión se revoca.
+        El cliente MUST hacer un solo refresh a la vez.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string, minLength: 20, maxLength: 200 }
+      responses:
+        "200":
+          description: Tokens nuevos
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/TokenPair" }
+        "401":
+          description: Sesión vencida, revocada o refresh token inválido
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /v1/auth/logout:
+    post:
+      tags: [auth]
+      summary: Cerrar la sesión actual (FR-009)
+      security: [{ bearerAuth: [] }]
+      responses:
+        "204": { description: Sesión revocada }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/auth/password/forgot:
+    post:
+      tags: [auth]
+      summary: Pedir enlace de recuperación (FR-028, FR-030, FR-035)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { $ref: "#/components/schemas/Email" }
+      responses:
+        "202": { $ref: "#/components/responses/NeutralAccepted" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+
+  /v1/auth/password/change:
+    post:
+      tags: [auth]
+      summary: Cambiar contraseña conociendo la actual (FR-018a)
+      description: Cierra todas las demás sesiones; la actual sigue activa.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string, minLength: 1, maxLength: 1024 }
+                newPassword: { $ref: "#/components/schemas/NewPassword" }
+      responses:
+        "204": { description: Contraseña cambiada }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/InvalidCredentials" }
+        "429": { $ref: "#/components/responses/TooManyAttempts" }
+
+  /v1/auth/email/verification:
+    post:
+      tags: [auth]
+      summary: Reenviar el correo de verificación (FR-033, FR-034, FR-035)
+      description: Invalida el enlace anterior. Si el correo ya está verificado, responde igual.
+      security: [{ bearerAuth: [] }]
+      responses:
+        "202": { $ref: "#/components/responses/NeutralAccepted" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /v1/auth/email:
+    put:
+      tags: [auth]
+      summary: Corregir el correo mientras no esté verificado (FR-034)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { $ref: "#/components/schemas/Email" }
+      responses:
+        "202":
+          description: Correo actualizado y enlace nuevo enviado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Me" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          description: El correo ya está verificado o no se puede usar el correo nuevo (genérico)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /v1/me:
+    get:
+      tags: [me]
+      summary: Usuario actual, perfil, cuenta por defecto y estado de verificación
+      security: [{ bearerAuth: [] }]
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Me" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    delete:
+      tags: [me]
+      summary: Borrar la cuenta y todos sus datos (FR-023 a FR-025)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string, minLength: 1, maxLength: 1024 }
+      responses:
+        "204": { description: Cuenta y datos eliminados; todas las sesiones revocadas }
+        "401": { $ref: "#/components/responses/InvalidCredentials" }
+        "429": { $ref: "#/components/responses/TooManyAttempts" }
+
+  /v1/me/profile:
+    put:
+      tags: [me]
+      summary: Guardar perfil y preferencias (onboarding y Configuración, FR-011 a FR-022)
+      description: |
+        Last-write-wins por registro completo. Se aplica si `updatedAt` es posterior al del
+        servidor; si no, responde 409 con la versión del servidor.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ProfileUpdate" }
+      responses:
+        "200":
+          description: Perfil guardado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+        "400": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          description: El servidor tiene una versión más nueva
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Profile" }
+
+  /v1/me/onboarding/complete:
+    post:
+      tags: [me]
+      summary: Terminar el onboarding y crear la cuenta "Efectivo" (FR-016)
+      description: Idempotente por `defaultAccountId`. Requiere `primaryCurrency` en el perfil.
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [defaultAccountId]
+              properties:
+                defaultAccountId: { type: string, format: uuid }
+      responses:
+        "200":
+          description: Onboarding terminado
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Me" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422":
+          description: Falta la moneda principal
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /v1/legal/privacy-policy:
+    get:
+      tags: [legal]
+      summary: Versión vigente de la política de tratamiento de datos (FR-004, FR-005)
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version, url]
+                properties:
+                  version: { type: string, example: 2026-10-v1 }
+                  url: { type: string, format: uri }
+
+  /legal/privacy:
+    get:
+      tags: [links]
+      summary: Página HTML con el texto de la política
+      responses:
+        "200":
+          description: HTML
+          content:
+            text/html: { schema: { type: string } }
+
+  /links/verify-email:
+    get:
+      tags: [links]
+      summary: Muestra el botón "Confirmar mi correo" (no consume el token)
+      parameters:
+        - $ref: "#/components/parameters/LinkToken"
+      responses:
+        "200":
+          description: Página con el botón, o con el aviso de enlace inválido y cómo pedir otro
+          content:
+            text/html: { schema: { type: string } }
+    post:
+      tags: [links]
+      summary: Consume el token y marca el correo como verificado
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        "200":
+          description: Página de éxito ("ya puedes volver a la app") o de enlace inválido
+          content:
+            text/html: { schema: { type: string } }
+
+  /links/reset-password:
+    get:
+      tags: [links]
+      summary: Muestra el formulario de contraseña nueva (no consume el token)
+      parameters:
+        - $ref: "#/components/parameters/LinkToken"
+      responses:
+        "200":
+          description: Formulario, o aviso de enlace vencido o usado con la opción de pedir otro
+          content:
+            text/html: { schema: { type: string } }
+    post:
+      tags: [links]
+      summary: Consume el token, cambia la contraseña y revoca todas las sesiones (FR-029)
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              required: [token, password, passwordConfirmation]
+              properties:
+                token: { type: string }
+                password: { type: string }
+                passwordConfirmation: { type: string }
+      responses:
+        "200":
+          description: Página de éxito, o el formulario con errores de validación
+          content:
+            text/html: { schema: { type: string } }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    LinkToken:
+      name: token
+      in: query
+      required: true
+      schema: { type: string, maxLength: 100 }
+
+  responses:
+    ValidationError:
+      description: Datos inválidos
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    InvalidCredentials:
+      description: Credenciales incorrectas (mensaje genérico)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: Falta el token, es inválido o la sesión fue revocada
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    TooManyAttempts:
+      description: Demasiados intentos; vuelve a intentar más tarde (mensaje genérico)
+      headers:
+        Retry-After:
+          schema: { type: integer, description: Segundos }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NeutralAccepted:
+      description: Respuesta idéntica exista o no el correo, y aunque se haya superado el límite
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [message]
+            properties:
+              message: { type: string }
+
+  schemas:
+    Error:
+      type: object
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          enum:
+            - validation_error
+            - invalid_credentials
+            - unauthorized
+            - too_many_attempts
+            - email_unavailable
+            - policy_not_accepted
+            - email_already_verified
+            - primary_currency_required
+            - not_found
+            - internal_error
+        message: { type: string }
+        fields:
+          type: object
+          description: Errores por campo (solo en validation_error)
+          additionalProperties: { type: string }
+
+    Email:
+      type: string
+      format: email
+      maxLength: 254
+      description: El servidor aplica trim y minúsculas antes de usarlo.
+
+    NewPassword:
+      type: string
+      minLength: 8
+      maxLength: 1024
+      description: Al menos una letra y un número (FR-003).
+
+    Device:
+      type: object
+      required: [id]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string, maxLength: 80 }
+
+    RegisterRequest:
+      type: object
+      required: [email, password, policyVersion, policyAccepted, device]
+      properties:
+        email: { $ref: "#/components/schemas/Email" }
+        password: { $ref: "#/components/schemas/NewPassword" }
+        policyVersion: { type: string }
+        policyAccepted: { type: boolean, const: true }
+        device: { $ref: "#/components/schemas/Device" }
+
+    LoginRequest:
+      type: object
+      required: [email, password, device]
+      properties:
+        email: { $ref: "#/components/schemas/Email" }
+        password: { type: string, minLength: 1, maxLength: 1024 }
+        device: { $ref: "#/components/schemas/Device" }
+
+    TokenPair:
+      type: object
+      required: [accessToken, accessTokenExpiresAt, refreshToken]
+      properties:
+        accessToken: { type: string }
+        accessTokenExpiresAt: { type: string, format: date-time }
+        refreshToken: { type: string }
+
+    AuthResponse:
+      type: object
+      required: [tokens, me]
+      properties:
+        tokens: { $ref: "#/components/schemas/TokenPair" }
+        me: { $ref: "#/components/schemas/Me" }
+
+    CurrencyCode:
+      type: string
+      pattern: "^[A-Z]{3}$"
+      description: ISO 4217 del catálogo soportado
+
+    OnboardingStep:
+      type: string
+      enum: [ai_name, country, city, currency, ai_mode, done]
+
+    Profile:
+      type: object
+      required:
+        - aiName
+        - countryCode
+        - city
+        - primaryCurrency
+        - referenceCurrencies
+        - aiMode
+        - onboardingStep
+        - updatedAt
+      properties:
+        aiName: { type: [string, "null"], maxLength: 30 }
+        countryCode: { type: [string, "null"], pattern: "^[A-Z]{2}$" }
+        city: { type: [string, "null"], maxLength: 80 }
+        primaryCurrency:
+          oneOf:
+            - $ref: "#/components/schemas/CurrencyCode"
+            - type: "null"
+        referenceCurrencies:
+          type: array
+          maxItems: 2
+          uniqueItems: true
+          items: { $ref: "#/components/schemas/CurrencyCode" }
+        aiMode: { type: string, enum: [manual, auto] }
+        onboardingStep: { $ref: "#/components/schemas/OnboardingStep" }
+        updatedAt: { type: string, format: date-time }
+
+    ProfileUpdate:
+      allOf:
+        - $ref: "#/components/schemas/Profile"
+        - type: object
+          properties:
+            autoModeConfirmed:
+              type: boolean
+              description: Obligatorio en true cuando aiMode pasa de manual a auto (FR-019)
+
+    Account:
+      type: object
+      required: [id, name, currency, initialBalance, isDefault]
+      properties:
+        id: { type: string, format: uuid }
+        name: { type: string }
+        currency: { $ref: "#/components/schemas/CurrencyCode" }
+        initialBalance:
+          type: string
+          pattern: "^-?\\d+(\\.\\d{1,4})?$"
+          description: Decimal exacto como texto, nunca número de punto flotante
+        isDefault: { type: boolean }
+
+    Me:
+      type: object
+      required: [id, email, emailVerified, verificationDeadline, verificationRequired, profile, defaultAccount]
+      properties:
+        id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        emailVerified: { type: boolean }
+        verificationDeadline:
+          type: string
+          format: date-time
+          description: created_at + 7 días
+        verificationRequired:
+          type: boolean
+          description: true si no está verificado y ya pasó el plazo; la app muestra el bloqueo (FR-032)
+        profile: { $ref: "#/components/schemas/Profile" }
+        defaultAccount:
+          oneOf:
+            - $ref: "#/components/schemas/Account"
+            - type: "null"
