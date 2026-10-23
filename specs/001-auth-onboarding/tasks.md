@@ -97,6 +97,7 @@ separado.
 - [X] T039 Crear `apps/mobile/src/app/_layout.tsx` con las guardas de navegación: `unknown` → splash; `signedOut` → `(auth)`; `signedIn` con `onboardingStep !== "done"` → `(onboarding)`; `verificationRequired && isOnline` → `(app)/verify-email-gate`; en otro caso → `(app)`
 - [X] T040 [P] Pruebas de la app en `apps/mobile/tests/foundation.test.tsx`: guardas de `_layout` para cada estado, single-flight (dos 401 simultáneos → un solo refresh), `outbox.count/flush` con `fetch` simulado, y `purgeUserData` borra archivo y clave (SQLite y SecureStore simulados)
 - [ ] T041 Compilar la development build (`bun run --cwd apps/mobile android`) en el emulador `saveria_spike` y confirmar en el log `cipher_version` y la apertura de la base del usuario
+  - **Estado (2026-10-23)**: el bundle de JavaScript compila con Metro (`expo export`, 2,5 MB). La compilación nativa en Windows falla por el límite de 260 caracteres de las rutas (`ninja 1.10.2` del SDK no respeta `LongPathsEnabled=1`), primero en reanimated y luego en safe-area-context. Pendiente decidir cómo compilar; ver research.md §10.
 
 **Checkpoint**: Base lista. Las historias pueden empezar.
 
