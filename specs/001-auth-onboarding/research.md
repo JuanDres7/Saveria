@@ -182,13 +182,15 @@ agregan *servicios en ejecución* fuera de la constitución.
 
 ### Límite de intentos (FR-007, aclaración de 2026-10-22)
 
-- **Clave**: `login_fail:{ip}:{sha256(email)}`, contador en Redis con TTL de 15 min. Con 5 fallos
+- **Clave**: `rl:login:{ip}:{sha256(email)}`, contador en Redis con TTL de 15 min. Con 5 fallos
   se rechazan nuevos intentos de esa IP a ese correo hasta que venza el TTL. Un login exitoso
   borra el contador.
 - **Límite general por IP**: 100 fallos en 15 min desde una IP, para frenar a quien prueba muchos
   correos. Es generoso a propósito: en datos móviles (CGNAT) muchos usuarios comparten IP.
 - **El mismo limitador** protege cambiar contraseña y borrar cuenta (ambos piden la contraseña).
 - **Respuesta**: `429` con mensaje genérico; no revela si el correo existe.
+- **Correos (FR-035)**: un solo contador por dirección, `rl:mail:{sha256(email)}`, que suma
+  verificación y recuperación: 3 por hora en total.
 
 ### IP real del cliente
 

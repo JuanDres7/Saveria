@@ -4,7 +4,7 @@
 
 **Created**: 2026-10-22
 
-**Status**: Draft
+**Status**: Ready
 
 **Input**: User description: "Registro, inicio de sesión, onboarding y configuración de perfil: el usuario crea su cuenta con correo y contraseña aceptando la política de datos, inicia sesión, responde un onboarding corto (cómo quiere que la IA lo llame, país, ciudad, moneda principal y modo de la IA manual o automático) y puede cambiar todo eso después desde Configuración. Incluye borrar la cuenta y todos sus datos."
 

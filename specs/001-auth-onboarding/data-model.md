@@ -141,7 +141,7 @@ gestión completa.
 | `rl:login:{ip}:{sha256(email)}` | contador | 15 min | 5 fallos → 429 (FR-007) |
 | `rl:login-ip:{ip}` | contador | 15 min | 100 fallos → 429 (límite general) |
 | `rl:pwd:{userId}:{ip}` | contador | 15 min | Cambio de contraseña y borrado de cuenta |
-| `rl:mail:{kind}:{sha256(email)}` | contador | 1 h | 3 correos por dirección (FR-035) |
+| `rl:mail:{sha256(email)}` | contador | 1 h | 3 correos por dirección en total, sumando verificación y recuperación (FR-035) |
 
 En las claves se usa el hash del correo, nunca el correo en claro.
 
@@ -165,14 +165,16 @@ En las claves se usa el hash del correo, nunca el correo en claro.
 | `meta` | Clave-valor: `last_server_check_at`, `email_verified`, `verification_deadline` |
 
 **Fuera de la base (SecureStore)**: `device_id`, `refresh_token`, `user_id` de la última sesión,
-`dbkey:{userId}`.
+`dbkey:{userId}` y `pendingRevocation` (refresh token de un logout hecho sin conexión, que se
+envía a `POST /v1/auth/logout` cuando vuelve la red).
 
 **Reglas**
 
 - Abrir la app sin conexión con una sesión guardada carga directamente la base del `user_id`
   guardado (SC-003, < 2 s).
 - Cerrar sesión: se borra el refresh token y la base se cierra, pero se conservan el archivo y su
-  clave (FR-010).
+  clave (FR-010). Sin conexión, el refresh token pasa a `pendingRevocation` hasta poder revocarlo
+  en el servidor (FR-009).
 - Borrar la cuenta: se borran el archivo, su clave y el refresh token.
 - Al sincronizar el outbox después de entrar: si el servidor responde que el usuario no existe,
   se descarta el archivo de ese usuario.

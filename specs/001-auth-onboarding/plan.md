@@ -96,7 +96,7 @@ quickstart.
 |---|---|---|
 | 1.1–1.5 | U + I + C (registro, login, mensajes genéricos) · M (formularios) | — |
 | 1.6 | I (logout revoca la sesión) · M (al cerrar sesión se cierra la base local) | — |
-| 1.7 | M con un ítem genérico del outbox (cambio de perfil) | Con movimientos reales → 003 |
+| 1.7 | M con un ítem genérico del outbox (cambio de perfil) · M + I (logout sin conexión → `pendingRevocation` → al volver la red la sesión queda revocada) | Con movimientos reales → 003 |
 | 2.1–2.5 | U (transiciones de `onboarding_step`) · I · M (orden de pasos, retomar, terminar sin conexión vía outbox) | — |
 | 2.6 | M (sin moneda principal no aparece la entrada "registrar movimiento") · U (regla en el perfil) | Validación en el caso de uso de movimientos → 003 |
 | 3.1 | M + I (`autoModeConfirmed` obligatorio) | — |
@@ -109,7 +109,7 @@ quickstart.
 | 5.1 | M (arranque con refresh token guardado) | — |
 | 5.2 | M (sesión vencida → login → el outbox se envía) | Sync de movimientos → 006 |
 | 5.3–5.5 | I (respuesta neutral, uso único, revocación, enlace vencido) · C (páginas HTML) | — |
-| 6.1–6.5 | I (envío, verificación por POST, reenvío invalida, `verificationRequired`) · M (puerta solo con conexión) | — |
+| 6.1–6.5 | I (envío, verificación por POST, reenvío invalida, `verificationRequired`) · M (puerta solo con conexión; el outbox sigue enviando con la puerta visible) | — |
 | Casos límite | I (normalización del correo, límite de intentos, 3 correos por hora, cambio de correo) · U (moneda de referencia igual a la principal, nombre vacío para la IA → parte del correo) | — |
 | SC-006 | I (prueba que revisa que los logs no contengan secretos) | — |
 
@@ -208,10 +208,11 @@ por IA, no en esta.
 9. **Cuenta borrada en otro dispositivo**: las sesiones se conservan revocadas con
    `revoke_reason = account_deleted` y sin datos personales. El otro dispositivo recibe `401` con
    `code: account_deleted` y borra su archivo local y su clave.
-10. **Cerrar sesión sin conexión** (escenario 1.7, FR-009): el refresh token se borra del
-    dispositivo y el access token solo vivía en memoria, así que el dispositivo queda sin acceso
-    de inmediato. La sesión del servidor muere en el próximo login desde ese `device_id`
-    (`replaced`) o cuando vence a los 30 días. Si hay red, además se llama a `POST /v1/auth/logout`.
+10. **Cerrar sesión sin conexión** (escenario 1.7, FR-009): el access token solo vivía en memoria
+    y el refresh token sale del almacenamiento de sesión, así que el dispositivo queda sin acceso
+    de inmediato. El refresh token se guarda aparte como `pendingRevocation` y la app lo envía a
+    `POST /v1/auth/logout` cuando vuelve la conexión, lo que revoca la sesión en el servidor.
+    Con red, la revocación es inmediata.
 11. **Terminar el onboarding sin conexión** (SC-004): la app crea "Efectivo" localmente con su UUID
     y encola `POST /v1/me/onboarding/complete` en el outbox. La llamada es idempotente por
     `defaultAccountId`, así que el usuario puede registrar movimientos de inmediato.
@@ -224,6 +225,9 @@ por IA, no en esta.
 - **JDK**: resuelto. Se compila con el JDK 21 que ya está instalado (validado en el spike).
 - **Resend**: sin dominio verificado solo envía al dueño de la cuenta. Hay que verificar un
   dominio antes de tener usuarios reales.
+- **Copias de respaldo (FR-024)**: las copias de Postgres se configuran al desplegar, con una
+  retención máxima de 30 días, para que los datos de una cuenta borrada desaparezcan también de
+  ellas. En desarrollo no se hacen copias.
 
 ## Complexity Tracking
 

@@ -12,6 +12,8 @@ info:
       verifica la firma del JWT y que la sesión (`sid`) siga activa.
     - Los mensajes de error de autenticación son genéricos y no revelan si un correo existe.
     - Tamaño máximo del body: 16 KB.
+    - Ningún endpoint rechaza a un usuario por no haber verificado su correo: el bloqueo de los
+      7 días (FR-032) es solo de pantalla y la sincronización sigue funcionando.
 servers:
   - url: http://localhost:8000
     description: Desarrollo local
@@ -118,11 +120,23 @@ paths:
   /v1/auth/logout:
     post:
       tags: [auth]
-      summary: Cerrar la sesión actual (FR-009)
-      security: [{ bearerAuth: [] }]
+      summary: Cerrar sesión (FR-009)
+      description: |
+        Revoca la sesión del access token enviado o, si no hay access token, la sesión a la que
+        pertenece `refreshToken` (actual o anterior). Esto permite revocar después un logout
+        hecho sin conexión. Responde 204 siempre, aunque el token ya no sirva, para no revelar
+        nada.
+      security: [{ bearerAuth: [] }, {}]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken: { type: string, minLength: 20, maxLength: 200 }
       responses:
-        "204": { description: Sesión revocada }
-        "401": { $ref: "#/components/responses/Unauthorized" }
+        "204": { description: Sesión revocada, o no había nada que revocar }
 
   /v1/auth/password/forgot:
     post:
