@@ -4,9 +4,7 @@ import type { ApiClient } from '../../api/client';
 import { API_URL, api } from '../../api/instance';
 import type { components } from '../../api/schema';
 import { closeUserDb, getOpenUserDb, openUserDb, type UserDb } from '../../db/open-user-db';
-import { accounts, profile } from '../../db/schema';
-import { createHttpSender } from '../../outbox/http-sender';
-import { createOutbox, DrizzleOutboxStore } from '../../outbox/outbox';
+import { outboxFor } from '../../outbox/user-outbox';
 import {
   clearPendingRevocation,
   clearRefreshToken,
@@ -18,6 +16,7 @@ import {
   setRefreshToken,
 } from '../../session/secure';
 import { type Me, useSession } from '../../session/session-store';
+import { DrizzleLocalStore, mergeMe } from '../profile/local-store';
 
 type AuthResponse = components['schemas']['AuthResponse'];
 type ErrorCode = components['schemas']['Error']['code'] | 'network_error';
@@ -44,31 +43,10 @@ export interface AuthServiceDeps {
   openDb(userId: string): Promise<UserDb>;
   closeDb(): void;
   getOpenDb(): { userId: string; db: UserDb } | null;
-  saveMe(db: UserDb, me: Me): void;
+  /** Guarda `me` en la base local y devuelve el `me` a mostrar (con el progreso local más nuevo). */
+  syncMe(db: UserDb, me: Me): Me;
   outboxFor(db: UserDb): { count(): number; flush(): Promise<unknown> };
   deviceName(): string | null;
-}
-
-/** Copia `me` en la base local: el perfil y, si existe, la cuenta por defecto. */
-export function saveMeLocally(db: UserDb, me: Me): void {
-  const row = { ...me.profile, id: me.id };
-  db.insert(profile).values(row).onConflictDoUpdate({ target: profile.id, set: row }).run();
-
-  const account = me.defaultAccount;
-  if (account) {
-    const now = new Date().toISOString();
-    const fields = {
-      name: account.name,
-      currency: account.currency,
-      initialBalance: account.initialBalance,
-      isDefault: account.isDefault,
-      updatedAt: now,
-    };
-    db.insert(accounts)
-      .values({ id: account.id, ...fields, createdAt: now })
-      .onConflictDoUpdate({ target: accounts.id, set: fields })
-      .run();
-  }
 }
 
 export function pendingChangesNotice(count: number): string {
@@ -131,9 +109,9 @@ export function createAuthService(deps: AuthServiceDeps) {
     await setRefreshToken(tokens.refreshToken);
     await setLastUserId(me.id);
     const db = await deps.openDb(me.id);
-    deps.saveMe(db, me);
+    const shown = deps.syncMe(db, me);
     useSession.getState().setNotice(null);
-    useSession.getState().setSignedIn({ me, accessToken: tokens.accessToken });
+    useSession.getState().setSignedIn({ me: shown, accessToken: tokens.accessToken });
 
     // En segundo plano: los cambios hechos antes de cerrar sesión y una revocación pendiente.
     void deps
@@ -207,7 +185,7 @@ export const authService = createAuthService({
   openDb: (userId) => openUserDb(userId),
   closeDb: closeUserDb,
   getOpenDb: getOpenUserDb,
-  saveMe: saveMeLocally,
-  outboxFor: (db) => createOutbox(new DrizzleOutboxStore(db), createHttpSender(api.fetch, API_URL)),
+  syncMe: (db, me) => mergeMe(new DrizzleLocalStore(db), me),
+  outboxFor,
   deviceName: () => Device.modelName,
 });

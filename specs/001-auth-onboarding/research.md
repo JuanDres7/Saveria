@@ -213,7 +213,9 @@ agregan *servicios en ejecución* fuera de la constitución.
 - **Alcance**: solo el registro de perfil/preferencias del usuario (una fila por usuario). La
   sincronización general de movimientos se define en la feature 006.
 - **Estrategia**: *last-write-wins* (gana la última escritura) **por registro completo**:
-  - El cliente envía `PUT /v1/me/profile` con todos los campos y su `updatedAt` local.
+  - El cliente envía `PUT /v1/me/profile` con todos los campos y su `updatedAt` local, que es
+    `max(ahora, updatedAt guardado + 1 ms)`: el perfil local puede tener la hora del servidor y,
+    con el reloj del teléfono atrasado, `ahora` haría que el servidor rechazara cada cambio.
   - Si `updatedAt` del cliente es mayor que el del servidor, se aplica; si no, el servidor responde
     `409` con su versión actual y el cliente la adopta.
 - **Riesgo aceptado**: relojes desajustados entre dispositivos pueden hacer ganar un cambio más

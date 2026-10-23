@@ -20,12 +20,18 @@ function isHttpPayload(payload: unknown): payload is HttpPayload {
  * un 401). Decide qué hacer con la respuesta:
  * - 2xx: enviado.
  * - 401, 429, 5xx o sin red: pasajero, se reintenta.
- * - otro 4xx (por ejemplo 409: el servidor tiene una versión más nueva): no tiene arreglo, se
- *   descarta para no bloquear la cola.
+ * - 409: el servidor tiene una versión más nueva. Se entrega su cuerpo a `onConflict` (por
+ *   ejemplo, para adoptar el perfil del servidor) y el cambio se descarta.
+ * - otro 4xx: no tiene arreglo, se descarta para no bloquear la cola.
  */
+export interface HttpSenderOptions {
+  onConflict?(item: OutboxItem, serverBody: unknown): void | Promise<void>;
+}
+
 export function createHttpSender(
   authFetch: (request: Request) => Promise<Response>,
   baseUrl: string,
+  options: HttpSenderOptions = {},
 ): Sender {
   return async (item: OutboxItem): Promise<SendResult> => {
     if (!isHttpPayload(item.payload)) return { status: 'discard', reason: 'payload inválido' };
@@ -45,6 +51,10 @@ export function createHttpSender(
     }
 
     if (response.ok) return { status: 'sent' };
+    if (response.status === 409 && options.onConflict) {
+      const serverBody: unknown = await response.json().catch(() => null);
+      await options.onConflict(item, serverBody);
+    }
     if (response.status === 401 || response.status === 429 || response.status >= 500) {
       return { status: 'retry', error: `HTTP ${response.status}` };
     }

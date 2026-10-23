@@ -55,6 +55,41 @@ export function Screen({ title, children }: { title: string; children: ReactNode
   );
 }
 
+/** Opción de una lista de selección única. */
+export function RadioOption({
+  label,
+  description,
+  checked,
+  onPress,
+}: {
+  label: string;
+  description?: string;
+  checked: boolean;
+  onPress(): void;
+}) {
+  return (
+    <Pressable
+      role="radio"
+      aria-checked={checked}
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={[styles.option, checked ? styles.optionChecked : null]}
+    >
+      <Text style={styles.optionLabel}>{label}</Text>
+      {description ? <Text>{description}</Text> : null}
+    </Pressable>
+  );
+}
+
+/** Botón secundario (por ejemplo, "Saltar"). */
+export function TextButton({ label, onPress }: { label: string; onPress(): void }) {
+  return (
+    <Pressable role="button" accessibilityLabel={label} onPress={onPress}>
+      <Text style={styles.link}>{label}</Text>
+    </Pressable>
+  );
+}
+
 export function Banner({ message }: { message: string }) {
   return (
     <View style={styles.banner}>
@@ -75,6 +110,9 @@ export const styles = StyleSheet.create({
   buttonDisabled: { backgroundColor: '#9ca3af' },
   buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
   link: { color: '#0f766e', textDecorationLine: 'underline' },
+  option: { borderWidth: 1, borderColor: '#9ca3af', borderRadius: 8, padding: 12, gap: 4 },
+  optionChecked: { borderColor: '#0f766e', borderWidth: 2, backgroundColor: '#f0fdfa' },
+  optionLabel: { fontSize: 16, fontWeight: '600' },
   banner: { backgroundColor: '#fef3c7', borderRadius: 8, padding: 12 },
   bannerText: { color: '#78350f' },
 });

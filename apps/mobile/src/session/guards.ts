@@ -35,3 +35,26 @@ export const ENTRY_ROUTE = {
   'verify-gate': '/verify-email-gate',
   app: '/home',
 } as const;
+
+/** Pantalla de cada paso del onboarding, en el orden en que se piden (FR-011). */
+export const ONBOARDING_ROUTE = {
+  ai_name: '/ai-name',
+  country: '/country',
+  city: '/city',
+  currency: '/currency',
+  ai_mode: '/ai-mode',
+} as const;
+
+type PendingStep = keyof typeof ONBOARDING_ROUTE;
+
+/**
+ * Pantalla de entrada de la zona. En el onboarding es la del paso pendiente, para retomarlo donde
+ * quedó (FR-014, escenario 2.5).
+ */
+export function entryRouteFor(group: Exclude<RouteGroup, 'splash'>, me: Me | null) {
+  const step = me?.profile.onboardingStep;
+  if (group === 'onboarding' && step && step !== 'done') {
+    return ONBOARDING_ROUTE[step as PendingStep];
+  }
+  return ENTRY_ROUTE[group];
+}

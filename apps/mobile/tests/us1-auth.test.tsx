@@ -10,7 +10,7 @@ import {
   setDbKey,
   setPendingRevocation,
 } from '../src/session/secure';
-import { useSession } from '../src/session/session-store';
+import { type Me, useSession } from '../src/session/session-store';
 import { makeMe } from './support/fixtures';
 
 jest.mock('expo-router', () => {
@@ -84,7 +84,7 @@ function setup(options: { pendingChanges?: number; logoutFails?: boolean } = {})
       openDb = null;
     }),
     getOpenDb: () => openDb,
-    saveMe: jest.fn(),
+    syncMe: jest.fn((_db: UserDb, me: Me) => me),
     outboxFor: () => ({ count: () => options.pendingChanges ?? 0, flush }),
     deviceName: () => 'Pixel de prueba',
   };
@@ -111,7 +111,7 @@ describe('auth-service: entrar', () => {
 
     expect(await getRefreshToken()).toBe('refresh-1');
     expect(deps.openDb).toHaveBeenCalledWith(USER_ID);
-    expect(deps.saveMe).toHaveBeenCalled();
+    expect(deps.syncMe).toHaveBeenCalled();
     expect(flush).toHaveBeenCalled();
     expect(useSession.getState()).toMatchObject({ status: 'signedIn', accessToken: 'access-1' });
 

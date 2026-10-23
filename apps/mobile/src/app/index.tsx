@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { ENTRY_ROUTE, routeGroupFor } from '../session/guards';
+import { entryRouteFor, routeGroupFor } from '../session/guards';
 import { useSession } from '../session/session-store';
 
 /**
@@ -14,5 +14,5 @@ export default function Index() {
 
   const group = routeGroupFor({ status, me, isOnline });
   if (group === 'splash') return null;
-  return <Redirect href={ENTRY_ROUTE[group]} />;
+  return <Redirect href={entryRouteFor(group, me)} />;
 }

@@ -41,6 +41,22 @@ describe('createHttpSender', () => {
     expect((await send(item(PROFILE))).status).toBe('discard');
   });
 
+  it('un 409 entrega la versión del servidor al manejador de conflictos y se descarta', async () => {
+    const onConflict = jest.fn();
+    const server = { aiName: 'Servidor', updatedAt: '2026-10-22T14:00:00.000Z' };
+    const send = createHttpSender(
+      async () =>
+        new Response(JSON.stringify(server), {
+          status: 409,
+          headers: { 'content-type': 'application/json' },
+        }),
+      BASE,
+      { onConflict },
+    );
+    expect((await send(item(PROFILE))).status).toBe('discard');
+    expect(onConflict).toHaveBeenCalledWith(expect.objectContaining({ entity: 'profile' }), server);
+  });
+
   it('sin red se reintenta', async () => {
     const send = createHttpSender(async () => {
       throw new TypeError('Network request failed');

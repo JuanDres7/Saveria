@@ -104,6 +104,25 @@ describe('outbox', () => {
     expect(outbox.count()).toBe(0);
   });
 
+  it('dos cambios en el mismo milisegundo salen en el orden en que se encolaron', async () => {
+    const order: string[] = [];
+    const store = new MemoryStore();
+    // ids que, ordenados, quedarían al revés: el orden no puede depender de ellos
+    const ids = ['z-id', 'a-id'];
+    const outbox = createOutbox(
+      store,
+      async (item) => {
+        order.push(item.entityId);
+        return { status: 'sent' };
+      },
+      { now: () => 5_000, newId: () => ids.shift() ?? 'x' },
+    );
+    outbox.enqueue(change('perfil'));
+    outbox.enqueue(change('terminar-onboarding'));
+    await outbox.flush();
+    expect(order).toEqual(['perfil', 'terminar-onboarding']);
+  });
+
   it('con la cola vacía no hace nada', async () => {
     const send = jest.fn<ReturnType<Sender>, Parameters<Sender>>();
     const { outbox } = setup(send);

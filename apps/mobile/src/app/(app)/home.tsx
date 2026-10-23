@@ -1,13 +1,33 @@
+import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { authService } from '../../features/auth/auth-service';
-import { PrimaryButton } from '../../features/auth/components';
+import { PrimaryButton, Screen, styles, TextButton } from '../../features/auth/components';
+import { useSession } from '../../session/session-store';
 
-// Marcador: la pantalla principal real llega con la historia 2 (onboarding).
+/** Pantalla principal provisional: la real llega con las features de movimientos. */
 export default function Home() {
+  const me = useSession((s) => s.me);
+  const [comingSoon, setComingSoon] = useState(false);
+  if (!me) return null;
+
+  // FR-017: sin nombre para la IA, se usa la parte del correo antes de la "@".
+  const name = me.profile.aiName ?? me.email.split('@')[0];
+  const account = me.defaultAccount;
+
   return (
-    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
-      <Text>Saveria</Text>
-      <PrimaryButton label="Cerrar sesión" onPress={() => void authService.logout()} />
-    </View>
+    <Screen title={`Hola, ${name}`}>
+      {account ? (
+        <View style={styles.option}>
+          <Text style={styles.optionLabel}>{account.name}</Text>
+          <Text>{`${account.initialBalance} ${account.currency}`}</Text>
+        </View>
+      ) : null}
+      {/* FR-015: sin moneda principal no se pueden registrar movimientos. */}
+      {me.profile.primaryCurrency ? (
+        <PrimaryButton label="Registrar movimiento" onPress={() => setComingSoon(true)} />
+      ) : null}
+      {comingSoon ? <Text>Registrar movimientos llega en la próxima versión.</Text> : null}
+      <TextButton label="Cerrar sesión" onPress={() => void authService.logout()} />
+    </Screen>
   );
 }

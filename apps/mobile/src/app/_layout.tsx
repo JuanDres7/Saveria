@@ -3,6 +3,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { authService } from '../features/auth/auth-service';
 import { bootstrapSession } from '../features/auth/bootstrap';
+import { registerProfileConflictHandler } from '../features/profile/profile-service';
+import { watchOutbox } from '../outbox/user-outbox';
 import { routeGroupFor } from '../session/guards';
 import { useSession, watchConnectivity } from '../session/session-store';
 
@@ -17,6 +19,9 @@ export default function RootLayout() {
     const stopWatching = watchConnectivity();
     // Un cierre de sesión hecho sin conexión se revoca en el servidor cuando vuelve la red.
     const stopRevocation = authService.watchPendingRevocation();
+    // Los cambios hechos sin conexión se envían cuando vuelve la red (FR-022).
+    const stopOutbox = watchOutbox();
+    registerProfileConflictHandler();
     void bootstrapSession();
     void authService.sendPendingRevocation();
     if (__DEV__ && process.env.EXPO_PUBLIC_SMOKE === '1') {
@@ -25,6 +30,7 @@ export default function RootLayout() {
     return () => {
       stopWatching();
       stopRevocation();
+      stopOutbox();
     };
   }, []);
 

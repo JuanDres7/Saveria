@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react-native';
 import type { ReactElement, ReactNode } from 'react';
-import { ENTRY_ROUTE, routeGroupFor } from '../src/session/guards';
+import { ENTRY_ROUTE, ONBOARDING_ROUTE, routeGroupFor } from '../src/session/guards';
 import { useSession } from '../src/session/session-store';
 import { makeMe } from './support/fixtures';
 
@@ -163,7 +163,8 @@ describe('ruta de entrada (/)', () => {
 
   it('con el onboarding pendiente manda al onboarding', async () => {
     setSession({ status: 'signedIn', me: makeMe({ onboardingStep: 'city' }) });
-    expect(await redirectTarget()).toBe('/ai-name');
+    // retoma en el paso pendiente (2.5)
+    expect(await redirectTarget()).toBe('/city');
   });
 
   it('con la sesión lista manda a la pantalla principal', async () => {
@@ -185,8 +186,12 @@ describe('ruta de entrada (/)', () => {
       '/ai-name': '(onboarding)/ai-name.tsx',
       '/verify-email-gate': '(app)/verify-email-gate.tsx',
       '/home': '(app)/home.tsx',
+      '/country': '(onboarding)/country.tsx',
+      '/city': '(onboarding)/city.tsx',
+      '/currency': '(onboarding)/currency.tsx',
+      '/ai-mode': '(onboarding)/ai-mode.tsx',
     };
-    for (const href of Object.values(ENTRY_ROUTE)) {
+    for (const href of [...Object.values(ENTRY_ROUTE), ...Object.values(ONBOARDING_ROUTE)]) {
       const file = files[href];
       expect(file).toBeDefined();
       expect(fs.existsSync(path.join(process.cwd(), 'src', 'app', file as string))).toBe(true);

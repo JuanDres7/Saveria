@@ -101,6 +101,8 @@ export function createOutbox(store: OutboxStore, send: Sender, options: OutboxOp
   // React Native no tiene `globalThis.crypto`: el UUID sale de expo-crypto.
   const newId = options.newId ?? (() => Crypto.randomUUID());
   let running: Promise<FlushSummary> | null = null;
+  // `createdAt` define el orden de envío: dos cambios en el mismo milisegundo no pueden empatar.
+  let lastCreatedAt = 0;
 
   async function run(): Promise<FlushSummary> {
     const summary: FlushSummary = { sent: 0, discarded: 0, remaining: 0, stoppedBy: null };
@@ -140,10 +142,11 @@ export function createOutbox(store: OutboxStore, send: Sender, options: OutboxOp
     /** Guarda un cambio para enviarlo cuando haya conexión y sesión. */
     enqueue(item: NewOutboxItem): string {
       const id = newId();
+      lastCreatedAt = Math.max(now(), lastCreatedAt + 1);
       store.insert({
         id,
         ...item,
-        createdAt: now(),
+        createdAt: lastCreatedAt,
         attempts: 0,
         lastError: null,
         nextAttemptAt: 0,
