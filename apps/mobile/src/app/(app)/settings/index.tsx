@@ -198,6 +198,10 @@ export default function Settings() {
         label="Cambiar contraseña"
         onPress={() => router.push('/settings/change-password')}
       />
+      <TextButton
+        label="Borrar mi cuenta"
+        onPress={() => router.push('/settings/delete-account')}
+      />
       <TextButton label="Volver" onPress={() => router.back()} />
     </ScrollView>
   );

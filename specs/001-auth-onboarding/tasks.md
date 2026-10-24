@@ -193,14 +193,14 @@ separado.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T076 [P] [US4] Pruebas unitarias en `apps/api/tests/unit/delete-account.test.ts`: contraseña incorrecta → `invalid_credentials`; limitador `rl:pwd`; éxito → en una transacción marca todas las sesiones `revoked_at = now()`, `revoke_reason = account_deleted`, `device_name = null` y luego borra `users` (cascada en perfil, cuentas y tokens)
-- [ ] T077 [P] [US4] Pruebas de contrato e integración en `apps/api/tests/integration/us4-delete.test.ts`: `DELETE /v1/me` (204, 401, 429); después las credenciales fallan (4.2), otro dispositivo recibe `401 account_deleted` en refresh y middleware, y registrarse con el mismo correo da una cuenta vacía (4.3); no quedan filas con ese `user_id` en `user_profiles`, `accounts` ni `one_time_tokens`
+- [X] T076 [P] [US4] Pruebas unitarias en `apps/api/tests/unit/delete-account.test.ts`: contraseña incorrecta → `invalid_credentials`; limitador `rl:pwd`; éxito → en una transacción marca todas las sesiones `revoked_at = now()`, `revoke_reason = account_deleted`, `device_name = null` y luego borra `users` (cascada en perfil, cuentas y tokens)
+- [X] T077 [P] [US4] Pruebas de contrato e integración en `apps/api/tests/integration/us4-delete.test.ts`: `DELETE /v1/me` (204, 401, 429); después las credenciales fallan (4.2), otro dispositivo recibe `401 account_deleted` en refresh y middleware, y registrarse con el mismo correo da una cuenta vacía (4.3); no quedan filas con ese `user_id` en `user_profiles`, `accounts` ni `one_time_tokens`
 
 ### Implementation for User Story 4
 
-- [ ] T078 [US4] Implementar `apps/api/src/application/use-cases/delete-account.ts` y la ruta `DELETE /v1/me` en `apps/api/src/interfaces/http/routes/me.ts`
-- [ ] T079 [US4] Crear `apps/mobile/src/app/(app)/settings/delete-account.tsx`: explica que no se puede deshacer y que los cambios pendientes se descartan, pide la contraseña y al confirmar llama a `DELETE /v1/me` y a `purgeUserData` (4.1, 4.2)
-- [ ] T080 [P] [US4] Pruebas de la app en `apps/mobile/tests/us4-delete.test.tsx`: la pantalla pide la contraseña y muestra que la acción no se puede deshacer y que los cambios pendientes se descartan (4.1); borrar elimina el archivo local y la clave; recibir `account_deleted` en otro dispositivo también los elimina
+- [X] T078 [US4] Implementar `apps/api/src/application/use-cases/delete-account.ts` y la ruta `DELETE /v1/me` en `apps/api/src/interfaces/http/routes/me.ts`
+- [X] T079 [US4] Crear `apps/mobile/src/app/(app)/settings/delete-account.tsx`: explica que no se puede deshacer y que los cambios pendientes se descartan, pide la contraseña y al confirmar llama a `DELETE /v1/me` y a `purgeUserData` (4.1, 4.2)
+- [X] T080 [P] [US4] Pruebas de la app en `apps/mobile/tests/us4-delete.test.tsx`: la pantalla pide la contraseña y muestra que la acción no se puede deshacer y que los cambios pendientes se descartan (4.1); borrar elimina el archivo local y la clave; recibir `account_deleted` en otro dispositivo también los elimina
 
 **Checkpoint**: US4 funciona sola
 

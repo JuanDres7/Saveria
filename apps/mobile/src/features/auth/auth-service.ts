@@ -4,6 +4,7 @@ import type { ApiClient } from '../../api/client';
 import { API_URL, api } from '../../api/instance';
 import type { components } from '../../api/schema';
 import { closeUserDb, getOpenUserDb, openUserDb, type UserDb } from '../../db/open-user-db';
+import { purgeUserData } from '../../db/purge';
 import { outboxFor } from '../../outbox/user-outbox';
 import {
   clearPendingRevocation,
@@ -47,7 +48,11 @@ export interface AuthServiceDeps {
   syncMe(db: UserDb, me: Me): Me;
   outboxFor(db: UserDb): { count(): number; flush(): Promise<unknown> };
   deviceName(): string | null;
+  /** Borra el archivo de la base, su clave y las credenciales de ese usuario. */
+  purgeUserData(userId: string): Promise<void>;
 }
+
+export const ACCOUNT_DELETED_NOTICE = 'Tu cuenta y todos tus datos fueron borrados.';
 
 export function pendingChangesNotice(count: number): string {
   return count === 1
@@ -165,6 +170,41 @@ export function createAuthService(deps: AuthServiceDeps) {
     return deps.client.POST('/v1/auth/password/change', { body });
   }
 
+  /** Cambios guardados en el dispositivo que todavía no llegan al servidor. */
+  function pendingChanges(): number {
+    const open = deps.getOpenDb();
+    return open ? deps.outboxFor(open.db).count() : 0;
+  }
+
+  /**
+   * Borra la cuenta y todos sus datos (FR-023, FR-024), confirmando con la contraseña. Requiere
+   * conexión. Solo cuando el servidor confirma se borran la base local (con sus cambios
+   * pendientes), su clave y las credenciales, y la sesión pasa a `signedOut`.
+   */
+  async function deleteAccount(password: string): Promise<void> {
+    const userId = useSession.getState().me?.id;
+    let result: Awaited<ReturnType<typeof requestAccountDeletion>>;
+    try {
+      result = await requestAccountDeletion(password);
+    } catch {
+      throw new AuthError('network_error', NETWORK_MESSAGE);
+    }
+    if (!result.response.ok) {
+      const error = result.error;
+      if (!error) throw new AuthError('internal_error', 'Ocurrió un error inesperado');
+      throw new AuthError(error.code, error.message, error.fields);
+    }
+
+    if (userId) await deps.purgeUserData(userId);
+    const session = useSession.getState();
+    session.setSignedOut();
+    session.setNotice(ACCOUNT_DELETED_NOTICE);
+  }
+
+  function requestAccountDeletion(password: string) {
+    return deps.client.DELETE('/v1/me', { body: { password } });
+  }
+
   /**
    * Cierra la sesión en el dispositivo de inmediato, con o sin conexión (FR-009, FR-010a):
    * borra el refresh token, cierra la base local SIN borrarla y pasa a `signedOut`. Si hay
@@ -172,8 +212,7 @@ export function createAuthService(deps: AuthServiceDeps) {
    * ahora si hay red o cuando vuelva.
    */
   async function logout(): Promise<{ pendingChanges: number }> {
-    const open = deps.getOpenDb();
-    const pendingChanges = open ? deps.outboxFor(open.db).count() : 0;
+    const pending = pendingChanges();
 
     const refreshToken = await getRefreshToken();
     // Se guarda antes de borrar la sesión: si la app se cierra a mitad, no se pierde.
@@ -183,10 +222,10 @@ export function createAuthService(deps: AuthServiceDeps) {
 
     const session = useSession.getState();
     session.setSignedOut();
-    session.setNotice(pendingChanges > 0 ? pendingChangesNotice(pendingChanges) : null);
+    session.setNotice(pending > 0 ? pendingChangesNotice(pending) : null);
 
     if (session.isOnline) await sendPendingRevocation();
-    return { pendingChanges };
+    return { pendingChanges: pending };
   }
 
   /** Envía la revocación pendiente cada vez que vuelve la conexión. Devuelve cómo dejar de escuchar. */
@@ -201,6 +240,8 @@ export function createAuthService(deps: AuthServiceDeps) {
     login,
     logout,
     changePassword,
+    pendingChanges,
+    deleteAccount,
     sendPendingRevocation,
     watchPendingRevocation,
   };
@@ -219,4 +260,5 @@ export const authService = createAuthService({
   syncMe: (db, me) => mergeMe(new DrizzleLocalStore(db), me),
   outboxFor,
   deviceName: () => Device.modelName,
+  purgeUserData: (userId) => purgeUserData(userId),
 });

@@ -470,6 +470,7 @@ export interface paths {
                     };
                     content?: never;
                 };
+                400: components["responses"]["ValidationError"];
                 401: components["responses"]["InvalidCredentials"];
                 429: components["responses"]["TooManyAttempts"];
             };

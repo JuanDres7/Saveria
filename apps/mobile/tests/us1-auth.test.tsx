@@ -87,6 +87,7 @@ function setup(options: { pendingChanges?: number; logoutFails?: boolean } = {})
     syncMe: jest.fn((_db: UserDb, me: Me) => me),
     outboxFor: () => ({ count: () => options.pendingChanges ?? 0, flush }),
     deviceName: () => 'Pixel de prueba',
+    purgeUserData: jest.fn(async () => undefined),
   };
   const service = createAuthService(deps);
   return { service, deps, calls, flush };
