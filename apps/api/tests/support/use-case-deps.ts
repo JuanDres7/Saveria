@@ -1,7 +1,7 @@
 import type { PasswordHasher } from '../../src/application/ports/services';
 import { JoseTokenService } from '../../src/infrastructure/crypto/jose-token-service';
 import { CryptoRandom } from '../../src/infrastructure/crypto/random';
-import { emailTemplates } from '../../src/infrastructure/email/templates/verify-email';
+import { emailTemplates } from '../../src/infrastructure/email/templates';
 import { FakeClock } from './fake-clock';
 import { createInMemoryPersistence, FakeEmailSender, InMemoryRateLimiter } from './in-memory';
 

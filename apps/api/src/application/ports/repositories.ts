@@ -61,7 +61,11 @@ export interface OneTimeTokenRepository {
   findByHash(tokenHash: string): Promise<OneTimeToken | null>;
   /** Invalida los enlaces vigentes de ese tipo (un enlace nuevo invalida los anteriores). */
   invalidateActive(userId: string, kind: OneTimeTokenKind, at: Date): Promise<void>;
-  markUsed(id: string, at: Date): Promise<void>;
+  /**
+   * Marca el enlace como usado solo si nadie lo usó antes. `false` si otra petición lo consumió
+   * primero (dos envíos simultáneos del mismo enlace).
+   */
+  markUsed(id: string, at: Date): Promise<boolean>;
   /** Borra tokens vencidos antes de `before`. Devuelve cuántos borró. */
   purgeBefore(before: Date): Promise<number>;
 }

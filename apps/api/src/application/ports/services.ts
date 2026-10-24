@@ -64,4 +64,5 @@ export interface EmailSender {
 /** Arma el contenido de cada correo. Solo lo necesario para la acción (FR-036). */
 export interface EmailTemplates {
   verifyEmail(input: { to: string; link: string }): EmailMessage;
+  resetPassword(input: { to: string; link: string }): EmailMessage;
 }

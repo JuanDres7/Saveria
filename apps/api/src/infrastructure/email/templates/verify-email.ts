@@ -1,4 +1,4 @@
-import type { EmailMessage, EmailTemplates } from '../../../application/ports/services';
+import type { EmailMessage } from '../../../application/ports/services';
 
 /**
  * Correo de verificación (FR-031). Solo lleva lo necesario para la acción: nunca montos ni datos
@@ -29,8 +29,3 @@ export function verifyEmailMessage({ to, link }: { to: string; link: string }): 
 </html>`,
   };
 }
-
-/** Plantillas reales de los correos de Saveria. */
-export const emailTemplates: EmailTemplates = {
-  verifyEmail: verifyEmailMessage,
-};

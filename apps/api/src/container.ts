@@ -19,7 +19,7 @@ import { createRepositories, DrizzleUnitOfWork } from './infrastructure/db/repos
 import { DevOutboxEmailSender } from './infrastructure/email/dev-outbox-sender';
 import { ResendEmailSender } from './infrastructure/email/resend-sender';
 import { ResilientEmailSender } from './infrastructure/email/resilient-email-sender';
-import { emailTemplates } from './infrastructure/email/templates/verify-email';
+import { emailTemplates } from './infrastructure/email/templates';
 import { createLogger, type Logger } from './infrastructure/logging/logger';
 import { RedisRateLimiter } from './infrastructure/redis/redis-rate-limiter';
 

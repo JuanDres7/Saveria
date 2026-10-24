@@ -34,8 +34,14 @@ export class DrizzleOneTimeTokenRepository implements OneTimeTokenRepository {
       );
   }
 
-  async markUsed(id: string, at: Date): Promise<void> {
-    await this.db.update(oneTimeTokens).set({ usedAt: at }).where(eq(oneTimeTokens.id, id));
+  async markUsed(id: string, at: Date): Promise<boolean> {
+    // La condición `used_at IS NULL` hace que solo una de dos peticiones simultáneas lo consuma.
+    const updated = await this.db
+      .update(oneTimeTokens)
+      .set({ usedAt: at })
+      .where(and(eq(oneTimeTokens.id, id), isNull(oneTimeTokens.usedAt)))
+      .returning({ id: oneTimeTokens.id });
+    return updated.length > 0;
   }
 
   async purgeBefore(before: Date): Promise<number> {

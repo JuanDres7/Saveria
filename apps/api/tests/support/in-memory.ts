@@ -183,7 +183,9 @@ class InMemoryOneTimeTokens implements OneTimeTokenRepository {
   }
   async markUsed(id: string, at: Date) {
     const token = this.store.tokens.get(id);
-    if (token) token.usedAt = at;
+    if (!token || token.usedAt !== null) return false;
+    token.usedAt = at;
+    return true;
   }
   async purgeBefore(before: Date) {
     let deleted = 0;

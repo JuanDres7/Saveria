@@ -6,12 +6,14 @@ import { createChangeEmail } from './application/use-cases/change-email';
 import { createChangePassword } from './application/use-cases/change-password';
 import { createCompleteOnboarding } from './application/use-cases/complete-onboarding';
 import { createDeleteAccount } from './application/use-cases/delete-account';
+import { createForgotPassword } from './application/use-cases/forgot-password';
 import { createGetMe } from './application/use-cases/get-me';
 import { createLogin } from './application/use-cases/login';
 import { createLogout } from './application/use-cases/logout';
 import { createRefresh } from './application/use-cases/refresh';
 import { createRegister } from './application/use-cases/register';
 import { createResendVerification } from './application/use-cases/resend-verification';
+import { createCheckResetLink, createResetPassword } from './application/use-cases/reset-password';
 import { createUpdateProfile } from './application/use-cases/update-profile';
 import {
   createCheckVerificationLink,
@@ -53,6 +55,7 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
       changePassword: createChangePassword(deps),
       resendVerification: createResendVerification(deps),
       changeEmail: createChangeEmail(deps),
+      forgotPassword: createForgotPassword(deps),
       auth,
     }),
   );
@@ -71,6 +74,8 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
     linkRoutes({
       checkVerificationLink: createCheckVerificationLink(deps),
       verifyEmail: createVerifyEmail(deps),
+      checkResetLink: createCheckResetLink(deps),
+      resetPassword: createResetPassword(deps),
     }),
   );
 }

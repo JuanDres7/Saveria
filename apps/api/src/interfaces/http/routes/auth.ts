@@ -3,6 +3,7 @@ import { Hono, type MiddlewareHandler } from 'hono';
 import { z } from 'zod';
 import type { createChangeEmail } from '../../../application/use-cases/change-email';
 import type { createChangePassword } from '../../../application/use-cases/change-password';
+import type { createForgotPassword } from '../../../application/use-cases/forgot-password';
 import type { createLogin } from '../../../application/use-cases/login';
 import type { createLogout } from '../../../application/use-cases/logout';
 import type { createRefresh } from '../../../application/use-cases/refresh';
@@ -20,6 +21,7 @@ export interface AuthRoutesDeps {
   changePassword: ReturnType<typeof createChangePassword>;
   resendVerification: ReturnType<typeof createResendVerification>;
   changeEmail: ReturnType<typeof createChangeEmail>;
+  forgotPassword: ReturnType<typeof createForgotPassword>;
   /** Exige sesión; solo lo usan las rutas que la necesitan (las demás son públicas). */
   auth: MiddlewareHandler<AppEnv>;
 }
@@ -45,6 +47,13 @@ const changeEmailSchema = z.object({ email: z.string().max(320) });
 /** Respuesta idéntica en todos los casos: verificado o no, y aunque se pase el límite (FR-035). */
 const RESEND_MESSAGE =
   'Si tu correo aún no está verificado, te enviamos un enlace nuevo. Revisa tu bandeja de entrada.';
+
+// Solo la forma: el formato del correo lo valida el caso de uso (responde `validation_error`).
+const forgotPasswordSchema = z.object({ email: z.string().max(320) });
+
+/** Respuesta idéntica exista o no el correo, y aunque se pase el límite (FR-030, FR-035). */
+const FORGOT_MESSAGE =
+  'Si el correo está registrado, te llegará un enlace para crear una contraseña nueva.';
 
 const loginSchema = z.object({
   email: emailSchema,
@@ -107,6 +116,11 @@ export function authRoutes(deps: AuthRoutesDeps) {
       ip: c.get('clientIp'),
     });
     return c.body(null, 204);
+  });
+
+  app.post('/password/forgot', validate('json', forgotPasswordSchema), async (c) => {
+    await deps.forgotPassword(c.req.valid('json').email);
+    return c.json({ message: FORGOT_MESSAGE }, 202);
   });
 
   app.post('/email/verification', deps.auth, async (c) => {
