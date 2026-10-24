@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { authService } from '../features/auth/auth-service';
 import { bootstrapSession } from '../features/auth/bootstrap';
 import { registerProfileConflictHandler } from '../features/profile/profile-service';
+import { verificationService } from '../features/verification/verification-service';
 import { watchOutbox } from '../outbox/user-outbox';
 import { routeGroupFor } from '../session/guards';
 import { useSession, watchConnectivity } from '../session/session-store';
@@ -21,6 +22,9 @@ export default function RootLayout() {
     const stopRevocation = authService.watchPendingRevocation();
     // Los cambios hechos sin conexión se envían cuando vuelve la red (FR-022).
     const stopOutbox = watchOutbox();
+    // Al volver la red se consulta el estado de la cuenta: el bloqueo de verificación solo se
+    // muestra cuando el servidor lo confirma (FR-032).
+    const stopVerification = verificationService.watchOnReconnect();
     registerProfileConflictHandler();
     void bootstrapSession();
     void authService.sendPendingRevocation();
@@ -31,6 +35,7 @@ export default function RootLayout() {
       stopWatching();
       stopRevocation();
       stopOutbox();
+      stopVerification();
     };
   }, []);
 

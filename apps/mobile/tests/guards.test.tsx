@@ -127,7 +127,12 @@ describe('RootLayout', () => {
 });
 
 /** Pantallas de la app con sesión y onboarding terminado. */
-const APP_SCREENS = ['home', 'settings/index', 'settings/change-password'];
+const APP_SCREENS = [
+  'home',
+  'settings/index',
+  'settings/change-password',
+  'settings/delete-account',
+];
 
 describe('(app)/_layout', () => {
   it('en el uso normal muestra la pantalla principal', async () => {

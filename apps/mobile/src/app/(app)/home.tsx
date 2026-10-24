@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { authService } from '../../features/auth/auth-service';
 import { PrimaryButton, Screen, styles, TextButton } from '../../features/auth/components';
+import { VerifyBanner } from '../../features/verification/VerifyBanner';
 import { useSession } from '../../session/session-store';
 
 /** Pantalla principal provisional: la real llega con las features de movimientos. */
@@ -17,6 +18,7 @@ export default function Home() {
 
   return (
     <Screen title={`Hola, ${name}`}>
+      <VerifyBanner />
       {account ? (
         <View style={styles.option}>
           <Text style={styles.optionLabel}>{account.name}</Text>
