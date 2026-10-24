@@ -1,6 +1,7 @@
 import { Hono, type MiddlewareHandler } from 'hono';
 import { z } from 'zod';
 import type { createCompleteOnboarding } from '../../../application/use-cases/complete-onboarding';
+import type { createDeleteAccount } from '../../../application/use-cases/delete-account';
 import type { createGetMe } from '../../../application/use-cases/get-me';
 import type { createUpdateProfile } from '../../../application/use-cases/update-profile';
 import type { AppEnv } from '../context';
@@ -11,6 +12,7 @@ export interface MeRoutesDeps {
   getMe: ReturnType<typeof createGetMe>;
   updateProfile: ReturnType<typeof createUpdateProfile>;
   completeOnboarding: ReturnType<typeof createCompleteOnboarding>;
+  deleteAccount: ReturnType<typeof createDeleteAccount>;
 }
 
 // Solo la forma: las reglas del perfil (catálogos, límites, monedas) las aplica el caso de uso
@@ -29,11 +31,22 @@ const profileUpdateSchema = z.object({
 
 const completeOnboardingSchema = z.object({ defaultAccountId: z.uuid() });
 
+const deleteAccountSchema = z.object({ password: z.string().min(1).max(1024) });
+
 export function meRoutes(deps: MeRoutesDeps) {
   const app = new Hono<AppEnv>();
   app.use(deps.auth);
 
   app.get('/', async (c) => c.json(await deps.getMe(c.get('userId'))));
+
+  app.delete('/', validate('json', deleteAccountSchema), async (c) => {
+    await deps.deleteAccount({
+      userId: c.get('userId'),
+      ip: c.get('clientIp'),
+      password: c.req.valid('json').password,
+    });
+    return c.body(null, 204);
+  });
 
   // Last-write-wins: si el servidor tiene una versión igual o más nueva responde 409 con ella.
   app.put('/profile', validate('json', profileUpdateSchema), async (c) => {

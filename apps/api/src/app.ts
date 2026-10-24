@@ -4,6 +4,7 @@ import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
 import { createChangePassword } from './application/use-cases/change-password';
 import { createCompleteOnboarding } from './application/use-cases/complete-onboarding';
+import { createDeleteAccount } from './application/use-cases/delete-account';
 import { createGetMe } from './application/use-cases/get-me';
 import { createLogin } from './application/use-cases/login';
 import { createLogout } from './application/use-cases/logout';
@@ -53,6 +54,7 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
       getMe: createGetMe(deps),
       updateProfile: createUpdateProfile(deps),
       completeOnboarding: createCompleteOnboarding(deps),
+      deleteAccount: createDeleteAccount(deps),
     }),
   );
 }

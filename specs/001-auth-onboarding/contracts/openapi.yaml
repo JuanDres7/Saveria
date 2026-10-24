@@ -242,6 +242,7 @@ paths:
                 password: { type: string, minLength: 1, maxLength: 1024 }
       responses:
         "204": { description: Cuenta y datos eliminados; todas las sesiones revocadas }
+        "400": { $ref: "#/components/responses/ValidationError" }
         "401": { $ref: "#/components/responses/InvalidCredentials" }
         "429": { $ref: "#/components/responses/TooManyAttempts" }
 
