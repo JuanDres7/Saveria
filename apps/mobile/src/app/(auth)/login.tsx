@@ -84,6 +84,9 @@ export default function Login() {
         onPress={onSubmit}
         disabled={!isOnline || formState.isSubmitting}
       />
+      <Pressable role="link" onPress={() => router.push('/forgot-password')}>
+        <Text style={styles.link}>Olvidé mi contraseña</Text>
+      </Pressable>
       <Pressable role="link" onPress={() => router.push('/register')}>
         <Text style={styles.link}>Crear una cuenta</Text>
       </Pressable>

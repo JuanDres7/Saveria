@@ -206,6 +206,27 @@ export function createAuthService(deps: AuthServiceDeps) {
   }
 
   /**
+   * Pide el enlace para crear una contraseña nueva (FR-028). Devuelve el mensaje del servidor,
+   * que es el mismo exista o no el correo (FR-030).
+   */
+  async function forgotPassword(email: string): Promise<string> {
+    let result: Awaited<ReturnType<typeof requestPasswordReset>>;
+    try {
+      result = await requestPasswordReset(email);
+    } catch {
+      throw new AuthError('network_error', NETWORK_MESSAGE);
+    }
+    if (result.data) return result.data.message;
+    const error = result.error;
+    if (!error) throw new AuthError('internal_error', 'Ocurrió un error inesperado');
+    throw new AuthError(error.code, error.message, error.fields);
+  }
+
+  function requestPasswordReset(email: string) {
+    return deps.client.POST('/v1/auth/password/forgot', { body: { email } });
+  }
+
+  /**
    * Cierra la sesión en el dispositivo de inmediato, con o sin conexión (FR-009, FR-010a):
    * borra el refresh token, cierra la base local SIN borrarla y pasa a `signedOut`. Si hay
    * cambios sin enviar muestra un aviso, sin bloquear. La revocación en el servidor se manda
@@ -242,6 +263,7 @@ export function createAuthService(deps: AuthServiceDeps) {
     changePassword,
     pendingChanges,
     deleteAccount,
+    forgotPassword,
     sendPendingRevocation,
     watchPendingRevocation,
   };

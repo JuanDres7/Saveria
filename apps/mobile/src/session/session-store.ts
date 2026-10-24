@@ -15,7 +15,8 @@ interface SessionState {
   isOnline: boolean;
   /** Aviso para mostrar fuera de la sesión (por ejemplo, cambios pendientes al cerrar sesión). */
   notice: string | null;
-  setSignedIn(session: { me: Me; accessToken: string }): void;
+  /** Al arrancar con la sesión guardada no hay access token hasta renovarla (`null`). */
+  setSignedIn(session: { me: Me; accessToken: string | null }): void;
   setSignedOut(): void;
   setMe(me: Me): void;
   setAccessToken(accessToken: string): void;

@@ -1,4 +1,5 @@
 import type {
+  AccountInfo,
   LocalAccount,
   LocalStore,
   ProfileFields,
@@ -22,6 +23,13 @@ export class MemoryLocalStore implements LocalStore {
   }
   writeAccount(account: LocalAccount) {
     this.accounts = [...this.accounts.filter((a) => a.id !== account.id), { ...account }];
+  }
+  accountInfo: AccountInfo | null = null;
+  readAccountInfo() {
+    return this.accountInfo ? { ...this.accountInfo } : null;
+  }
+  writeAccountInfo(info: AccountInfo) {
+    this.accountInfo = { ...info };
   }
 }
 

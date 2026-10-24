@@ -240,17 +240,17 @@ separado.
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T091 [P] [US5] Pruebas unitarias en `apps/api/tests/unit/password-reset.test.ts`: `forgot` responde igual exista o no el correo, y aunque se pase el límite compartido `rl:mail:{sha256(email)}` de 3/h (FR-030, FR-035); token de 30 min y uso único; al resetear se revocan todas las sesiones con `password_reset`
-- [ ] T092 [P] [US5] Pruebas de contrato en `apps/api/tests/contract/auth-us5.test.ts` para `POST /v1/auth/password/forgot` (202, 400) y las páginas `GET/POST /links/reset-password`
-- [ ] T093 [P] [US5] Pruebas de integración en `apps/api/tests/integration/us5-session.test.ts`: recuperar de punta a punta (5.3, 5.4); el GET no consume el token; el segundo uso muestra "no válido" y ofrece pedir otro (5.5); el formulario con contraseña inválida vuelve a mostrarse con errores
+- [X] T091 [P] [US5] Pruebas unitarias en `apps/api/tests/unit/password-reset.test.ts`: `forgot` responde igual exista o no el correo, y aunque se pase el límite compartido `rl:mail:{sha256(email)}` de 3/h (FR-030, FR-035); token de 30 min y uso único; al resetear se revocan todas las sesiones con `password_reset`
+- [X] T092 [P] [US5] Pruebas de contrato en `apps/api/tests/contract/auth-us5.test.ts` para `POST /v1/auth/password/forgot` (202, 400) y las páginas `GET/POST /links/reset-password`
+- [X] T093 [P] [US5] Pruebas de integración en `apps/api/tests/integration/us5-session.test.ts`: recuperar de punta a punta (5.3, 5.4); el GET no consume el token; el segundo uso muestra "no válido" y ofrece pedir otro (5.5); el formulario con contraseña inválida vuelve a mostrarse con errores
 
 ### Implementation for User Story 5
 
-- [ ] T094 [US5] Implementar `apps/api/src/application/use-cases/forgot-password.ts` y `reset-password.ts`, la plantilla `apps/api/src/infrastructure/email/templates/reset-password.ts` y la ruta `POST /v1/auth/password/forgot`
-- [ ] T095 [US5] Crear la página `apps/api/src/interfaces/http/pages/reset-password.tsx` (GET con formulario de contraseña y confirmación; POST valida con FR-003, consume el token y revoca sesiones; mismos headers que verify-email) y montar `/links/reset-password`
-- [ ] T096 [US5] Implementar el arranque con sesión guardada en `apps/mobile/src/features/auth/bootstrap.ts`: con refresh token y `lastUserId`, abrir la base local de inmediato y mostrar la app (< 2 s, SC-003, también sin conexión); refrescar en segundo plano cuando haya red; si la sesión expiró, pasar a `signedOut` conservando la base y, al volver a entrar con el mismo usuario, vaciar el outbox (5.2)
-- [ ] T097 [P] [US5] Crear `apps/mobile/src/app/(auth)/forgot-password.tsx` (correo → mensaje neutral "Si el correo está registrado, te llegará un enlace")
-- [ ] T098 [P] [US5] Pruebas de la app en `apps/mobile/tests/us5-session.test.tsx`: arranque directo con sesión guardada (5.1), sesión expirada → login → el outbox se envía (5.2), mensaje neutral de recuperación (5.3)
+- [X] T094 [US5] Implementar `apps/api/src/application/use-cases/forgot-password.ts` y `reset-password.ts`, la plantilla `apps/api/src/infrastructure/email/templates/reset-password.ts` y la ruta `POST /v1/auth/password/forgot`
+- [X] T095 [US5] Crear la página `apps/api/src/interfaces/http/pages/reset-password.tsx` (GET con formulario de contraseña y confirmación; POST valida con FR-003, consume el token y revoca sesiones; mismos headers que verify-email) y montar `/links/reset-password`
+- [X] T096 [US5] Implementar el arranque con sesión guardada en `apps/mobile/src/features/auth/bootstrap.ts`: con refresh token y `lastUserId`, abrir la base local de inmediato y mostrar la app (< 2 s, SC-003, también sin conexión); refrescar en segundo plano cuando haya red; si la sesión expiró, pasar a `signedOut` conservando la base y, al volver a entrar con el mismo usuario, vaciar el outbox (5.2)
+- [X] T097 [P] [US5] Crear `apps/mobile/src/app/(auth)/forgot-password.tsx` (correo → mensaje neutral "Si el correo está registrado, te llegará un enlace")
+- [X] T098 [P] [US5] Pruebas de la app en `apps/mobile/tests/us5-session.test.tsx`: arranque directo con sesión guardada (5.1), sesión expirada → login → el outbox se envía (5.2), mensaje neutral de recuperación (5.3)
 
 **Checkpoint**: Todas las historias funcionan
 
