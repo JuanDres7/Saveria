@@ -60,3 +60,8 @@ export interface EmailMessage {
 export interface EmailSender {
   send(message: EmailMessage): Promise<void>;
 }
+
+/** Arma el contenido de cada correo. Solo lo necesario para la acción (FR-036). */
+export interface EmailTemplates {
+  verifyEmail(input: { to: string; link: string }): EmailMessage;
+}

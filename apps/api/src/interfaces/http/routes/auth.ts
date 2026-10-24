@@ -1,11 +1,13 @@
 import { emailSchema, passwordSchema } from '@saveria/shared';
 import { Hono, type MiddlewareHandler } from 'hono';
 import { z } from 'zod';
+import type { createChangeEmail } from '../../../application/use-cases/change-email';
 import type { createChangePassword } from '../../../application/use-cases/change-password';
 import type { createLogin } from '../../../application/use-cases/login';
 import type { createLogout } from '../../../application/use-cases/logout';
 import type { createRefresh } from '../../../application/use-cases/refresh';
 import type { createRegister } from '../../../application/use-cases/register';
+import type { createResendVerification } from '../../../application/use-cases/resend-verification';
 import { DomainError } from '../../../domain/errors';
 import type { AppEnv } from '../context';
 import { validate } from '../validate';
@@ -16,6 +18,8 @@ export interface AuthRoutesDeps {
   refresh: ReturnType<typeof createRefresh>;
   logout: ReturnType<typeof createLogout>;
   changePassword: ReturnType<typeof createChangePassword>;
+  resendVerification: ReturnType<typeof createResendVerification>;
+  changeEmail: ReturnType<typeof createChangeEmail>;
   /** Exige sesión; solo lo usan las rutas que la necesitan (las demás son públicas). */
   auth: MiddlewareHandler<AppEnv>;
 }
@@ -34,6 +38,13 @@ const registerSchema = z.object({
   policyAccepted: z.boolean(),
   device: deviceSchema,
 });
+
+// Solo la forma: el formato del correo lo valida el caso de uso (responde `validation_error`).
+const changeEmailSchema = z.object({ email: z.string().max(320) });
+
+/** Respuesta idéntica en todos los casos: verificado o no, y aunque se pase el límite (FR-035). */
+const RESEND_MESSAGE =
+  'Si tu correo aún no está verificado, te enviamos un enlace nuevo. Revisa tu bandeja de entrada.';
 
 const loginSchema = z.object({
   email: emailSchema,
@@ -97,6 +108,15 @@ export function authRoutes(deps: AuthRoutesDeps) {
     });
     return c.body(null, 204);
   });
+
+  app.post('/email/verification', deps.auth, async (c) => {
+    await deps.resendVerification(c.get('userId'));
+    return c.json({ message: RESEND_MESSAGE }, 202);
+  });
+
+  app.put('/email', deps.auth, validate('json', changeEmailSchema), async (c) =>
+    c.json(await deps.changeEmail(c.get('userId'), c.req.valid('json').email), 202),
+  );
 
   return app;
 }

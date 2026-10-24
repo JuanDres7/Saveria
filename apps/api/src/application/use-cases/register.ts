@@ -6,6 +6,10 @@ import type { UnitOfWork } from '../ports/repositories';
 import type { Clock, PasswordHasher, Random, TokenService } from '../ports/services';
 import { toMe } from './get-me';
 import { issueSession } from './issue-session';
+import {
+  createSendVerificationEmail,
+  type SendVerificationEmailDeps,
+} from './send-verification-email';
 
 export interface RegisterInput {
   email: string;
@@ -16,7 +20,7 @@ export interface RegisterInput {
 }
 
 /** Sin repositorios fuera de la transacción: todo lo que escribe pasa por `uow`. */
-export interface RegisterDeps {
+export interface RegisterDeps extends SendVerificationEmailDeps {
   uow: UnitOfWork;
   hasher: PasswordHasher;
   tokens: TokenService;
@@ -36,8 +40,13 @@ function validate(input: RegisterInput): { email: string; password: string } {
   return { email: email.data, password: password.data };
 }
 
-/** Crea la cuenta (usuario + perfil inicial) e inicia sesión (FR-001 a FR-004). */
+/**
+ * Crea la cuenta (usuario + perfil inicial) e inicia sesión (FR-001 a FR-004). Después envía el
+ * correo de verificación (FR-031).
+ */
 export function createRegister(deps: RegisterDeps) {
+  const sendVerificationEmail = createSendVerificationEmail(deps);
+
   return async function register(input: RegisterInput): Promise<AuthResponseDto> {
     const { email, password } = validate(input);
     if (!input.policyAccepted || input.policyVersion !== PRIVACY_POLICY_VERSION) {
@@ -72,7 +81,7 @@ export function createRegister(deps: RegisterDeps) {
       deletedAt: null,
     };
 
-    return deps.uow.run(async (repos) => {
+    const result = await deps.uow.run(async (repos) => {
       // Mensaje genérico: no revela que el correo ya tiene una cuenta (escenario 1.3).
       if ((await repos.users.create(user)) === 'email_taken') {
         throw new DomainError('email_unavailable');
@@ -84,5 +93,10 @@ export function createRegister(deps: RegisterDeps) {
       });
       return { tokens, me: toMe(user, profile, null, now) };
     });
+
+    // Fuera de la transacción: si el correo no sale, la cuenta igual queda creada y el usuario
+    // puede pedir el reenvío (spec, Assumptions).
+    await sendVerificationEmail(user).catch(() => undefined);
+    return result;
   };
 }

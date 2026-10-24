@@ -2,6 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { Scalar } from '@scalar/hono-api-reference';
 import { Hono } from 'hono';
 import { secureHeaders } from 'hono/secure-headers';
+import { createChangeEmail } from './application/use-cases/change-email';
 import { createChangePassword } from './application/use-cases/change-password';
 import { createCompleteOnboarding } from './application/use-cases/complete-onboarding';
 import { createDeleteAccount } from './application/use-cases/delete-account';
@@ -10,7 +11,12 @@ import { createLogin } from './application/use-cases/login';
 import { createLogout } from './application/use-cases/logout';
 import { createRefresh } from './application/use-cases/refresh';
 import { createRegister } from './application/use-cases/register';
+import { createResendVerification } from './application/use-cases/resend-verification';
 import { createUpdateProfile } from './application/use-cases/update-profile';
+import {
+  createCheckVerificationLink,
+  createVerifyEmail,
+} from './application/use-cases/verify-email';
 import type { Container } from './container';
 import type { AppEnv } from './interfaces/http/context';
 import { requireAuth } from './interfaces/http/middleware/auth';
@@ -20,6 +26,7 @@ import { createErrorHandler, notFoundHandler } from './interfaces/http/middlewar
 import { requestLogger } from './interfaces/http/middleware/request-logger';
 import { authRoutes } from './interfaces/http/routes/auth';
 import { legalRoutes } from './interfaces/http/routes/legal';
+import { linkPageHeaders, linkRoutes } from './interfaces/http/routes/links';
 import { meRoutes } from './interfaces/http/routes/me';
 
 /** Lo que `createApp` necesita del contenedor; las pruebas pueden pasar un subconjunto. */
@@ -44,6 +51,8 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
       refresh: createRefresh(deps),
       logout: createLogout(deps),
       changePassword: createChangePassword(deps),
+      resendVerification: createResendVerification(deps),
+      changeEmail: createChangeEmail(deps),
       auth,
     }),
   );
@@ -55,6 +64,13 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
       updateProfile: createUpdateProfile(deps),
       completeOnboarding: createCompleteOnboarding(deps),
       deleteAccount: createDeleteAccount(deps),
+    }),
+  );
+  app.route(
+    '/',
+    linkRoutes({
+      checkVerificationLink: createCheckVerificationLink(deps),
+      verifyEmail: createVerifyEmail(deps),
     }),
   );
 }
@@ -76,6 +92,8 @@ export function createApp(deps: AppDeps, options: AppOptions = {}) {
   app.notFound(notFoundHandler);
 
   app.use(requestLogger(logger));
+  // Antes de `secureHeaders`, para que sus headers más estrictos queden al final.
+  app.use('/links/*', linkPageHeaders);
   app.use(secureHeaders());
   app.use(limitBodySize());
   app.use(

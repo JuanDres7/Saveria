@@ -4,6 +4,7 @@ import type { Repositories, UnitOfWork } from './application/ports/repositories'
 import type {
   Clock,
   EmailSender,
+  EmailTemplates,
   PasswordHasher,
   Random,
   RateLimiter,
@@ -18,6 +19,7 @@ import { createRepositories, DrizzleUnitOfWork } from './infrastructure/db/repos
 import { DevOutboxEmailSender } from './infrastructure/email/dev-outbox-sender';
 import { ResendEmailSender } from './infrastructure/email/resend-sender';
 import { ResilientEmailSender } from './infrastructure/email/resilient-email-sender';
+import { emailTemplates } from './infrastructure/email/templates/verify-email';
 import { createLogger, type Logger } from './infrastructure/logging/logger';
 import { RedisRateLimiter } from './infrastructure/redis/redis-rate-limiter';
 
@@ -31,6 +33,9 @@ export interface Container {
   tokens: TokenService;
   rateLimiter: RateLimiter;
   emailSender: EmailSender;
+  emailTemplates: EmailTemplates;
+  /** Base de los enlaces que van en los correos (`PUBLIC_BASE_URL`). */
+  publicBaseUrl: string;
   repositories: Repositories;
   uow: UnitOfWork;
   /** Cierra conexiones y espera los correos en curso (apagado ordenado). */
@@ -63,6 +68,8 @@ export function createContainer(config: Config, overrides: ContainerOverrides = 
     tokens: new JoseTokenService(config.JWT_SECRET, clock),
     rateLimiter: new RedisRateLimiter(redis),
     emailSender,
+    emailTemplates,
+    publicBaseUrl: config.PUBLIC_BASE_URL,
     repositories: createRepositories(db),
     uow: new DrizzleUnitOfWork(db),
     async close() {
