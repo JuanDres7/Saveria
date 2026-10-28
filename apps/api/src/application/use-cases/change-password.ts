@@ -48,6 +48,8 @@ export function createChangePassword(deps: ChangePasswordDeps) {
     await deps.uow.run(async (repos) => {
       await repos.users.updatePasswordHash(user.id, passwordHash, now);
       await repos.sessions.revokeAllForUser(user.id, 'password_changed', now, input.sessionId);
+      // Un enlace de recuperación pedido antes del cambio ya no debe poder pisar la contraseña nueva.
+      await repos.oneTimeTokens.invalidateActive(user.id, 'password_reset', now);
     });
   };
 }

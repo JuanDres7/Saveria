@@ -4,7 +4,7 @@ import {
   createChangePassword,
 } from '../../src/application/use-cases/change-password';
 import { DomainError } from '../../src/domain/errors';
-import { makeSession, makeUser } from '../support/builders';
+import { makeSession, makeToken, makeUser } from '../support/builders';
 import { createUseCaseDeps, type UseCaseDeps } from '../support/use-case-deps';
 
 let deps: UseCaseDeps;
@@ -80,6 +80,24 @@ describe('changePassword', () => {
       expect(deps.store.users.get(userId)?.passwordHash).toBe('fake:clave1234');
     },
   );
+
+  it('anula los enlaces de recuperación pendientes, y solo esos', async () => {
+    const reset = makeToken(userId, { kind: 'password_reset' });
+    const verification = makeToken(userId, { kind: 'email_verification' });
+    await deps.repositories.oneTimeTokens.create(reset);
+    await deps.repositories.oneTimeTokens.create(verification);
+
+    await changePassword(input());
+    expect(deps.store.tokens.get(reset.id)?.invalidatedAt).toEqual(deps.clock.now());
+    expect(deps.store.tokens.get(verification.id)?.invalidatedAt).toBeNull();
+  });
+
+  it('con la contraseña actual incorrecta no anula los enlaces de recuperación', async () => {
+    const reset = makeToken(userId, { kind: 'password_reset' });
+    await deps.repositories.oneTimeTokens.create(reset);
+    await errorOf(changePassword(input({ currentPassword: 'mala1234' })));
+    expect(deps.store.tokens.get(reset.id)?.invalidatedAt).toBeNull();
+  });
 
   it('tras 5 contraseñas actuales incorrectas responde too_many_attempts, aun con la correcta', async () => {
     for (let i = 0; i < 5; i += 1) {
