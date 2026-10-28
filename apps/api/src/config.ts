@@ -33,6 +33,20 @@ const envSchema = z
 
 export type Config = z.infer<typeof envSchema>;
 
+/**
+ * Configuraciones válidas pero probablemente equivocadas. No impiden arrancar: `main.ts` las
+ * registra como advertencia.
+ */
+export function configWarnings(config: Config): string[] {
+  const warnings: string[] = [];
+  if (config.NODE_ENV === 'production' && config.TRUSTED_PROXY_HOPS === 0) {
+    warnings.push(
+      'TRUSTED_PROXY_HOPS=0: si hay un proxy delante, todos los clientes tendrán su IP y los límites de intentos los bloquearán a todos juntos',
+    );
+  }
+  return warnings;
+}
+
 /** Lee y valida las variables de entorno; falla al arrancar si algo está mal. */
 export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
   const result = envSchema.safeParse(env);

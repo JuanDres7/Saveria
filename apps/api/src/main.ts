@@ -1,6 +1,6 @@
 import { createApp } from './app';
 import { createPurgeExpired, PURGE_INTERVAL_MS } from './application/use-cases/purge-expired';
-import { loadConfig } from './config';
+import { configWarnings, loadConfig } from './config';
 import { createContainer } from './container';
 
 const config = loadConfig();
@@ -10,6 +10,7 @@ const app = createApp(container);
 // Bun pasa el servidor como segundo argumento de `fetch`; Hono lo usa para leer la IP del socket.
 const server = Bun.serve({ port: config.PORT, fetch: app.fetch });
 container.logger.info({ port: server.port, env: config.NODE_ENV }, 'api listening');
+for (const warning of configWarnings(config)) container.logger.warn({ warning }, 'config warning');
 
 // Limpieza diaria de sesiones y enlaces vencidos. Un fallo se registra y se reintenta mañana.
 const purgeExpired = createPurgeExpired(container);

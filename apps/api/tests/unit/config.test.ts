@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { loadConfig } from '../../src/config';
+import { configWarnings, loadConfig } from '../../src/config';
 
 const validEnv = {
   DATABASE_URL: 'postgres://saveria:saveria@localhost:5432/saveria',
@@ -67,6 +67,28 @@ describe('loadConfig', () => {
       expect(() => loadConfig({ ...prodEnv, PUBLIC_BASE_URL: 'http://api.saveria.app' })).toThrow(
         'PUBLIC_BASE_URL',
       );
+    });
+  });
+
+  describe('configWarnings', () => {
+    const prod = () =>
+      loadConfig({
+        ...validEnv,
+        NODE_ENV: 'production',
+        PUBLIC_BASE_URL: 'https://api.saveria.app',
+        EMAIL_PROVIDER: 'resend',
+        RESEND_API_KEY: 're_test',
+      });
+
+    it('en producción avisa si TRUSTED_PROXY_HOPS es 0 (detrás de un proxy todos tendrían la misma IP)', () => {
+      const warnings = configWarnings(prod());
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0]).toContain('TRUSTED_PROXY_HOPS');
+    });
+
+    it('no avisa con proxies configurados ni fuera de producción', () => {
+      expect(configWarnings({ ...prod(), TRUSTED_PROXY_HOPS: 1 })).toEqual([]);
+      expect(configWarnings(loadConfig(validEnv))).toEqual([]);
     });
   });
 
