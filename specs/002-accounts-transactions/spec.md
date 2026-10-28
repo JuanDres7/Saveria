@@ -8,6 +8,16 @@
 
 **Input**: User description: "Cuentas y movimientos manuales: que el usuario pueda registrar dinero de verdad sin IA y sin conexión. Registrar gastos e ingresos con la lista fija de categorías, ver el historial y el saldo de cada cuenta, crear y administrar cuentas (efectivo, billetera digital, banco) con su moneda y saldo inicial, editar y borrar movimientos, transferir entre cuentas y ajustar el saldo cuando no cuadra."
 
+## Clarifications
+
+### Session 2026-10-28
+
+- Q: ¿Se puede archivar una cuenta que todavía tiene saldo, y ese saldo sigue sumando en el total? → A: Sí, con cualquier saldo y avisando cuánto tiene; su saldo deja de sumar en el total y sale de la lista principal, pero se ve en "cuentas archivadas" y su historial se conserva.
+- Q: Cuando el servidor rechaza un movimiento o una cuenta que ya se guardó en el teléfono, ¿qué pasa con él? → A: Se queda en el teléfono y en el saldo, marcado como "no se pudo guardar" con el motivo; el usuario lo corrige o lo borra y el envío se reintenta.
+- Q: Al borrar un movimiento, ¿cómo evitamos borrados por error? → A: Se borra al instante, sin pedir confirmación, y durante unos segundos aparece la opción "Deshacer".
+- Q: Si un gasto deja una cuenta en negativo, ¿qué hace la app? → A: Lo guarda sin aviso ni confirmación y muestra el saldo negativo destacado (en rojo).
+- Q: ¿Se puede registrar un movimiento con una fecha futura? → A: No; solo hoy o fechas pasadas, sin límite hacia atrás. Lo que aún no pasó llega con los movimientos recurrentes (v2).
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Registrar un gasto o un ingreso (Priority: P1)
@@ -98,8 +108,10 @@ por defecto y el siguiente gasto la trae preseleccionada.
    lista y en todos sus movimientos.
 5. **Given** una cuenta activa con otro nombre igual, **When** intenta crear o renombrar otra con
    ese mismo nombre (sin importar mayúsculas), **Then** no se permite y se indica por qué.
-6. **Given** una cuenta que no es la cuenta por defecto, **When** la archiva, **Then** deja de
-   aparecer al elegir cuenta para un movimiento nuevo, pero sus movimientos siguen en el historial.
+6. **Given** una cuenta que no es la cuenta por defecto y con saldo 20.000, **When** la archiva,
+   **Then** se le avisa del saldo que tiene; al confirmar, la cuenta sale de la lista principal,
+   del total y de la elección de cuenta para movimientos nuevos, pero aparece en "cuentas
+   archivadas" y sus movimientos siguen en el historial.
 7. **Given** la cuenta por defecto, **When** intenta archivarla, **Then** se le pide elegir antes
    otra cuenta por defecto.
 8. **Given** una cuenta con movimientos, **When** intenta cambiar su moneda, **Then** no se
@@ -128,9 +140,11 @@ el movimiento borrado desaparece del historial, también sin conexión.
    en el historial y en los saldos de las cuentas afectadas.
 3. **Given** un gasto, **When** lo cambia a otra cuenta con distinta moneda, **Then** se le pide
    confirmar el monto en la moneda de la nueva cuenta, porque no se convierte solo.
-4. **Given** un movimiento, **When** lo borra y confirma, **Then** desaparece del historial y el
-   saldo vuelve a como estaba sin él.
-5. **Given** un usuario sin conexión, **When** edita o borra un movimiento, **Then** el cambio se
+4. **Given** un movimiento, **When** lo borra, **Then** desaparece del historial al instante, el
+   saldo vuelve a como estaba sin él y durante unos segundos aparece "Deshacer".
+5. **Given** un movimiento recién borrado, **When** toca "Deshacer" a tiempo, **Then** el
+   movimiento y el saldo vuelven a estar como antes.
+6. **Given** un usuario sin conexión, **When** edita o borra un movimiento, **Then** el cambio se
    aplica en el teléfono de inmediato y se envía al servidor cuando vuelve la conexión.
 
 ---
@@ -190,8 +204,8 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
 
 - El usuario sin moneda principal (onboarding sin terminar) no ve la opción de registrar
   movimientos ni de crear cuentas.
-- Un gasto puede dejar el saldo de una cuenta en negativo (sobregiro, deuda con el banco); el
-  saldo se muestra negativo, sin impedir el registro.
+- Un gasto puede dejar el saldo de una cuenta en negativo (sobregiro, deuda con el banco); se
+  guarda sin aviso y el saldo se muestra negativo y destacado.
 - Montos muy grandes: se rechazan montos con más de 12 dígitos enteros.
 - Montos con separadores de miles o coma decimal al estilo colombiano ("18.000", "12,50") se
   interpretan según la moneda de la cuenta.
@@ -199,6 +213,8 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   posterior); sí cualquier fecha pasada.
 - Un movimiento creado sin conexión y luego editado o borrado antes de enviarse llega al servidor
   en su estado final, sin pasos intermedios que lo dupliquen.
+- El servidor rechaza un gasto ya guardado en el teléfono: el gasto sigue en el historial con la
+  marca "no se pudo guardar" y el motivo hasta que el usuario lo corrija o lo borre.
 - Una cuenta archivada con movimientos sin enviar: los movimientos se envían igual.
 - El usuario cierra sesión con movimientos sin enviar: se conservan y se envían cuando ese mismo
   usuario vuelve a entrar (regla ya definida en la feature 001).
@@ -226,8 +242,9 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   decimales que permite la moneda de la cuenta.
 - **FR-006**: Todo movimiento MUST usar la moneda de su cuenta y conservar su monto original
   exacto, sin redondeos.
-- **FR-007**: La fecha de un movimiento MUST ser hoy o una fecha pasada; no se permiten fechas
-  futuras.
+- **FR-007**: La fecha de un movimiento MUST ser hoy o una fecha pasada, sin límite hacia atrás;
+  no se permiten fechas futuras (los movimientos programados llegan con los recurrentes, v2).
+  "Hoy" es el día según la hora del teléfono del usuario.
 - **FR-008**: El sistema MUST impedir registrar movimientos y crear cuentas mientras el usuario no
   tenga moneda principal (regla FR-015 de la feature 001).
 - **FR-009**: El registro manual MUST pasar por el mismo caso de uso que usará después el registro
@@ -244,8 +261,9 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   total que sume cuentas de monedas distintas; el total consolidado en la moneda principal llega
   con las tasas de cambio (feature 008).
 - **FR-013**: Cuando todas las cuentas activas estén en la moneda principal, el sistema MUST
-  mostrar también el total de todas ellas.
-- **FR-014**: Un saldo MAY ser negativo; el sistema lo muestra como tal sin impedir registrar.
+  mostrar también el total de todas ellas. Las cuentas archivadas no suman en el total.
+- **FR-014**: Un saldo MAY ser negativo. El sistema MUST registrar el movimiento sin aviso ni
+  confirmación adicional y mostrar el saldo negativo destacado visualmente.
 
 **Cuentas**
 
@@ -260,9 +278,11 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   movimientos.
 - **FR-020**: Siempre MUST existir exactamente una cuenta por defecto entre las activas. Marcar
   otra como cuenta por defecto quita la marca a la anterior.
-- **FR-021**: Los usuarios MUST poder archivar una cuenta que no sea la cuenta por defecto y
-  volver a activarla después. Una cuenta archivada no aparece al elegir cuenta para un movimiento
-  nuevo, pero sus movimientos y su saldo se conservan y siguen visibles en el historial.
+- **FR-021**: Los usuarios MUST poder archivar una cuenta que no sea la cuenta por defecto, con
+  cualquier saldo, y volver a activarla después. Antes de archivar, el sistema MUST avisar el
+  saldo que tiene. Una cuenta archivada no aparece en la lista principal ni al elegir cuenta para
+  un movimiento nuevo, y su saldo no suma en el total (FR-013); se ve en "cuentas archivadas" con
+  su saldo, y sus movimientos se conservan y siguen visibles en el historial.
 - **FR-022**: Las cuentas MUST NOT poder borrarse en esta feature; solo archivarse.
 - **FR-023**: Un usuario MUST poder tener hasta 20 cuentas activas.
 
@@ -272,8 +292,9 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   descripción de un movimiento, con las mismas reglas que al crearlo.
 - **FR-025**: Al mover un movimiento a una cuenta de otra moneda, el sistema MUST pedir el monto
   en la nueva moneda; nunca convierte solo.
-- **FR-026**: Los usuarios MUST poder borrar un movimiento, previa confirmación. El borrado quita
-  el movimiento del historial y de los saldos.
+- **FR-026**: Los usuarios MUST poder borrar un movimiento con un solo toque, sin confirmación
+  previa. El borrado quita el movimiento del historial y de los saldos, y el sistema MUST ofrecer
+  "Deshacer" durante al menos 5 segundos. Deshacer restaura el movimiento tal como estaba.
 
 **Transferencias**
 
@@ -301,9 +322,10 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   haya conexión, en el orden en que se hicieron, usando la cola de cambios de la feature 001.
 - **FR-036**: Reenviar el mismo cambio MUST NOT duplicarlo en el servidor: cada cuenta y cada
   movimiento tiene un identificador creado en el teléfono.
-- **FR-037**: Si el servidor rechaza un cambio por datos inválidos, el sistema MUST mostrarle al
-  usuario cuál movimiento o cuenta no se pudo guardar y por qué, sin bloquear el envío de los
-  demás.
+- **FR-037**: Si el servidor rechaza un cambio por datos inválidos, el sistema MUST conservar el
+  movimiento o la cuenta en el teléfono (y en los saldos), marcarlo como "no se pudo guardar" con
+  el motivo, y permitir corregirlo o borrarlo; al corregirlo, el envío se reintenta. Un rechazo
+  MUST NOT bloquear el envío de los demás cambios.
 - **FR-038**: Descargar en un teléfono los cambios hechos en otro y resolver conflictos entre
   dispositivos queda fuera de esta feature (feature 006).
 
@@ -353,10 +375,9 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
 - Los decimales permitidos por moneda siguen el estándar internacional de monedas (por ejemplo,
   COP sin decimales en la app, USD y EUR con 2).
 - Las cuentas no se conectan con ningún banco; el usuario las alimenta a mano.
-- Valores por defecto que debe confirmar `/speckit-clarify`: se permite archivar una cuenta con
-  saldo distinto de cero; "Efectivo" no se puede borrar, solo archivar si deja de ser la cuenta
-  por defecto; no hay fechas futuras y no hay límite hacia atrás; los saldos pueden ser
-  negativos; la moneda de una cuenta con movimientos no se puede cambiar.
+- Reglas propuestas por el usuario y aceptadas sin pregunta formal: ninguna cuenta se borra en
+  esta feature, tampoco "Efectivo", que solo se archiva si deja de ser la cuenta por defecto
+  (FR-022, FR-020); la moneda de una cuenta con movimientos no se puede cambiar (FR-019).
 - Fuera de alcance: resumen del mes y gasto por categoría (007); tasas de cambio y totales
   consolidados en la moneda principal (008); descargar cambios de otros dispositivos y resolver
   conflictos (006); registro por IA, memoria de conceptos y categorización automática (004/005);
