@@ -58,26 +58,29 @@ export function createRefresh({ repositories, tokens, random, clock }: RefreshDe
     }
     if (session.expiresAt.getTime() <= now.getTime()) throw new DomainError('unauthorized');
 
-    const next = newRefreshToken(random, session.id);
-
-    if (matches === 'current') {
-      session.previousRefreshTokenHash = session.refreshTokenHash;
-      session.rotatedAt = now;
-    } else {
+    if (matches === 'previous') {
       const rotatedAt = session.rotatedAt?.getTime() ?? 0;
       if (now.getTime() - rotatedAt > REFRESH_GRACE_MS) {
         // El token anterior llegó tarde: alguien más lo tiene. Se corta la sesión.
         await sessions.revoke(session.id, 'reuse_detected', now);
         throw new DomainError('unauthorized');
       }
-      // Reintento dentro de la ventana: el token anterior sigue siendo el "anterior" y
-      // `rotatedAt` no se mueve, para que la ventana no se alargue con cada reintento.
     }
 
-    session.refreshTokenHash = next.hash;
-    session.lastUsedAt = now;
-    session.expiresAt = new Date(now.getTime() + SESSION_TTL_MS);
-    await sessions.save(session);
+    const next = newRefreshToken(random, session.id);
+    const rotated = await sessions.rotate(session.id, session.refreshTokenHash, {
+      refreshTokenHash: next.hash,
+      // En un reintento dentro de la ventana el token anterior sigue siendo el "anterior" y
+      // `rotatedAt` no se mueve, para que la ventana no se alargue con cada reintento.
+      previousRefreshTokenHash:
+        matches === 'current' ? session.refreshTokenHash : session.previousRefreshTokenHash,
+      rotatedAt: matches === 'current' ? now : session.rotatedAt,
+      lastUsedAt: now,
+      expiresAt: new Date(now.getTime() + SESSION_TTL_MS),
+    });
+    // Mientras corría este refresh, otra petición revocó la sesión (logout, cambio o recuperación
+    // de contraseña) o la rotó primero.
+    if (!rotated) throw new DomainError('unauthorized');
 
     return signTokenPair(tokens, session.userId, session.id, next.token);
   };

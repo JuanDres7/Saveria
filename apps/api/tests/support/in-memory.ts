@@ -4,6 +4,7 @@ import type {
   ProfileRepository,
   Repositories,
   SessionRepository,
+  SessionRotation,
   UnitOfWork,
   UserRepository,
 } from '../../src/application/ports/repositories';
@@ -119,8 +120,13 @@ class InMemorySessions implements SessionRepository {
   async findById(id: string) {
     return copy(this.store.sessions.get(id));
   }
-  async save(session: Session) {
-    this.store.sessions.set(session.id, structuredClone(session));
+  async rotate(id: string, expectedHash: string, rotation: SessionRotation) {
+    const session = this.store.sessions.get(id);
+    if (!session || session.revokedAt !== null || session.refreshTokenHash !== expectedHash) {
+      return false;
+    }
+    Object.assign(session, structuredClone(rotation));
+    return true;
   }
   async revoke(id: string, reason: RevokeReason, at: Date) {
     const session = this.store.sessions.get(id);

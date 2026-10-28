@@ -8,6 +8,12 @@ import type {
   User,
 } from '../../domain/entities';
 
+/** Lo único que cambia al rotar el refresh token. */
+export type SessionRotation = Pick<
+  Session,
+  'refreshTokenHash' | 'previousRefreshTokenHash' | 'rotatedAt' | 'lastUsedAt' | 'expiresAt'
+>;
+
 export interface UserRepository {
   /** `email_taken` si ya existe otra cuenta con ese correo (también ante una carrera). */
   create(user: User): Promise<'created' | 'email_taken'>;
@@ -31,7 +37,12 @@ export interface ProfileRepository {
 export interface SessionRepository {
   create(session: Session): Promise<void>;
   findById(id: string): Promise<Session | null>;
-  save(session: Session): Promise<void>;
+  /**
+   * Rota el refresh token solo si la sesión sigue activa y su hash actual es `expectedHash`.
+   * Devuelve `false` si otra petición la revocó o la rotó primero: así un refresh nunca deshace
+   * una revocación hecha mientras corría.
+   */
+  rotate(id: string, expectedHash: string, rotation: SessionRotation): Promise<boolean>;
   revoke(id: string, reason: RevokeReason, at: Date): Promise<void>;
   /** Revoca las sesiones activas del usuario, salvo `exceptSessionId`. */
   revokeAllForUser(

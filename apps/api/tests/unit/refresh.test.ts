@@ -116,6 +116,28 @@ describe('refresh', () => {
     expect((await errorOf(refresh(refreshToken))).code).toBe('unauthorized');
   });
 
+  it('una revocación que llega mientras corre el refresh no se deshace', async () => {
+    const { sessionId, refreshToken } = await newSession();
+    const sessions = deps.repositories.sessions;
+    const findById = sessions.findById.bind(sessions);
+    // La recuperación de contraseña revoca la sesión justo después de que el refresh la leyó.
+    sessions.findById = async (id) => {
+      const session = await findById(id);
+      await sessions.revokeAllForUser(userId, 'password_reset', deps.clock.now());
+      return session;
+    };
+
+    expect((await errorOf(refresh(refreshToken))).code).toBe('unauthorized');
+    expect(stored(sessionId)).toMatchObject({ revokeReason: 'password_reset' });
+    expect(stored(sessionId)?.revokedAt).not.toBeNull();
+  });
+
+  it('dos refresh simultáneos con el mismo token: solo uno rota', async () => {
+    const { refreshToken } = await newSession();
+    const results = await Promise.allSettled([refresh(refreshToken), refresh(refreshToken)]);
+    expect(results.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
+  });
+
   it('una sesión revocada responde 401', async () => {
     const { sessionId, refreshToken } = await newSession();
     await deps.repositories.sessions.revoke(sessionId, 'logout', deps.clock.now());

@@ -188,20 +188,45 @@ describe('SessionRepository', () => {
     }
   });
 
-  it('save persiste la rotación del refresh token', async () => {
+  const rotation = (previous: string) => ({
+    refreshTokenHash: 'c'.repeat(64),
+    previousRefreshTokenHash: previous,
+    rotatedAt: at,
+    lastUsedAt: at,
+    expiresAt: new Date(at.getTime() + 30 * 24 * 60 * 60 * 1000),
+  });
+
+  it('rotate persiste la rotación del refresh token', async () => {
     const { a } = await userWithSessions();
-    await repos.sessions.save({
-      ...a,
-      refreshTokenHash: 'c'.repeat(64),
-      previousRefreshTokenHash: a.refreshTokenHash,
-      rotatedAt: at,
-      lastUsedAt: at,
-    });
+    expect(
+      await repos.sessions.rotate(a.id, a.refreshTokenHash, rotation(a.refreshTokenHash)),
+    ).toBe(true);
     expect(await repos.sessions.findById(a.id)).toMatchObject({
       refreshTokenHash: 'c'.repeat(64),
       previousRefreshTokenHash: 'a'.repeat(64),
       rotatedAt: at,
     });
+  });
+
+  it('rotate no revive una sesión revocada', async () => {
+    const { a } = await userWithSessions();
+    await repos.sessions.revoke(a.id, 'password_reset', at);
+    expect(
+      await repos.sessions.rotate(a.id, a.refreshTokenHash, rotation(a.refreshTokenHash)),
+    ).toBe(false);
+    expect(await repos.sessions.findById(a.id)).toMatchObject({
+      revokedAt: at,
+      revokeReason: 'password_reset',
+      refreshTokenHash: a.refreshTokenHash,
+    });
+  });
+
+  it('rotate no pisa una rotación hecha por otra petición', async () => {
+    const { a } = await userWithSessions();
+    expect(await repos.sessions.rotate(a.id, 'd'.repeat(64), rotation(a.refreshTokenHash))).toBe(
+      false,
+    );
+    expect((await repos.sessions.findById(a.id))?.refreshTokenHash).toBe(a.refreshTokenHash);
   });
 
   it('purgeBefore borra sesiones vencidas o revocadas antes de la fecha y deja las vigentes', async () => {

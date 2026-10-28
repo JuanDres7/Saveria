@@ -1,5 +1,5 @@
 import { and, eq, isNull, lt, ne, or } from 'drizzle-orm';
-import type { SessionRepository } from '../../../application/ports/repositories';
+import type { SessionRepository, SessionRotation } from '../../../application/ports/repositories';
 import type { RevokeReason, Session } from '../../../domain/entities';
 import { sessions } from '../schema';
 import type { DbExecutor } from './executor';
@@ -16,9 +16,21 @@ export class DrizzleSessionRepository implements SessionRepository {
     return row ?? null;
   }
 
-  async save(session: Session): Promise<void> {
-    const { id, ...fields } = session;
-    await this.db.update(sessions).set(fields).where(eq(sessions.id, id));
+  async rotate(id: string, expectedHash: string, rotation: SessionRotation): Promise<boolean> {
+    // Una sola sentencia condicional: si entre la lectura y esta escritura alguien revocó o rotó
+    // la sesión, no se toca nada (no se puede "revivir" una sesión revocada).
+    const updated = await this.db
+      .update(sessions)
+      .set(rotation)
+      .where(
+        and(
+          eq(sessions.id, id),
+          isNull(sessions.revokedAt),
+          eq(sessions.refreshTokenHash, expectedHash),
+        ),
+      )
+      .returning({ id: sessions.id });
+    return updated.length > 0;
   }
 
   async revoke(id: string, reason: RevokeReason, at: Date): Promise<void> {
