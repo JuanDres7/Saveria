@@ -36,6 +36,7 @@ const registerInput = (overrides: Partial<RegisterInput> = {}): RegisterInput =>
   policyVersion: PRIVACY_POLICY_VERSION,
   policyAccepted: true,
   device: DEVICE,
+  ip: '203.0.113.10',
   ...overrides,
 });
 
@@ -242,5 +243,32 @@ describe('corregir el correo (FR-034)', () => {
     const error = await errorOf(createChangeEmail(deps)(user.id, 'no-es-correo'));
     expect(error.code).toBe('validation_error');
     expect(error.fields?.email).toBeDefined();
+  });
+
+  it('5 cambios de correo por hora por usuario; el siguiente → too_many_attempts sin enviar nada (FR-035a)', async () => {
+    const user = await unverifiedUser('ana@mial.com');
+    const changeEmail = createChangeEmail(deps);
+    for (let i = 0; i < 5; i += 1) await changeEmail(user.id, `ana${i}@mail.com`);
+    const sent = deps.emailSender.sent.length;
+
+    const blocked = await errorOf(changeEmail(user.id, 'victima@mail.com'));
+    expect(blocked.code).toBe('too_many_attempts');
+    expect(blocked.retryAfterSec).toBeGreaterThan(0);
+    expect(deps.emailSender.sent).toHaveLength(sent);
+    expect(deps.store.users.get(user.id)?.email).toBe('ana4@mail.com');
+
+    // el límite es por usuario: otro usuario no está afectado
+    const other = await unverifiedUser('otro@mial.com');
+    await changeEmail(other.id, 'otro@mail.com');
+  });
+
+  it('un correo que ya usa otra cuenta también cuenta para el límite de cambios', async () => {
+    await unverifiedUser('otra@mail.com');
+    const user = await unverifiedUser('ana@mial.com');
+    const changeEmail = createChangeEmail(deps);
+    for (let i = 0; i < 5; i += 1) {
+      expect((await errorOf(changeEmail(user.id, 'otra@mail.com'))).code).toBe('email_unavailable');
+    }
+    expect((await errorOf(changeEmail(user.id, 'otra@mail.com'))).code).toBe('too_many_attempts');
   });
 });

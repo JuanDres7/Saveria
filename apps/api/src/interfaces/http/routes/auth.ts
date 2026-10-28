@@ -86,7 +86,7 @@ export function authRoutes(deps: AuthRoutesDeps) {
   const app = new Hono<AppEnv>();
 
   app.post('/register', validate('json', registerSchema), async (c) =>
-    c.json(await deps.register(c.req.valid('json')), 201),
+    c.json(await deps.register({ ...c.req.valid('json'), ip: c.get('clientIp') }), 201),
   );
 
   app.post('/login', validate('json', loginSchema), async (c) =>

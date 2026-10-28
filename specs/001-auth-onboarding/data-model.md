@@ -142,6 +142,8 @@ gestión completa.
 | `rl:login-ip:{ip}` | contador | 15 min | 100 fallos → 429 (límite general) |
 | `rl:pwd:{userId}:{ip}` | contador | 15 min | 5 contraseñas actuales incorrectas → 429, en cambio de contraseña y borrado de cuenta (comparten el contador) |
 | `rl:mail:{sha256(email)}` | contador | 1 h | 3 correos por dirección en total, sumando verificación y recuperación (FR-035) |
+| `rl:register:{ip}` | contador | 1 h | 10 intentos de registro → 429 (FR-035a) |
+| `rl:email-change:{userId}` | contador | 1 h | 5 cambios de correo → 429 (FR-035a) |
 
 En las claves se usa el hash del correo, nunca el correo en claro.
 

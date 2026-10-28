@@ -17,7 +17,12 @@ export interface RegisterInput {
   policyVersion: string;
   policyAccepted: boolean;
   device: DeviceInput;
+  ip: string;
 }
+
+/** FR-035a: intentos de registro por IP. Frena el envío masivo de correos y el sondeo de cuentas. */
+export const REGISTER_LIMIT = 10;
+export const REGISTER_WINDOW_SEC = 60 * 60;
 
 /** Sin repositorios fuera de la transacción: todo lo que escribe pasa por `uow`. */
 export interface RegisterDeps extends SendVerificationEmailDeps {
@@ -51,6 +56,17 @@ export function createRegister(deps: RegisterDeps) {
     const { email, password } = validate(input);
     if (!input.policyAccepted || input.policyVersion !== PRIVACY_POLICY_VERSION) {
       throw new DomainError('policy_not_accepted');
+    }
+
+    // Cuenta todo intento con datos válidos, también los de un correo ya registrado: si no, se
+    // podría probar sin límite qué correos tienen cuenta. Va antes de bcrypt, que es lento.
+    const limit = await deps.rateLimiter.hit(
+      `rl:register:${input.ip}`,
+      REGISTER_LIMIT,
+      REGISTER_WINDOW_SEC,
+    );
+    if (!limit.allowed) {
+      throw new DomainError('too_many_attempts', { retryAfterSec: limit.retryAfterSec });
     }
 
     // bcrypt es lento: se calcula antes de abrir la transacción.

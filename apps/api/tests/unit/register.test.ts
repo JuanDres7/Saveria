@@ -14,6 +14,7 @@ beforeEach(() => {
 });
 
 const DEVICE = { id: '0199a1b2-0000-7000-8000-00000000d001', name: 'Pixel 8' };
+const IP = '203.0.113.10';
 
 const input = (overrides: Partial<RegisterInput> = {}): RegisterInput => ({
   email: 'ana@mail.com',
@@ -21,6 +22,7 @@ const input = (overrides: Partial<RegisterInput> = {}): RegisterInput => ({
   policyVersion: PRIVACY_POLICY_VERSION,
   policyAccepted: true,
   device: DEVICE,
+  ip: IP,
   ...overrides,
 });
 
@@ -106,6 +108,31 @@ describe('register', () => {
     await expect(register(input())).rejects.toThrow('falla simulada');
     expect(deps.store.users.size).toBe(0);
     expect(deps.store.sessions.size).toBe(0);
+  });
+
+  it('desde una IP se pueden intentar 10 registros por hora; el siguiente → too_many_attempts (FR-035a)', async () => {
+    for (let i = 0; i < 10; i += 1) await register(input({ email: `ana${i}@mail.com` }));
+    const blocked = await expectError(
+      register(input({ email: 'otra@mail.com' })),
+      'too_many_attempts',
+    );
+    expect(blocked.retryAfterSec).toBeGreaterThan(0);
+    expect(blocked.retryAfterSec).toBeLessThanOrEqual(60 * 60);
+    expect([...deps.store.users.values()]).toHaveLength(10);
+    // otra IP no está afectada
+    await register(input({ email: 'otra@mail.com', ip: '198.51.100.7' }));
+  });
+
+  it('un correo ya registrado también cuenta: no se puede probar en masa qué correos existen', async () => {
+    await deps.repositories.users.create(makeUser({ email: 'ana@mail.com' }));
+    for (let i = 0; i < 10; i += 1) await expectError(register(input()), 'email_unavailable');
+    await expectError(register(input()), 'too_many_attempts');
+  });
+
+  it('el límite de registro vence a la hora', async () => {
+    for (let i = 0; i < 10; i += 1) await register(input({ email: `ana${i}@mail.com` }));
+    deps.clock.advance(60 * 60 * 1000 + 1000);
+    await register(input({ email: 'otra@mail.com' }));
   });
 
   it('la respuesta no expone el hash de la contraseña', async () => {

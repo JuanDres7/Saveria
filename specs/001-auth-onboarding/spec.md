@@ -330,6 +330,10 @@ comprobando que la cuenta queda verificada.
   mientras no esté verificado.
 - **FR-035**: El sistema MUST limitar a 3 por hora los correos de recuperación o de verificación
   enviados a una misma dirección.
+- **FR-035a**: El sistema MUST limitar los intentos de crear cuenta a 10 por hora desde una misma
+  IP, y los cambios de correo a 5 por hora por usuario. Al pasar el límite MUST responder con un
+  mensaje genérico de "demasiados intentos". Así nadie puede usar Saveria para mandar correos a
+  direcciones ajenas ni para probar en masa qué correos tienen cuenta.
 - **FR-036**: Los correos enviados MUST NOT incluir montos, movimientos ni otros datos financieros.
 - **FR-037**: Los enlaces de verificación y de recuperación MUST abrir una página web mínima de
   Saveria donde se completa la acción (confirmar el correo o escribir la contraseña nueva), y

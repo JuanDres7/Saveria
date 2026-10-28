@@ -94,6 +94,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
+                429: components["responses"]["TooManyAttempts"];
             };
         };
         delete?: never;
@@ -407,6 +408,7 @@ export interface paths {
                         "application/json": components["schemas"]["Error"];
                     };
                 };
+                429: components["responses"]["TooManyAttempts"];
             };
         };
         post?: never;

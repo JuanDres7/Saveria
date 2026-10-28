@@ -63,6 +63,27 @@ describe('contrato: POST /v1/auth/register', () => {
     const body = await expectContract(res, 'post', '/v1/auth/register', 422);
     expect(body?.code).toBe('policy_not_accepted');
   });
+
+  it(
+    '429 con Retry-After tras 10 intentos desde la misma IP (FR-035a)',
+    async () => {
+      for (let i = 0; i < 10; i += 1) {
+        const res = await postJson(
+          t,
+          '/v1/auth/register',
+          registerBody({ email: `ana${i}@mail.com` }),
+        );
+        expect(res.status).toBe(201);
+      }
+      const res = await postJson(t, '/v1/auth/register', registerBody({ email: 'otra@mail.com' }));
+      const retryAfter = Number(res.headers.get('retry-after'));
+      const body = await expectContract(res, 'post', '/v1/auth/register', 429);
+      expect(body?.code).toBe('too_many_attempts');
+      expect(retryAfter).toBeGreaterThan(0);
+      expect(retryAfter).toBeLessThanOrEqual(60 * 60);
+    },
+    SLOW,
+  );
 });
 
 describe('contrato: POST /v1/auth/login', () => {

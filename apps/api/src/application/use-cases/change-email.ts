@@ -8,6 +8,10 @@ import {
   type SendVerificationEmailDeps,
 } from './send-verification-email';
 
+/** FR-035a: cambios de correo por usuario. Sin esto, una cuenta podría mandar enlaces a cualquiera. */
+export const EMAIL_CHANGE_LIMIT = 5;
+export const EMAIL_CHANGE_WINDOW_SEC = 60 * 60;
+
 export interface ChangeEmailDeps extends SendVerificationEmailDeps {
   repositories: Pick<Repositories, 'users' | 'profiles' | 'accounts'>;
 }
@@ -28,6 +32,17 @@ export function createChangeEmail(deps: ChangeEmailDeps) {
       });
     }
     const email = parsed.data;
+
+    // Cuenta también los intentos con un correo ya usado: si no, se podría probar sin límite qué
+    // correos tienen cuenta.
+    const limit = await deps.rateLimiter.hit(
+      `rl:email-change:${userId}`,
+      EMAIL_CHANGE_LIMIT,
+      EMAIL_CHANGE_WINDOW_SEC,
+    );
+    if (!limit.allowed) {
+      throw new DomainError('too_many_attempts', { retryAfterSec: limit.retryAfterSec });
+    }
 
     const user = await deps.repositories.users.findById(userId);
     if (!user) throw new DomainError('unauthorized');
