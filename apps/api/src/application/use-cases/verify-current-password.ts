@@ -20,13 +20,16 @@ export async function verifyCurrentPassword(
   { user, password, ip }: { user: User; password: string; ip: string },
 ): Promise<void> {
   const key = `rl:pwd:${user.id}:${ip}`;
-  const limit = await rateLimiter.peek(key, PASSWORD_CHECK_MAX);
+  // Se cuenta ANTES de verificar (ver `RateLimiter.release`). Un intento bloqueado devuelve su
+  // cupo: no gasta bcrypt ni cuenta como fallo.
+  const limit = await rateLimiter.hit(key, PASSWORD_CHECK_MAX, PASSWORD_CHECK_WINDOW_SEC);
   if (!limit.allowed) {
+    await rateLimiter.release(key);
     throw new DomainError('too_many_attempts', { retryAfterSec: limit.retryAfterSec });
   }
 
+  // `verify` nunca lanza: un hash inválido es `false`. Un fallo deja el intento contado.
   if (!(await hasher.verify(password, user.passwordHash))) {
-    await rateLimiter.hit(key, PASSWORD_CHECK_MAX, PASSWORD_CHECK_WINDOW_SEC);
     throw new DomainError('invalid_credentials');
   }
   await rateLimiter.reset(key);

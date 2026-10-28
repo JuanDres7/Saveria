@@ -45,8 +45,14 @@ export interface RateLimiter {
    * `windowSec` empieza con el primer intento.
    */
   hit(key: string, limit: number, windowSec: number): Promise<RateLimitResult>;
-  /** Consulta sin contar: `allowed` es `false` si el contador ya alcanzó `limit`. */
-  peek(key: string, limit: number): Promise<RateLimitResult>;
+  /**
+   * Devuelve un intento contado con `hit` que al final no fue un fallo (bloqueado, correcto o con
+   * un error inesperado). No baja de 0 ni cambia la ventana.
+   *
+   * Para limitar fallos se cuenta ANTES de verificar y se devuelve después: así varias peticiones
+   * en paralelo no pueden pasar todas antes de que se cuente la primera.
+   */
+  release(key: string): Promise<void>;
   reset(key: string): Promise<void>;
 }
 

@@ -93,6 +93,23 @@ describe('changePassword', () => {
     expect(deps.store.users.get(userId)?.passwordHash).toBe('fake:clave1234');
   });
 
+  it('10 intentos en paralelo no se saltan el límite de 5 fallos', async () => {
+    // bcrypt tarda: mientras verifica, llegan los demás intentos.
+    const verify = deps.hasher.verify.bind(deps.hasher);
+    deps.hasher.verify = async (password, hash) => {
+      await Bun.sleep(5);
+      return verify(password, hash);
+    };
+    const codes = await Promise.all(
+      Array.from(
+        { length: 10 },
+        async () => (await errorOf(changePassword(input({ currentPassword: 'mala1234' })))).code,
+      ),
+    );
+    expect(codes.filter((code) => code === 'invalid_credentials')).toHaveLength(5);
+    expect(codes.filter((code) => code === 'too_many_attempts')).toHaveLength(5);
+  });
+
   it('el límite es por usuario e IP (clave rl:pwd:{userId}:{ip})', async () => {
     for (let i = 0; i < 5; i += 1) {
       await errorOf(changePassword(input({ currentPassword: 'mala1234' })));

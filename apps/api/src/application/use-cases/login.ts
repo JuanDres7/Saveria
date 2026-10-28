@@ -1,4 +1,5 @@
 import { emailSchema } from '@saveria/shared';
+import type { User } from '../../domain/entities';
 import { DomainError } from '../../domain/errors';
 import type { AuthResponseDto, DeviceInput } from '../dto';
 import type { Repositories, UnitOfWork } from '../ports/repositories';
@@ -38,37 +39,45 @@ export function createLogin(deps: LoginDeps) {
     const emailKey = `rl:login:${input.ip}:${deps.random.sha256Hex(email)}`;
     const ipKey = `rl:login-ip:${input.ip}`;
 
-    // Se consulta antes de verificar: un intento bloqueado no gasta bcrypt ni cuenta como fallo.
+    // Se cuenta ANTES de verificar (ver `RateLimiter.release`): si no, varios intentos en paralelo
+    // pasarían todos mientras bcrypt trabaja. Lo que al final no es un fallo devuelve su cupo.
     const [byEmail, byIp] = await Promise.all([
-      rateLimiter.peek(emailKey, LOGIN_MAX_PER_EMAIL),
-      rateLimiter.peek(ipKey, LOGIN_MAX_PER_IP),
+      rateLimiter.hit(emailKey, LOGIN_MAX_PER_EMAIL, LOGIN_WINDOW_SEC),
+      rateLimiter.hit(ipKey, LOGIN_MAX_PER_IP, LOGIN_WINDOW_SEC),
     ]);
+    const releaseBoth = () =>
+      Promise.all([rateLimiter.release(emailKey), rateLimiter.release(ipKey)]);
+
+    // Un intento bloqueado no gasta bcrypt ni cuenta como fallo.
     if (!byEmail.allowed || !byIp.allowed) {
+      await releaseBoth();
       throw new DomainError('too_many_attempts', {
         retryAfterSec: Math.max(byEmail.retryAfterSec, byIp.retryAfterSec),
       });
     }
 
-    const user = parsed.success ? await repositories.users.findByEmail(email) : null;
+    let user: User | null;
     let valid = false;
-    if (user) {
-      valid = await hasher.verify(input.password, user.passwordHash);
-    } else {
-      // Mismo trabajo que con una cuenta real: el tiempo no revela si el correo existe (FR-006).
-      await hasher.verifyDummy(input.password);
+    try {
+      user = parsed.success ? await repositories.users.findByEmail(email) : null;
+      if (user) {
+        valid = await hasher.verify(input.password, user.passwordHash);
+      } else {
+        // Mismo trabajo que con una cuenta real: el tiempo no revela si el correo existe (FR-006).
+        await hasher.verifyDummy(input.password);
+      }
+    } catch (error) {
+      // Un error nuestro (por ejemplo, la base caída) no es un fallo del usuario.
+      await releaseBoth();
+      throw error;
     }
 
-    if (!user || !valid) {
-      await Promise.all([
-        rateLimiter.hit(emailKey, LOGIN_MAX_PER_EMAIL, LOGIN_WINDOW_SEC),
-        rateLimiter.hit(ipKey, LOGIN_MAX_PER_IP, LOGIN_WINDOW_SEC),
-      ]);
-      throw new DomainError('invalid_credentials');
-    }
+    // Un fallo deja los dos intentos contados.
+    if (!user || !valid) throw new DomainError('invalid_credentials');
 
     // Solo se reinicia el contador de este correo: el de la IP sigue frenando a quien prueba
-    // muchos correos aunque tenga una cuenta propia válida.
-    await rateLimiter.reset(emailKey);
+    // muchos correos aunque tenga una cuenta propia válida. Este intento no fue un fallo.
+    await Promise.all([rateLimiter.reset(emailKey), rateLimiter.release(ipKey)]);
 
     const now = deps.clock.now();
     const { tokens, profile, account } = await deps.uow.run(async (repos) => {

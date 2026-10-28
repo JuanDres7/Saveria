@@ -111,6 +111,44 @@ describe('login', () => {
     expect((await errorOf(login(input()))).code).toBe('too_many_attempts');
   });
 
+  it('20 intentos en paralelo no se saltan el límite de 5 fallos por correo', async () => {
+    // bcrypt tarda: mientras verifica, llegan los demás intentos.
+    const verify = deps.hasher.verify.bind(deps.hasher);
+    deps.hasher.verify = async (password, hash) => {
+      await Bun.sleep(5);
+      return verify(password, hash);
+    };
+    const codes = await Promise.all(
+      Array.from(
+        { length: 20 },
+        async () => (await errorOf(login(input({ password: 'mala1234' })))).code,
+      ),
+    );
+    expect(codes.filter((code) => code === 'invalid_credentials')).toHaveLength(5);
+    expect(codes.filter((code) => code === 'too_many_attempts')).toHaveLength(15);
+  });
+
+  it('los intentos bloqueados no alargan el bloqueo ni cuentan como fallos', async () => {
+    await failTimes(5);
+    for (let i = 0; i < 10; i += 1) await errorOf(login(input()));
+    deps.clock.advance(15 * MIN + 1000);
+    // ventana nueva: vuelven a quedar 5 intentos
+    await failTimes(5);
+    expect((await errorOf(login(input()))).code).toBe('too_many_attempts');
+  });
+
+  it('un error inesperado no cuenta como fallo', async () => {
+    const findByEmail = deps.repositories.users.findByEmail.bind(deps.repositories.users);
+    deps.repositories.users.findByEmail = async () => {
+      throw new Error('base caída');
+    };
+    for (let i = 0; i < 6; i += 1) {
+      await login(input()).catch(() => undefined);
+    }
+    deps.repositories.users.findByEmail = findByEmail;
+    expect((await login(input())).me.email).toBe('ana@mail.com');
+  });
+
   it('un intento bloqueado no verifica la contraseña', async () => {
     await failTimes(5);
     let verified = false;

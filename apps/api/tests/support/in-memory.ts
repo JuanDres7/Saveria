@@ -313,10 +313,9 @@ export class InMemoryRateLimiter implements RateLimiter {
     return { allowed, retryAfterSec: allowed ? 0 : this.retryAfter(entry) };
   }
 
-  async peek(key: string, limit: number): Promise<RateLimitResult> {
+  async release(key: string): Promise<void> {
     const entry = this.current(key);
-    const allowed = !entry || entry.count < limit;
-    return { allowed, retryAfterSec: allowed || !entry ? 0 : this.retryAfter(entry) };
+    if (entry && entry.count > 0) entry.count -= 1;
   }
 
   async reset(key: string): Promise<void> {

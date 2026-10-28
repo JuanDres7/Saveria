@@ -44,20 +44,30 @@ describe('RedisRateLimiter (Redis real)', () => {
     expect(ttlAfter).toBeLessThanOrEqual(ttlBefore);
   });
 
-  it('peek no cuenta intentos', async () => {
-    const key = newKey();
-    for (let i = 0; i < 10; i++) {
-      expect((await limiter.peek(key, 3)).allowed).toBe(true);
-    }
-    expect(await redis.get(key)).toBeNull();
-  });
-
-  it('peek bloquea cuando el contador alcanzó el límite', async () => {
+  it('release devuelve un intento y conserva la ventana', async () => {
     const key = newKey();
     for (let i = 0; i < 3; i++) await limiter.hit(key, 3, 900);
-    const result = await limiter.peek(key, 3);
-    expect(result.allowed).toBe(false);
-    expect(result.retryAfterSec).toBeGreaterThan(0);
+    await limiter.release(key);
+    expect(await redis.get(key)).toBe('2');
+    expect(await redis.ttl(key)).toBeGreaterThan(0);
+    expect((await limiter.hit(key, 3, 900)).allowed).toBe(true);
+    expect((await limiter.hit(key, 3, 900)).allowed).toBe(false);
+  });
+
+  it('release no baja de 0 ni crea una clave que ya venció', async () => {
+    const key = newKey();
+    await limiter.release(key);
+    expect(await redis.get(key)).toBeNull();
+    await limiter.hit(key, 3, 900);
+    await limiter.release(key);
+    await limiter.release(key);
+    expect(await redis.get(key)).toBe('0');
+  });
+
+  it('con hit primero, intentos en paralelo no pasan del límite', async () => {
+    const key = newKey();
+    const results = await Promise.all(Array.from({ length: 20 }, () => limiter.hit(key, 5, 900)));
+    expect(results.filter((r) => r.allowed)).toHaveLength(5);
   });
 
   it('reset borra el contador', async () => {
