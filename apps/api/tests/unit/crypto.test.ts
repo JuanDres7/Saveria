@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'bun:test';
 import { SignJWT } from 'jose';
 import { BunPasswordHasher } from '../../src/infrastructure/crypto/bun-password-hasher';
-import { JoseTokenService } from '../../src/infrastructure/crypto/jose-token-service';
+import {
+  ACCESS_TOKEN_AUDIENCE,
+  ACCESS_TOKEN_ISSUER,
+  JoseTokenService,
+} from '../../src/infrastructure/crypto/jose-token-service';
 import { CryptoRandom } from '../../src/infrastructure/crypto/random';
 import { FakeClock } from '../support/fake-clock';
 
@@ -97,6 +101,33 @@ describe('JoseTokenService', () => {
     const key = new TextEncoder().encode(SECRET);
     const clock = new FakeClock();
     const token = await new SignJWT({})
+      .setProtectedHeader({ alg: 'HS256' })
+      .setSubject(USER_ID)
+      .setIssuer(ACCESS_TOKEN_ISSUER)
+      .setAudience(ACCESS_TOKEN_AUDIENCE)
+      .setExpirationTime(Math.floor(clock.now().getTime() / 1000) + 600)
+      .sign(key);
+    expect(await new JoseTokenService(SECRET, clock).verifyAccess(token)).toBeNull();
+  });
+
+  it('firma con emisor y destinatario de Saveria', async () => {
+    const { token } = await new JoseTokenService(SECRET, new FakeClock()).signAccess({
+      sub: USER_ID,
+      sid: SESSION_ID,
+    });
+    const payload = JSON.parse(Buffer.from(token.split('.')[1] ?? '', 'base64url').toString());
+    expect(payload.iss).toBe(ACCESS_TOKEN_ISSUER);
+    expect(payload.aud).toBe(ACCESS_TOKEN_AUDIENCE);
+  });
+
+  it.each([
+    ['sin emisor ni destinatario', {}],
+    ['con otro emisor', { iss: 'otro-servicio', aud: ACCESS_TOKEN_AUDIENCE }],
+    ['con otro destinatario', { iss: ACCESS_TOKEN_ISSUER, aud: 'otra-app' }],
+  ])('rechaza un token firmado con el mismo secreto pero %s', async (_n, claims) => {
+    const key = new TextEncoder().encode(SECRET);
+    const clock = new FakeClock();
+    const token = await new SignJWT({ sid: SESSION_ID, ...claims })
       .setProtectedHeader({ alg: 'HS256' })
       .setSubject(USER_ID)
       .setExpirationTime(Math.floor(clock.now().getTime() / 1000) + 600)
