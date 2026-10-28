@@ -111,6 +111,17 @@ describe('contrato: POST /v1/me/onboarding/complete', () => {
     expect(body.code).toBe('primary_currency_required');
   });
 
+  it('400 validation_error si defaultAccountId no es un UUID', async () => {
+    const res = await postJson(
+      t,
+      '/v1/me/onboarding/complete',
+      { defaultAccountId: 'no-es-uuid' },
+      bearer(token),
+    );
+    const body = await expectContract(res, 'post', '/v1/me/onboarding/complete', 400);
+    expect(body.code).toBe('validation_error');
+  });
+
   it('401 sin token', async () => {
     const res = await postJson(t, '/v1/me/onboarding/complete', { defaultAccountId: ACCOUNT_ID });
     await expectContract(res, 'post', '/v1/me/onboarding/complete', 401);

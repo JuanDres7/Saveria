@@ -576,6 +576,15 @@ export interface paths {
                         "application/json": components["schemas"]["Me"];
                     };
                 };
+                /** @description defaultAccountId no es un UUID o ya lo usa otra cuenta */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
                 401: components["responses"]["Unauthorized"];
                 /** @description Falta la moneda principal */
                 422: {

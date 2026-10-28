@@ -298,6 +298,11 @@ paths:
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Me" }
+        "400":
+          description: defaultAccountId no es un UUID o ya lo usa otra cuenta
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "422":
           description: Falta la moneda principal
@@ -353,7 +358,7 @@ paths:
               type: object
               required: [token]
               properties:
-                token: { type: string }
+                token: { type: string, maxLength: 100 }
       responses:
         "200":
           description: Página de éxito ("ya puedes volver a la app") o de enlace inválido
@@ -382,7 +387,7 @@ paths:
               type: object
               required: [token, password, passwordConfirmation]
               properties:
-                token: { type: string }
+                token: { type: string, maxLength: 100 }
                 password: { type: string }
                 passwordConfirmation: { type: string }
       responses:
