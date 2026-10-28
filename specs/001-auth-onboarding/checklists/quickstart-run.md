@@ -40,18 +40,44 @@ contraseñas usadas (`clave1234`, `nueva5678`, `otra9999`, `mala1234`), el corre
 
 ## Arranque con sesión guardada (SC-003)
 
-**Pendiente de medir en una build de release.** En la development build, abrir la app hasta ver
-Inicio tardó 9,8 s, 8,6 s y 8,5 s. Ese tiempo lo domina el lanzador de desarrollo, que descarga
-desde Metro el bundle sin minificar (1.611 módulos). El código del arranque no espera a la red: abre
-la base local y muestra Inicio, y renueva la sesión en segundo plano (pruebas en
-`apps/mobile/tests/us5-session.test.tsx`). Para validar los 2 s hay que compilar la variante
-release (`bunx expo run:android --variant release`) y repetir la medición.
+✅ **Se cumple: Inicio visible en 1,06–1,27 s**, por debajo de los 2 s.
+
+- **Build**: variante release (`./gradlew assembleRelease`, Hermes y minificación activos),
+  instalada con `adb install -r` sobre la development build con una sesión guardada de una cuenta
+  con el onboarding terminado. Las dos variantes se firman con la misma clave, así que los datos se
+  conservan.
+- **Condiciones**: emulador `saveria_spike`, **modo avión activado** (sin red) y la app detenida
+  con `am force-stop` antes de cada corrida (arranque en frío).
+- **Método**: `uiautomator events` registra los eventos de accesibilidad con `EventTime` (uptime en
+  ms). Se compara con `/proc/uptime` justo antes de `am start`. Se toma el **último** cambio de
+  contenido de la ventana de la app: después no hubo más cambios en 6 s y la pantalla final era
+  Inicio ("Hola, qs.run") en todas las corridas. Es una cota superior con resolución de
+  milisegundos. Un primer intento consultando la pantalla con `uiautomator dump` no servía: cada
+  consulta tarda ~2,3 s.
+
+| Corrida | Ventana de la app | Último cambio (Inicio visible) |
+|---|---|---|
+| 1 | 63 ms | 1104 ms |
+| 2 | 62 ms | 1127 ms |
+| 3 | 60 ms | 1107 ms |
+| 4 | 66 ms | 1273 ms |
+| 5 | 59 ms | 1086 ms |
+| 6 | 52 ms | 1060 ms |
+
+La misma prueba confirma el escenario 5.1 sin conexión: la build de release abre directo en Inicio
+en modo avión. En la development build, en cambio, el arranque tarda ~8,5 s porque el lanzador de
+desarrollo descarga el bundle sin minificar desde Metro; no sirve para medir SC-003.
 
 ## Observaciones
 
-- La development build no puede arrancar en modo avión porque descarga su código desde Metro. Se
-  probó el arranque sin servidor apagando el backend: la app abrió con los datos locales. La build
-  de release trae el código incluido.
+- La development build no puede arrancar en modo avión porque descarga su código desde Metro. La
+  build de release trae el código incluido y sí arranca sin red (ver SC-003).
+- La build de release no permite HTTP sin cifrar (solo los manifiestos de debug tienen
+  `usesCleartextTraffic`), así que no puede hablar con el backend local en `http://10.0.2.2:8000`.
+  Es lo correcto para producción, donde la API irá por HTTPS.
+- El emulador se arranca con `-no-snapshot-save`: cada arranque vuelve al último snapshot y se
+  pierden los datos de la sesión anterior. Para pruebas que dependan de datos guardados hay que
+  hacerlas en un mismo arranque del emulador.
 - Guardar en Configuración sin cambios también encola un cambio en el outbox. No es un error, pero
   se podría evitar.
 - En la página de contraseña nueva, Chrome sugiere un campo de usuario oculto para los gestores de

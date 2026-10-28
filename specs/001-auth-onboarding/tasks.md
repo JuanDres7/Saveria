@@ -265,7 +265,7 @@ separado.
 - [X] T101 [P] Job de purga diaria en `apps/api/src/application/use-cases/purge-expired.ts`: borra sesiones vencidas o revocadas hace más de 30 días y tokens de un solo uso vencidos; se programa con `setInterval` en `apps/api/src/main.ts` (una vez al día), con prueba en `apps/api/tests/unit/purge-expired.test.ts`
 - [X] T102 [P] Actualizar `README.md` en la raíz (qué es Saveria, estructura del monorepo, cómo levantar el entorno enlazando a `specs/001-auth-onboarding/quickstart.md`, convención de ramas `main`/`develop`/`feat/*` y conventional commits)
 - [X] T103 Ejecutar `bunx biome check .`, `bun test --cwd apps/api`, `bun test --cwd packages/shared` y `bun run --cwd apps/mobile test`; todo en verde
-- [ ] T104 Hacer el recorrido manual de `specs/001-auth-onboarding/quickstart.md` (pasos 1–14, revisión de logs y tiempo de arranque con sesión guardada < 2 s, SC-003) en el emulador `saveria_spike` y registrar el resultado en `specs/001-auth-onboarding/checklists/quickstart-run.md`
+- [X] T104 Hacer el recorrido manual de `specs/001-auth-onboarding/quickstart.md` (pasos 1–14, revisión de logs y tiempo de arranque con sesión guardada < 2 s, SC-003) en el emulador `saveria_spike` y registrar el resultado en `specs/001-auth-onboarding/checklists/quickstart-run.md`
 
 ---
 
