@@ -19,6 +19,16 @@ const envSchema = z
   .refine((env) => env.EMAIL_PROVIDER !== 'resend' || !!env.RESEND_API_KEY, {
     message: 'RESEND_API_KEY es obligatoria cuando EMAIL_PROVIDER=resend',
     path: ['RESEND_API_KEY'],
+  })
+  // En producción, dev-outbox dejaría los enlaces de los correos en disco sin enviarlos.
+  .refine((env) => env.NODE_ENV !== 'production' || env.EMAIL_PROVIDER !== 'dev-outbox', {
+    message: 'en producción EMAIL_PROVIDER debe ser resend',
+    path: ['EMAIL_PROVIDER'],
+  })
+  // Los enlaces de los correos llevan el token: por http viajarían sin cifrar.
+  .refine((env) => env.NODE_ENV !== 'production' || env.PUBLIC_BASE_URL.startsWith('https://'), {
+    message: 'en producción PUBLIC_BASE_URL debe usar https',
+    path: ['PUBLIC_BASE_URL'],
   });
 
 export type Config = z.infer<typeof envSchema>;

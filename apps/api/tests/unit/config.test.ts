@@ -41,6 +41,41 @@ describe('loadConfig', () => {
     ).toBe('resend');
   });
 
+  describe('en producción', () => {
+    const prodEnv = {
+      ...validEnv,
+      NODE_ENV: 'production',
+      PUBLIC_BASE_URL: 'https://api.saveria.app',
+      EMAIL_PROVIDER: 'resend',
+      RESEND_API_KEY: 're_test',
+    };
+
+    it('acepta una configuración completa', () => {
+      expect(loadConfig(prodEnv).NODE_ENV).toBe('production');
+    });
+
+    it('no permite dev-outbox: los enlaces quedarían en disco y nunca llegarían', () => {
+      expect(() => loadConfig({ ...prodEnv, EMAIL_PROVIDER: 'dev-outbox' })).toThrow(
+        'EMAIL_PROVIDER',
+      );
+      // tampoco por omisión
+      const { EMAIL_PROVIDER: _omit, ...rest } = prodEnv;
+      expect(() => loadConfig(rest)).toThrow('EMAIL_PROVIDER');
+    });
+
+    it('exige https en PUBLIC_BASE_URL: los enlaces de los correos llevan el token', () => {
+      expect(() => loadConfig({ ...prodEnv, PUBLIC_BASE_URL: 'http://api.saveria.app' })).toThrow(
+        'PUBLIC_BASE_URL',
+      );
+    });
+  });
+
+  it('fuera de producción se permiten dev-outbox y http', () => {
+    const config = loadConfig({ ...validEnv, NODE_ENV: 'test' });
+    expect(config.EMAIL_PROVIDER).toBe('dev-outbox');
+    expect(config.PUBLIC_BASE_URL).toBe('http://localhost:8000');
+  });
+
   it('el mensaje de error no incluye los valores de las variables', () => {
     const secret = 'corto-y-secreto';
     try {
