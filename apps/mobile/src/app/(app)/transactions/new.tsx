@@ -1,7 +1,7 @@
 import { categoriesFor, DESCRIPTION_MAX, localToday } from '@saveria/shared';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { styles as base, Field, PrimaryButton } from '../../../features/auth/components';
 import { refreshLedger, useLedger } from '../../../features/transactions/ledger';
 import { transactionService } from '../../../features/transactions/transaction-service';
@@ -75,85 +75,95 @@ export default function NewTransaction() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text role="heading" style={base.title}>
-        Registrar movimiento
-      </Text>
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        <Text role="heading" style={base.title}>
+          Registrar movimiento
+        </Text>
 
-      <View style={styles.row}>
-        <Chip label="Gasto" checked={kind === 'expense'} onPress={() => changeKind('expense')} />
-        <Chip label="Ingreso" checked={kind === 'income'} onPress={() => changeKind('income')} />
-      </View>
+        <View style={styles.row}>
+          <Chip label="Gasto" checked={kind === 'expense'} onPress={() => changeKind('expense')} />
+          <Chip label="Ingreso" checked={kind === 'income'} onPress={() => changeKind('income')} />
+        </View>
 
-      <Field
-        label="Monto"
-        value={amountText}
-        onChangeText={setAmountText}
-        keyboardType="decimal-pad"
-        autoFocus
-        placeholder="18.000"
-        error={errors.amount}
-      />
-
-      <Text style={base.label}>Categoría</Text>
-      <View style={styles.row}>
-        {categoriesFor(kind).map((category) => (
-          <Chip
-            key={category.slug}
-            label={category.name}
-            checked={categorySlug === category.slug}
-            onPress={() => setCategorySlug(category.slug)}
-          />
-        ))}
-      </View>
-      {errors.categorySlug ? <Text style={base.error}>{errors.categorySlug}</Text> : null}
-
-      <Text style={base.label}>Cuenta</Text>
-      <View style={styles.row}>
-        {active.map((account) => (
-          <Chip
-            key={account.id}
-            label={account.name}
-            checked={selectedAccountId === account.id}
-            onPress={() => setAccountId(account.id)}
-          />
-        ))}
-      </View>
-      {errors.accountId ? <Text style={base.error}>{errors.accountId}</Text> : null}
-
-      <Text style={base.label}>Fecha</Text>
-      <View style={styles.row}>
-        <Chip label="Hoy" checked={occurredOn === today} onPress={() => setOccurredOn(today)} />
-        <Chip
-          label="Ayer"
-          checked={occurredOn === yesterday()}
-          onPress={() => setOccurredOn(yesterday())}
+        <Field
+          label="Monto"
+          value={amountText}
+          onChangeText={setAmountText}
+          keyboardType="decimal-pad"
+          autoFocus
+          placeholder="18.000"
+          error={errors.amount}
         />
+
+        <Text style={base.label}>Categoría</Text>
+        <View style={styles.row}>
+          {categoriesFor(kind).map((category) => (
+            <Chip
+              key={category.slug}
+              label={category.name}
+              checked={categorySlug === category.slug}
+              onPress={() => {
+                setCategorySlug(category.slug);
+                // El monto ya está escrito: se cierra el teclado para dejar "Guardar" a la vista.
+                Keyboard.dismiss();
+              }}
+            />
+          ))}
+        </View>
+        {errors.categorySlug ? <Text style={base.error}>{errors.categorySlug}</Text> : null}
+
+        <Text style={base.label}>Cuenta</Text>
+        <View style={styles.row}>
+          {active.map((account) => (
+            <Chip
+              key={account.id}
+              label={account.name}
+              checked={selectedAccountId === account.id}
+              onPress={() => setAccountId(account.id)}
+            />
+          ))}
+        </View>
+        {errors.accountId ? <Text style={base.error}>{errors.accountId}</Text> : null}
+
+        <Text style={base.label}>Fecha</Text>
+        <View style={styles.row}>
+          <Chip label="Hoy" checked={occurredOn === today} onPress={() => setOccurredOn(today)} />
+          <Chip
+            label="Ayer"
+            checked={occurredOn === yesterday()}
+            onPress={() => setOccurredOn(yesterday())}
+          />
+        </View>
+        <Field
+          label="Otra fecha (AAAA-MM-DD)"
+          value={otherDay ? occurredOn : ''}
+          onChangeText={(text) => setOccurredOn(text || today)}
+          placeholder="2026-10-01"
+          error={errors.occurredOn}
+        />
+
+        <Field
+          label="Descripción (opcional)"
+          value={description}
+          onChangeText={setDescription}
+          maxLength={DESCRIPTION_MAX}
+          autoCapitalize="sentences"
+          error={errors.description}
+        />
+      </ScrollView>
+      {/* Fuera del área que se desplaza: "Guardar" siempre queda a la vista (FR-002). */}
+      <View style={styles.footer}>
+        <PrimaryButton label="Guardar" onPress={save} />
       </View>
-      <Field
-        label="Otra fecha (AAAA-MM-DD)"
-        value={otherDay ? occurredOn : ''}
-        onChangeText={(text) => setOccurredOn(text || today)}
-        placeholder="2026-10-01"
-        error={errors.occurredOn}
-      />
-
-      <Field
-        label="Descripción (opcional)"
-        value={description}
-        onChangeText={setDescription}
-        maxLength={DESCRIPTION_MAX}
-        autoCapitalize="sentences"
-        error={errors.description}
-      />
-
-      <PrimaryButton label="Guardar" onPress={save} />
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  screen: { flex: 1 },
   content: { padding: 24, gap: 12 },
+  footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb', backgroundColor: '#ffffff' },
   row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   chip: {
     borderWidth: 1,

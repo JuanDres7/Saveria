@@ -1,5 +1,6 @@
 import { localToday } from '@saveria/shared';
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { Keyboard } from 'react-native';
 import type { LocalAccountRecord } from '../src/features/accounts/local-accounts';
 import {
   type LedgerContext,
@@ -106,9 +107,12 @@ describe('historia 1: registrar un gasto o un ingreso', () => {
   it('1.2 monto + categoría + "Guardar" registra el gasto en 3 toques (SC-001)', async () => {
     signIn(false);
     const { ledger, efectivo } = setup();
+    const dismiss = jest.spyOn(Keyboard, 'dismiss');
     await render(<NewTransaction />);
     await typeAmount('18.000');
     await fireEvent.press(radio('Restaurantes y domicilios')); // toque 2 (el 1 es el "+")
+    // Con el monto escrito se cierra el teclado: si no, tapa "Guardar" (visto en el emulador).
+    expect(dismiss).toHaveBeenCalled();
     await save(); // toque 3
 
     expect(ledger.rows).toHaveLength(1);
