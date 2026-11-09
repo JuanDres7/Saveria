@@ -86,7 +86,7 @@ export interface AppOptions {
 }
 
 const OPENAPI_FILE = fileURLToPath(
-  new URL('../../../specs/001-auth-onboarding/contracts/openapi.yaml', import.meta.url),
+  new URL('../../../specs/002-accounts-transactions/contracts/openapi.yaml', import.meta.url),
 );
 
 export function createApp(deps: AppDeps, options: AppOptions = {}) {

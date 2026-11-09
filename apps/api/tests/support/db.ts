@@ -14,6 +14,6 @@ export function createTestDb() {
 
 export async function resetDatabase(client: ReturnType<typeof createDb>['client']): Promise<void> {
   await client.unsafe(
-    'TRUNCATE users, user_profiles, sessions, one_time_tokens, accounts RESTART IDENTITY CASCADE',
+    'TRUNCATE users, user_profiles, sessions, one_time_tokens, accounts, transactions RESTART IDENTITY CASCADE',
   );
 }

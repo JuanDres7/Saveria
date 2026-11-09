@@ -5,6 +5,7 @@ import type {
   Profile,
   RevokeReason,
   Session,
+  Transaction,
   User,
 } from '../../domain/entities';
 
@@ -83,8 +84,27 @@ export interface OneTimeTokenRepository {
 
 export interface AccountRepository {
   create(account: Account): Promise<void>;
+  /** Crea la cuenta o reemplaza todos sus campos (el `PUT` idempotente de la 002). */
+  upsert(account: Account): Promise<void>;
   findById(id: string): Promise<Account | null>;
   findDefaultByUser(userId: string): Promise<Account | null>;
+  /** Todas las cuentas del usuario (activas y archivadas), sin las borradas. */
+  listByUser(userId: string): Promise<Account[]>;
+  /** Quita la marca de cuenta por defecto a las demás cuentas del usuario. */
+  clearDefaultExcept(userId: string, accountId: string, at: Date): Promise<void>;
+}
+
+export interface TransactionRepository {
+  /** Crea el movimiento o reemplaza todos sus campos (el `PUT` idempotente). */
+  upsert(transaction: Transaction): Promise<void>;
+  findById(id: string): Promise<Transaction | null>;
+  /** Si la cuenta tiene movimientos vivos, como origen o como destino (FR-019). */
+  existsForAccount(accountId: string): Promise<boolean>;
+  /**
+   * Saldo exacto de la cuenta (data-model.md): saldo inicial + ingresos − gastos ± ajustes −
+   * transferencias que salen + transferencias que entran, sin los borrados. Texto decimal.
+   */
+  balanceOf(accountId: string): Promise<string>;
 }
 
 export interface Repositories {
@@ -93,6 +113,7 @@ export interface Repositories {
   sessions: SessionRepository;
   oneTimeTokens: OneTimeTokenRepository;
   accounts: AccountRepository;
+  transactions: TransactionRepository;
 }
 
 /** Ejecuta varias operaciones de repositorio en una sola transacción. */
