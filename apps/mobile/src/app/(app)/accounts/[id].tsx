@@ -6,6 +6,7 @@ import { AccountFields, GeneralErrors } from '../../../features/accounts/Account
 import { type AccountForm, accountService } from '../../../features/accounts/account-service';
 import { styles as base, PrimaryButton, TextButton } from '../../../features/auth/components';
 import { openLedgerContext, refreshLedger, useLedger } from '../../../features/transactions/ledger';
+import { colors } from '../../../theme';
 
 /**
  * Detalle de una cuenta de dinero (historia 3): editar, volverla la cuenta por defecto, archivar
@@ -113,5 +114,5 @@ export default function AccountDetail() {
 
 const styles = StyleSheet.create({
   content: { padding: 24, paddingTop: 48, gap: 12 },
-  hint: { color: '#0f766e' },
+  hint: { color: colors.primary },
 });

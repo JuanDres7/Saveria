@@ -6,6 +6,7 @@ import { styles as base, Field, PrimaryButton } from '../../../../features/auth/
 import { previewAdjustment } from '../../../../features/transactions/adjustment';
 import { refreshLedger, useLedger } from '../../../../features/transactions/ledger';
 import { transactionService } from '../../../../features/transactions/transaction-service';
+import { colors } from '../../../../theme';
 
 /**
  * Ajustar el saldo de una cuenta de dinero (historia 6). El usuario escribe el saldo real y
@@ -70,5 +71,5 @@ export default function AdjustBalance() {
 
 const styles = StyleSheet.create({
   content: { padding: 24, paddingTop: 48, gap: 12 },
-  hint: { color: '#4b5563', fontSize: 13 },
+  hint: { color: colors.textMuted, fontSize: 13 },
 });

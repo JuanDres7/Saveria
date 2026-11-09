@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { create } from 'zustand';
+import { colors } from '../../theme';
 import { transactionService } from './transaction-service';
 
 /** Cuánto tiempo se ofrece "Deshacer" (FR-026: al menos 5 segundos). */
@@ -60,10 +61,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#1f2937',
+    backgroundColor: colors.inverse,
     borderRadius: 8,
     padding: 14,
   },
-  text: { color: '#ffffff' },
-  action: { color: '#5eead4', fontWeight: '700' },
+  text: { color: colors.onPrimary },
+  action: { color: colors.inverseAccent, fontWeight: '700' },
 });

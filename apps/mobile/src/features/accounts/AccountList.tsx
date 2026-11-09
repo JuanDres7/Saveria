@@ -1,6 +1,7 @@
 import { formatAmount } from '@saveria/shared';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text } from 'react-native';
+import { colors } from '../../theme';
 import { styles as base } from '../auth/components';
 import type { AccountBalance } from '../transactions/ledger';
 import { NEGATIVE_COLOR } from '../transactions/RecentList';
@@ -33,5 +34,5 @@ export function AccountList({ items }: { items: readonly AccountBalance[] }) {
 
 const styles = StyleSheet.create({
   negative: { color: NEGATIVE_COLOR, fontWeight: '600' },
-  hint: { color: '#0f766e', fontSize: 13 },
+  hint: { color: colors.primary, fontSize: 13 },
 });

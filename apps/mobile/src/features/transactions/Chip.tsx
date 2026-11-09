@@ -1,4 +1,5 @@
 import { Pressable, StyleSheet, Text } from 'react-native';
+import { colors, radius } from '../../theme';
 
 /** Opción compacta de selección única (tipo, categoría, cuenta, fecha, filtro). */
 export function Chip({
@@ -31,11 +32,11 @@ export const chipRow = { flexDirection: 'row', flexWrap: 'wrap', gap: 8 } as con
 const styles = StyleSheet.create({
   chip: {
     borderWidth: 1,
-    borderColor: '#9ca3af',
-    borderRadius: 16,
+    borderColor: colors.border,
+    borderRadius: radius.pill,
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
-  chipChecked: { borderColor: '#0f766e', backgroundColor: '#0f766e' },
-  chipTextChecked: { color: '#ffffff', fontWeight: '600' },
+  chipChecked: { borderColor: colors.primary, backgroundColor: colors.primary },
+  chipTextChecked: { color: colors.onPrimary, fontWeight: '600' },
 });

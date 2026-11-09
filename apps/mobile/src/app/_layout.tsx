@@ -35,6 +35,10 @@ export default function RootLayout() {
     if (__DEV__ && process.env.EXPO_PUBLIC_SMOKE === '1') {
       void import('../dev/smoke').then((smoke) => smoke.runSmoke());
     }
+    const seedCount = Number(process.env.EXPO_PUBLIC_SEED_TRANSACTIONS);
+    if (__DEV__ && Number.isInteger(seedCount) && seedCount > 0) {
+      void import('../dev/seed-transactions').then((seed) => seed.runSeed(seedCount));
+    }
     return () => {
       stopWatching();
       stopRevocation();

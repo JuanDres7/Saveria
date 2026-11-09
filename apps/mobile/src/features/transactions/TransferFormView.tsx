@@ -1,6 +1,7 @@
 import { DESCRIPTION_MAX, localToday } from '@saveria/shared';
 import { useState } from 'react';
 import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { colors } from '../../theme';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
 import { styles as base, Field, PrimaryButton } from '../auth/components';
 import { Chip, chipRow } from './Chip';
@@ -177,7 +178,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 8,
     borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    backgroundColor: '#ffffff',
+    borderTopColor: colors.divider,
+    backgroundColor: colors.surface,
   },
 });

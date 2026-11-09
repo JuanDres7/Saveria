@@ -10,6 +10,7 @@ import {
 } from '../../../features/transactions/ledger';
 import type { LocalTransactionRecord } from '../../../features/transactions/local-transactions';
 import { DayHeader, TransactionRow } from '../../../features/transactions/RecentList';
+import { colors } from '../../../theme';
 
 const PAGE = 50;
 
@@ -81,5 +82,5 @@ export default function History() {
 
 const styles = StyleSheet.create({
   screen: { flex: 1, padding: 24, paddingTop: 48, gap: 12 },
-  count: { color: '#4b5563', fontSize: 13 },
+  count: { color: colors.textMuted, fontSize: 13 },
 });

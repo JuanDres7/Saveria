@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, type TextInputProps, View } from 'react-native';
+import { colors, radius } from '../../theme';
 
 /** Campo de texto con etiqueta y error; la etiqueta también es su nombre accesible. */
 export function Field({
@@ -105,16 +106,37 @@ export const styles = StyleSheet.create({
   title: { fontSize: 26, fontWeight: '700' },
   field: { gap: 4 },
   label: { fontSize: 14, fontWeight: '600' },
-  input: { borderWidth: 1, borderColor: '#9ca3af', borderRadius: 8, padding: 12, fontSize: 16 },
-  inputError: { borderColor: '#b91c1c' },
-  error: { color: '#b91c1c', fontSize: 13 },
-  button: { backgroundColor: '#0f766e', borderRadius: 8, padding: 14, alignItems: 'center' },
-  buttonDisabled: { backgroundColor: '#9ca3af' },
-  buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '600' },
-  link: { color: '#0f766e', textDecorationLine: 'underline' },
-  option: { borderWidth: 1, borderColor: '#9ca3af', borderRadius: 8, padding: 12, gap: 4 },
-  optionChecked: { borderColor: '#0f766e', borderWidth: 2, backgroundColor: '#f0fdfa' },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: 12,
+    fontSize: 16,
+  },
+  inputError: { borderColor: colors.negative },
+  error: { color: colors.negative, fontSize: 13 },
+  button: {
+    backgroundColor: colors.primary,
+    borderRadius: radius.md,
+    padding: 14,
+    alignItems: 'center',
+  },
+  buttonDisabled: { backgroundColor: colors.disabled },
+  buttonText: { color: colors.onPrimary, fontSize: 16, fontWeight: '600' },
+  link: { color: colors.primary, textDecorationLine: 'underline' },
+  option: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radius.md,
+    padding: 12,
+    gap: 4,
+  },
+  optionChecked: {
+    borderColor: colors.primary,
+    borderWidth: 2,
+    backgroundColor: colors.primarySoft,
+  },
   optionLabel: { fontSize: 16, fontWeight: '600' },
-  banner: { backgroundColor: '#fef3c7', borderRadius: 8, padding: 12 },
-  bannerText: { color: '#78350f' },
+  banner: { backgroundColor: colors.warningBackground, borderRadius: radius.md, padding: 12 },
+  bannerText: { color: colors.warningText },
 });

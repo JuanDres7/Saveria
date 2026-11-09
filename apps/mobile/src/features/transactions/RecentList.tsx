@@ -1,6 +1,7 @@
 import { categoryBySlug, formatAmount } from '@saveria/shared';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { colors } from '../../theme';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
 import { styles as base, TextButton } from '../auth/components';
 import type { DaySection } from './ledger';
@@ -122,15 +123,15 @@ export function DaySections({
   );
 }
 
-export const NEGATIVE_COLOR = '#b91c1c';
+export const NEGATIVE_COLOR = colors.negative;
 
 const styles = StyleSheet.create({
-  row: { borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingVertical: 8, gap: 2 },
+  row: { borderBottomWidth: 1, borderBottomColor: colors.divider, paddingVertical: 8, gap: 2 },
   content: { gap: 2 },
   line: { flexDirection: 'row', justifyContent: 'space-between' },
-  detail: { color: '#4b5563', fontSize: 13 },
-  header: { fontSize: 13, fontWeight: '700', color: '#374151', marginTop: 12 },
+  detail: { color: colors.textMuted, fontSize: 13 },
+  header: { fontSize: 13, fontWeight: '700', color: colors.textStrong, marginTop: 12 },
   out: { color: NEGATIVE_COLOR, fontWeight: '600' },
-  in: { color: '#047857', fontWeight: '600' },
-  neutral: { color: '#111827', fontWeight: '600' },
+  in: { color: colors.positive, fontWeight: '600' },
+  neutral: { color: colors.text, fontWeight: '600' },
 });

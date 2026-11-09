@@ -9,6 +9,7 @@ import { API_URL } from '../../api/instance';
 import { AuthError, authService } from '../../features/auth/auth-service';
 import { Banner, Field, PrimaryButton, Screen, styles } from '../../features/auth/components';
 import { useSession } from '../../session/session-store';
+import { colors } from '../../theme';
 
 const schema = z.object({
   email: emailSchema,
@@ -100,8 +101,8 @@ export default function Register() {
                 height: 24,
                 borderWidth: 2,
                 borderRadius: 4,
-                borderColor: '#0f766e',
-                backgroundColor: field.value ? '#0f766e' : 'transparent',
+                borderColor: colors.primary,
+                backgroundColor: field.value ? colors.primary : 'transparent',
               }}
             />
             <Text style={{ flex: 1 }}>
