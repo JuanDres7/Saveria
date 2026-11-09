@@ -83,6 +83,7 @@ export default function AccountDetail() {
             label="Guardar cambios"
             onPress={() => done(accountService.update(id, form))}
           />
+          <TextButton label="Ajustar saldo" onPress={() => router.push(`/accounts/${id}/adjust`)} />
           <TextButton
             label="Transferir desde esta cuenta"
             onPress={() => router.push(`/transfer?from=${id}`)}

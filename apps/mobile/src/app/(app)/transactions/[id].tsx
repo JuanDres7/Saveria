@@ -68,14 +68,14 @@ export default function EditTransaction() {
     );
   }
 
-  // Los ajustes se editan en su propia historia; aquí solo se pueden borrar.
+  // Los ajustes no se editan, solo se borran (historia 6).
   if (transaction.type !== 'expense' && transaction.type !== 'income') {
     return (
       <ScrollView contentContainerStyle={styles.content}>
         <Text role="heading" style={base.title}>
           {transactionTitle(transaction)}
         </Text>
-        <Text>Este tipo de movimiento todavía no se puede editar, pero sí borrar.</Text>
+        <Text>Los ajustes no se editan: bórralo y haz uno nuevo.</Text>
         {deleteButton}
       </ScrollView>
     );

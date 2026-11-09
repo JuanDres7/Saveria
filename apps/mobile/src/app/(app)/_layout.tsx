@@ -23,6 +23,7 @@ export default function AppLayout() {
           <Stack.Screen name="accounts/new" />
           <Stack.Screen name="accounts/archived" />
           <Stack.Screen name="accounts/[id]" />
+          <Stack.Screen name="accounts/[id]/adjust" />
           <Stack.Screen name="settings/index" />
           <Stack.Screen name="settings/change-password" />
           <Stack.Screen name="settings/delete-account" />

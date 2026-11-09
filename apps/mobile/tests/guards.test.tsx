@@ -137,6 +137,7 @@ const APP_SCREENS = [
   'accounts/new',
   'accounts/archived',
   'accounts/[id]',
+  'accounts/[id]/adjust',
   'settings/index',
   'settings/change-password',
   'settings/delete-account',

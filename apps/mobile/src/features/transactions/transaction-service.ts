@@ -2,6 +2,7 @@ import { localToday, parseAmount, transactionInputSchema } from '@saveria/shared
 import * as Crypto from 'expo-crypto';
 import type { OutboxItem } from '../../outbox/outbox';
 import { onOutboxConflict, onOutboxRejected, onOutboxSent } from '../../outbox/user-outbox';
+import { previewAdjustment } from './adjustment';
 import {
   flushIfOnline,
   type LedgerContext,
@@ -35,6 +36,11 @@ export interface TransferForm {
   occurredOn: string;
   description: string;
 }
+
+/** Resultado de ajustar el saldo: `transaction: null` si el saldo real ya coincidía (6.3). */
+export type AdjustResult =
+  | { ok: true; transaction: LocalTransactionRecord | null }
+  | { ok: false; errors: Record<string, string> };
 
 export type SaveResult =
   | { ok: true; transaction: LocalTransactionRecord }
@@ -247,6 +253,52 @@ export function createTransactionService({ context, now, newId, today }: Transac
       if (!built.ok) return built;
       persist(ctx, built.transaction);
       return built;
+    },
+
+    /**
+     * Ajusta el saldo de una cuenta al saldo real (historia 6): crea un movimiento de ajuste por la
+     * diferencia exacta, sin tocar ningún movimiento anterior. Si ya coincide, no crea nada.
+     */
+    adjustTo(accountId: string, realBalanceText: string): AdjustResult {
+      const ctx = requireContext();
+      const account = ctx.accounts.findById(accountId);
+      if (!account || account.deletedAt !== null) {
+        return { ok: false, errors: { accountId: 'La cuenta no existe' } };
+      }
+      const current = ctx.ledger.balances().get(accountId) ?? account.initialBalance;
+      const preview = previewAdjustment(current, realBalanceText, account.currency);
+      if (preview.status === 'invalid') return { ok: false, errors: { amount: preview.error } };
+      if (preview.status === 'same') return { ok: true, transaction: null };
+
+      const at = new Date(now()).toISOString();
+      const record: LocalTransactionRecord = {
+        id: newId(),
+        type: 'adjustment',
+        accountId,
+        amount: preview.difference,
+        currency: account.currency,
+        toAccountId: null,
+        toAmount: null,
+        toCurrency: null,
+        categorySlug: null,
+        description: null,
+        occurredOn: today(),
+        createdAt: at,
+        updatedAt: at,
+        deletedAt: null,
+        syncState: 'pending',
+        syncError: null,
+      };
+      const parsed = transactionInputSchema.safeParse(toInput(record));
+      if (!parsed.success) {
+        const errors: Record<string, string> = {};
+        for (const issue of parsed.error.issues) {
+          errors[String(issue.path[0] ?? 'body')] ??= issue.message;
+        }
+        return { ok: false, errors };
+      }
+      persist(ctx, record);
+      return { ok: true, transaction: record };
     },
 
     /** Borrado lógico al instante (FR-026): sale de los saldos y del historial y encola el `DELETE`. */
