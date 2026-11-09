@@ -1,14 +1,17 @@
 <!--
 Sync Impact Report
-- Version change: 1.1.0 → 1.1.1 (PATCH: aclaración de redacción, sin cambio de intención)
-- Principios modificados:
-  III. Offline primero (la regla de UUID del cliente aplica a las entidades que se pueden crear
-  sin conexión; las que solo se crean en línea pueden usar UUID del servidor)
+- Version change: 1.1.1 → 1.2.0 (MINOR: se amplía materialmente la regla de herramientas del stack)
+- Principios modificados: ninguno (I a VIII intactos)
+- Secciones modificadas:
+  Stack y restricciones técnicas, línea «Prohibido sin enmienda»: sigue prohibiendo servicios y
+  herramientas de backend, datos, IA o infraestructura fuera de la lista; las librerías de
+  interfaz de la app (íconos, dibujo vectorial, componentes visuales) pasan a permitirse sin
+  enmienda si cumplen cuatro condiciones y el plan que las usa las justifica.
 - Secciones añadidas: ninguna
 - Secciones eliminadas: ninguna
 - Plantillas dependientes: sin cambios; leen esta constitución en tiempo de ejecución.
-- Specs afectadas: specs/001-auth-onboarding (user_profiles usa el id del usuario, creado en
-  línea al registrarse; queda conforme). Hallazgo C1 de /speckit-analyze.
+- Specs afectadas: specs/003-visual-redesign (necesita lucide-react-native y react-native-svg;
+  quedan justificadas en su Complexity Tracking). Las specs 001 y 002 no cambian.
 - TODOs diferidos: ninguno.
 -->
 
@@ -154,8 +157,13 @@ Saveria trata datos financieros personales y MUST cumplir la Ley 1581 de 2012 (C
   cambiar de proveedor sin tocar los casos de uso.
 - **Infraestructura**: Docker y Docker Compose; solo el backend principal se expone fuera de la
   red interna.
-- **Prohibido sin enmienda**: agregar servicios o herramientas fuera de esta lista (por ejemplo
-  Firebase, Supabase, MongoDB, una base vectorial aparte, otro proveedor de correo).
+- **Prohibido sin enmienda**: agregar servicios o herramientas de backend, datos, IA o
+  infraestructura fuera de esta lista (por ejemplo Firebase, Supabase, MongoDB, una base vectorial
+  aparte, otro proveedor de correo).
+- **Librerías de interfaz de la app** (íconos, dibujo vectorial, componentes visuales): se pueden
+  agregar sin enmienda si cumplen las cuatro condiciones: (1) están mantenidas y son compatibles
+  con la versión de Expo del proyecto; (2) no hacen llamadas de red ni envían datos; (3) funcionan
+  sin conexión; (4) el plan de la funcionalidad que las usa las justifica en *Complexity Tracking*.
 - **Simplicidad**: el proyecto lo construye una sola persona. Toda complejidad adicional MUST
   justificarse en la sección *Complexity Tracking* del plan; ante la duda, YAGNI.
 - **Monetización**: todo es gratuito durante el prototipo, pero el diseño MUST permitir limitar
@@ -187,4 +195,4 @@ proyecto. Cuando un documento de `docs/` contradiga esta constitución, manda la
 - **Cumplimiento**: cada plan verifica la constitución en su *Constitution Check*;
   `/speckit-analyze` revisa la coherencia entre spec, plan y tareas antes de implementar.
 
-**Version**: 1.1.1 | **Ratified**: 2026-10-22 | **Last Amended**: 2026-10-22
+**Version**: 1.2.0 | **Ratified**: 2026-10-22 | **Last Amended**: 2026-11-09
