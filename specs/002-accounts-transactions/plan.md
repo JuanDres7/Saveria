@@ -67,7 +67,7 @@ logs sin montos ni descripciones (FR-040); body de máximo 16 KB; un solo desarr
 | IV. Precisión monetaria y multimoneda | `numeric(19,4)` + `char(3)`; texto en el contrato; enteros exactos en SQLite (research §5); el movimiento usa la moneda de su cuenta; transferencias y ajustes sin categoría. **Totales consolidados**: la regla exige convertir con tasas, que llegan en la 008. Para no violarla, la 002 no muestra totales que mezclen monedas y solo suma cuando todas las cuentas activas están en la moneda principal (FR-012, FR-013) | ✅ |
 | V. Categorización en capas | Lista fija sin categorías personalizadas (catálogo compartido). La categorización automática llega en la 005 | ✅ |
 | VI. Privacidad | Borrado en cascada de cuentas y movimientos; aislamiento por usuario (404 sin revelar ids ajenos); logs sin montos ni descripciones, con prueba automática | ✅ |
-| VII. Clean Architecture y contratos | Casos de uso `save-account`, `save-transaction`, `delete-transaction` con puertos de repositorio; contrato acumulativo `contracts/openapi.yaml` (0.2.0) escrito antes del código | ✅ |
+| VII. Clean Architecture y contratos | Casos de uso `save-account`, `save-transaction`, `delete-transaction` con puertos de repositorio; contrato acumulativo `contracts/openapi.yaml` (0.2.0) escrito antes del código. El formato de las acciones de la IA (`version: 1`) se valida desde ya del lado TypeScript con Zod; el lado Python se valida con el mismo formato cuando exista el microservicio (004) | ✅ |
 | VIII. Pruebas guiadas por la spec | Cada escenario tiene una prueba o un diferimiento explícito (matriz abajo) | ✅ |
 | Stack | Sin herramientas nuevas | ✅ |
 
@@ -89,16 +89,17 @@ manual del quickstart.
 | 2.2–2.3 | M (agrupado por día, orden, filtro por cuenta incluye transferencias) | — |
 | 2.4–2.5 | M (sin total con monedas mezcladas; total cuando todas están en la principal; archivadas no suman) | Total consolidado con tasas → 008 |
 | 2.6 | M (historial y saldos con la red apagada) | — |
-| 3.1–3.4 | M (crear, moneda preseleccionada, cambiar la predeterminada, renombrar) · I (`isDefault` desmarca las demás en la misma transacción) | — |
+| 3.1–3.4 | M (crear, moneda preseleccionada, cambiar la cuenta por defecto, renombrar) · I (`isDefault` desmarca las demás en la misma transacción) | — |
 | 3.5 | U + I (nombre único sin distinguir mayúsculas entre activas) | — |
-| 3.6–3.7 | I (archivar con saldo; no archivar la predeterminada) · M (aviso de saldo, "cuentas archivadas") | — |
+| 3.6–3.7 | I (archivar con saldo; no archivar la cuenta por defecto) · M (aviso de saldo, "cuentas archivadas") | — |
+| Reactivar (FR-021) | U (shared: nombre ocupado o 20 activas) · I (el servidor lo comprueba con sus datos) · M (pide renombrar o archivar otra) | — |
 | 3.8 | U + I (moneda inmutable con movimientos, también como destino de transferencia) | — |
 | 3.9 | M (crear cuenta sin red → outbox) | — |
 | 4.1–4.3 | M (editar recalcula saldos; cambiar a otra moneda pide el monto) · I (moneda distinta a la de la cuenta → 400) | — |
 | 4.4–4.6 | M ("Deshacer" ≥ 5 s restaura; sin red) · I (`DELETE` lógico; `PUT` con `deletedAt: null` revive) · C (204) | — |
 | 5.1–5.5 | U (validación de transferencia) · I (una fila, saldos de origen y destino, misma cuenta → 400, borrar mueve los dos saldos) · M (dos montos si las monedas difieren) | — |
 | 6.1–6.4 | U (diferencia con signo; igual → no crea) · M (ajuste distinguido en el historial) · I (ajuste sin categoría) | — |
-| Casos límite | U (fechas futuras, monto máximo, descripción de 120) · M (compactar la cola: crear + editar + borrar sin red = estado final) · I (cuentas de otro usuario → 404, sin moneda principal → 422) | Descargar cambios de otro teléfono → 006 |
+| Casos límite | U (fechas futuras, monto máximo, descripción de 120) · M (editar un movimiento de una cuenta archivada la conserva en el selector; borrado rechazado vuelve a aparecer marcado) · M (compactar la cola: crear + editar + borrar sin red = estado final) · I (cuentas de otro usuario → 404, sin moneda principal → 422) | Descargar cambios de otro teléfono → 006 |
 | FR-037 | M (`onRejected` marca `rejected` con el motivo y la cola sigue) · Q (paso 14) | — |
 | FR-040 / SC-006 | I (la prueba de logs de la 001 cubre los endpoints nuevos: sin montos ni descripciones) | — |
 | FR-041 | I (borrar el usuario borra cuentas y movimientos) | — |

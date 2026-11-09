@@ -45,11 +45,11 @@ Con una cuenta nueva y el onboarding terminado en COP. Anotar los resultados en
 
 | # | Paso | Esperado | Escenario |
 |---|---|---|---|
-| 1 | Tocar "+", escribir `18.000`, tocar "Restaurantes y domicilios", "Guardar" | Gasto en "Efectivo" con fecha de hoy, en 3 toques más el monto; saldo −18.000 | 1.1, 1.2, SC-001 |
+| 1 | Tocar "+", escribir `18.000`, tocar "Restaurantes y domicilios", "Guardar" | Gasto en "Efectivo" con fecha de hoy, en 3 toques más el monto y **en menos de 5 s** (cronometrar desde el toque en "+" hasta ver el gasto en Inicio); saldo −18.000 | 1.1, 1.2, SC-001 |
 | 2 | Cambiar a "ingreso" | Solo se ven las 8 categorías de ingreso | 1.3 |
 | 3 | Intentar guardar con monto `0` o sin categoría; escribir `18000,50` en COP | No se guarda y se dice qué falta; COP no acepta decimales | 1.5, 1.6 |
 | 4 | Modo avión → registrar 2 gastos → quitar el modo avión | Aparecen al instante; al volver la red llegan al servidor una sola vez | 1.4, 1.7, SC-002 |
-| 5 | Crear "Nequi", billetera digital, COP, saldo inicial `80.000`, y marcarla por defecto | Saldo 80.000; "Efectivo" deja de ser la predeterminada; "+" trae "Nequi" | 3.1–3.3 |
+| 5 | Crear "Nequi", billetera digital, COP, saldo inicial `80.000`, y marcarla por defecto | Saldo 80.000; "Efectivo" deja de ser la cuenta por defecto; "+" trae "Nequi" | 3.1–3.3 |
 | 6 | Crear otra cuenta llamada "nequi" | No se permite: el nombre ya existe | 3.5 |
 | 7 | Crear "Ahorros USD" en USD y transferir `10` USD → `40.000` COP a "Nequi" | Se piden los dos montos; los saldos cambian; no aparece como gasto ni ingreso | 5.1–5.3 |
 | 8 | Ver Inicio con cuentas COP y USD | Cada saldo en su moneda; no se muestra un total que las mezcle | 2.4, FR-012 |

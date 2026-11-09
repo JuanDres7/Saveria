@@ -216,6 +216,10 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
 - El servidor rechaza un gasto ya guardado en el teléfono: el gasto sigue en el historial con la
   marca "no se pudo guardar" y el motivo hasta que el usuario lo corrija o lo borre.
 - Una cuenta archivada con movimientos sin enviar: los movimientos se envían igual.
+- Al editar un movimiento de una cuenta archivada, esa cuenta sigue disponible en el selector
+  para ese movimiento (no se le obliga a cambiar de cuenta); no aparece para movimientos nuevos.
+- El servidor rechaza un borrado: el movimiento vuelve a aparecer con "no se pudo borrar" y el
+  motivo, y se puede reintentar.
 - El usuario cierra sesión con movimientos sin enviar: se conservan y se envían cuando ese mismo
   usuario vuelve a entrar (regla ya definida en la feature 001).
 - El usuario borra su cuenta de Saveria: se borran también todas sus cuentas y movimientos, en el
@@ -246,7 +250,9 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   exacto, sin redondeos.
 - **FR-007**: La fecha de un movimiento MUST ser hoy o una fecha pasada, sin límite hacia atrás;
   no se permiten fechas futuras (los movimientos programados llegan con los recurrentes, v2).
-  "Hoy" es el día según la hora del teléfono del usuario.
+  "Hoy" es el día según la hora del teléfono del usuario. Por las zonas horarias, el servidor
+  acepta como "hoy" hasta un día después de su propia fecha; para el usuario no existen fechas
+  futuras.
 - **FR-008**: El sistema MUST impedir registrar movimientos y crear cuentas mientras el usuario no
   tenga moneda principal (regla FR-015 de la feature 001).
 - **FR-009**: El registro manual MUST pasar por el mismo caso de uso que usará después el registro
@@ -331,8 +337,10 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   movimiento tiene un identificador creado en el teléfono.
 - **FR-037**: Si el servidor rechaza un cambio por datos inválidos, el sistema MUST conservar el
   movimiento o la cuenta en el teléfono (y en los saldos), marcarlo como "no se pudo guardar" con
-  el motivo, y permitir corregirlo o borrarlo; al corregirlo, el envío se reintenta. Un rechazo
-  MUST NOT bloquear el envío de los demás cambios.
+  el motivo, y permitir corregirlo o borrarlo; al corregirlo, el envío se reintenta. Si lo
+  rechazado es un borrado, el movimiento vuelve a aparecer marcado "no se pudo borrar" con el
+  motivo y el usuario puede reintentar el borrado. Un rechazo MUST NOT bloquear el envío de los
+  demás cambios.
 - **FR-038**: Descargar en un teléfono los cambios hechos en otro y resolver conflictos entre
   dispositivos queda fuera de esta feature (feature 006).
 

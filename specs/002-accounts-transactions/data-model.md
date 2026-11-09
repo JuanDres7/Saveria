@@ -32,6 +32,8 @@ están en [research.md](research.md).
 - No se puede archivar si `is_default`; tampoco quitar `is_default` sin marcar otra (siempre debe
   quedar una).
 - Archivar con saldo distinto de cero está permitido (el aviso es de la app).
+- Reactivar (`archived_at` → null) cumple las mismas reglas que crear: nombre único entre las
+  activas y máximo 20 activas (FR-021).
 
 ### `transactions` (nueva, sincronizable)
 

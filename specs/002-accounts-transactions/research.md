@@ -118,7 +118,7 @@ decisiones de diseño nuevas.
 ## 9. Cuenta por defecto y nombres únicos
 
 - **Decision**:
-  - Marcar una cuenta como predeterminada (`isDefault = true`) desmarca las demás **en el
+  - Marcar una cuenta como cuenta por defecto (`isDefault = true`) desmarca las demás **en el
     servidor**, dentro de la misma transacción del `PUT`. Así no importa el orden en que lleguen
     los cambios de las dos cuentas y el índice único parcial existente nunca falla. El teléfono
     hace lo mismo en su base local.
