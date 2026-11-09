@@ -14,6 +14,7 @@ import { createRefresh } from './application/use-cases/refresh';
 import { createRegister } from './application/use-cases/register';
 import { createResendVerification } from './application/use-cases/resend-verification';
 import { createCheckResetLink, createResetPassword } from './application/use-cases/reset-password';
+import { createSaveTransaction } from './application/use-cases/save-transaction';
 import { createUpdateProfile } from './application/use-cases/update-profile';
 import {
   createCheckVerificationLink,
@@ -30,6 +31,7 @@ import { authRoutes } from './interfaces/http/routes/auth';
 import { legalRoutes } from './interfaces/http/routes/legal';
 import { linkPageHeaders, linkRoutes } from './interfaces/http/routes/links';
 import { meRoutes } from './interfaces/http/routes/me';
+import { transactionRoutes } from './interfaces/http/routes/transactions';
 
 /** Lo que `createApp` necesita del contenedor; las pruebas pueden pasar un subconjunto. */
 export type AppDeps = Pick<Container, 'config' | 'logger'> & Partial<Container>;
@@ -68,6 +70,10 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
       completeOnboarding: createCompleteOnboarding(deps),
       deleteAccount: createDeleteAccount(deps),
     }),
+  );
+  app.route(
+    '/v1/transactions',
+    transactionRoutes({ auth, saveTransaction: createSaveTransaction(deps) }),
   );
   app.route(
     '/',

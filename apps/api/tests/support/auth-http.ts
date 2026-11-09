@@ -69,3 +69,43 @@ export function profileBody(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+export function deleteJson(
+  t: TestApp,
+  path: string,
+  body: unknown,
+  headers: Record<string, string>,
+) {
+  return t.app.request(path, {
+    method: 'DELETE',
+    headers: { 'content-type': 'application/json', ...headers },
+    body: JSON.stringify(body),
+  });
+}
+
+/**
+ * Registra un usuario y le termina el onboarding con "Efectivo" en `currency` (la feature 002
+ * necesita una moneda principal y una cuenta para registrar movimientos).
+ */
+export async function onboardUser(
+  t: TestApp,
+  { email = 'ana@mail.com', currency = 'COP', accountId = crypto.randomUUID() } = {},
+) {
+  const auth = await registerUser(t, { email });
+  const headers = bearer(auth.tokens.accessToken);
+  const profile = await putJson(
+    t,
+    '/v1/me/profile',
+    profileBody({ primaryCurrency: currency, onboardingStep: 'ai_mode' }),
+    headers,
+  );
+  if (profile.status !== 200) throw new Error(`perfil falló con ${profile.status}`);
+  const done = await postJson(
+    t,
+    '/v1/me/onboarding/complete',
+    { defaultAccountId: accountId },
+    headers,
+  );
+  if (done.status !== 200) throw new Error(`onboarding falló con ${done.status}`);
+  return { token: auth.tokens.accessToken, headers, userId: auth.me.id, accountId };
+}
