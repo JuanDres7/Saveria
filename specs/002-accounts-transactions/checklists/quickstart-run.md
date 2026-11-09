@@ -93,3 +93,15 @@ Efectivo. Cada paso se comprobó también en el servidor.
 | 5.5 | Borrarla | ✅ Los dos saldos vuelven a la vez: Efectivo $ 460.000, Nequi $ 0; en el servidor la fila queda con `deleted_at` |
 | 2.3 | Filtro por cuenta con transferencias | Cubierto por `apps/mobile/tests/us5-transfer.test.tsx` (aparece una sola vez en "Todas", con "-" en el origen y "+" en el destino) |
 | 5.4 (misma cuenta), FR-030 sin red | Reglas del servicio y cola | Cubiertos por las pruebas automáticas (servicio, servidor y outbox) |
+
+## Historia 6: ajustar el saldo (2026-11-09)
+
+Cuenta de prueba `qs002.us5@mail.com`. Se registró un ingreso de 120.000 en Efectivo para partir de
+un saldo conocido y cada paso se comprobó también en el servidor.
+
+| Escenario | Paso | Resultado |
+|---|---|---|
+| 6.1 | Cuentas de dinero → Efectivo → "Ajustar saldo" → saldo real `115.000` | ✅ Muestra "Saldo actual: $ 120.000 COP" y "Diferencia: -$ 5.000"; al confirmar el saldo queda en $ 115.000 y el servidor tiene `adjustment -5000` sin categoría |
+| 6.3 | Volver a "Ajustar saldo" con saldo real `115.000` (igual al actual) | ✅ "El saldo ya coincide: no se crea ningún ajuste"; el botón queda deshabilitado (comprobado en la prueba automática) |
+| 6.2 | Inicio | ✅ El movimiento aparece como "Ajuste de saldo", sin categoría |
+| 6.4 | Tocar el ajuste → "Borrar" | ✅ Dice "Los ajustes no se editan: bórralo y haz uno nuevo."; al borrar el saldo vuelve a $ 120.000; en el servidor el ajuste queda con `deleted_at` |

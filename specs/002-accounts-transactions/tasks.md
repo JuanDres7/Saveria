@@ -204,12 +204,12 @@ todas las historias
 
 ### Tests for User Story 6 ⚠️
 
-- [ ] T055 [P] [US6] Pruebas unitarias en `apps/api/tests/unit/save-transaction-adjustment.test.ts`: ajuste negativo y positivo válidos; monto `0` → `validation_error`; con categoría o campos `to*` → `validation_error` (FR-032)
-- [ ] T056 [P] [US6] Pruebas de la app en `apps/mobile/tests/us6-adjust.test.tsx`: saldo 120.000 y real 115.000 → ajuste de −5.000 y saldo 115.000 (6.1); el ajuste se distingue en el historial y no lleva categoría (6.2); real igual al actual → no crea nada (6.3); borrarlo devuelve el saldo anterior (6.4)
+- [X] T055 [P] [US6] Pruebas unitarias en `apps/api/tests/unit/save-transaction-adjustment.test.ts`: ajuste negativo y positivo válidos; monto `0` → `validation_error`; con categoría o campos `to*` → `validation_error` (FR-032)
+- [X] T056 [P] [US6] Pruebas de la app en `apps/mobile/tests/us6-adjust.test.tsx`: saldo 120.000 y real 115.000 → ajuste de −5.000 y saldo 115.000 (6.1); el ajuste se distingue en el historial y no lleva categoría (6.2); real igual al actual → no crea nada (6.3); borrarlo devuelve el saldo anterior (6.4)
 
 ### Implementation for User Story 6
 
-- [ ] T057 [US6] Agregar `adjustTo(accountId, realBalanceText)` en `apps/mobile/src/features/transactions/transaction-service.ts` (diferencia exacta con `toE4`/`fromE4`; si es cero no crea nada) y crear `apps/mobile/src/app/(app)/accounts/[id]/adjust.tsx` (saldo actual, campo "saldo real", vista previa de la diferencia)
+- [X] T057 [US6] Agregar `adjustTo(accountId, realBalanceText)` en `apps/mobile/src/features/transactions/transaction-service.ts` (diferencia exacta con `toE4`/`fromE4`; si es cero no crea nada) y crear `apps/mobile/src/app/(app)/accounts/[id]/adjust.tsx` (saldo actual, campo "saldo real", vista previa de la diferencia)
 
 **Checkpoint**: las seis historias funcionan por separado
 
