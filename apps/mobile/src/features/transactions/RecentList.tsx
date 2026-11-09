@@ -1,9 +1,11 @@
 import { categoryBySlug, formatAmount } from '@saveria/shared';
-import { StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
-import { styles as base } from '../auth/components';
+import { styles as base, TextButton } from '../auth/components';
 import type { DaySection } from './ledger';
 import type { LocalTransactionRecord } from './local-transactions';
+import { DELETE_REJECTED_PREFIX, transactionService } from './transaction-service';
 
 const TYPE_LABELS: Record<LocalTransactionRecord['type'], string> = {
   expense: 'Gasto',
@@ -45,7 +47,8 @@ function signedAmount(tx: LocalTransactionRecord, fromAccountId?: string): [stri
 
 /**
  * Un movimiento: título, monto, cuenta (u origen → destino) y descripción. La fecha la da el
- * encabezado del día. Si el servidor lo rechazó, muestra el motivo (FR-037).
+ * encabezado del día. Al tocarlo se abre para editarlo o borrarlo. Si el servidor lo rechazó,
+ * muestra el motivo (FR-037); si lo rechazado fue un borrado, ofrece reintentarlo.
  */
 export function TransactionRow({
   tx,
@@ -61,15 +64,28 @@ export function TransactionRow({
   const where =
     tx.type === 'transfer' ? `${name(tx.accountId)} → ${name(tx.toAccountId)}` : name(tx.accountId);
   const [amount, tone] = signedAmount(tx, fromAccountId);
+  const deleteRejected = tx.syncError?.startsWith(DELETE_REJECTED_PREFIX) ?? false;
   return (
-    <View style={styles.row} accessibilityLabel={`${transactionTitle(tx)} ${tx.amount}`}>
-      <View style={styles.line}>
-        <Text style={base.optionLabel}>{transactionTitle(tx)}</Text>
-        <Text style={styles[tone]}>{amount}</Text>
-      </View>
-      <Text style={styles.detail}>{[where, tx.description].filter(Boolean).join(' · ')}</Text>
+    <View style={styles.row}>
+      <Pressable
+        role="button"
+        accessibilityLabel={`${transactionTitle(tx)} ${tx.amount}`}
+        onPress={() => router.push(`/transactions/${tx.id}`)}
+        style={styles.content}
+      >
+        <View style={styles.line}>
+          <Text style={base.optionLabel}>{transactionTitle(tx)}</Text>
+          <Text style={styles[tone]}>{amount}</Text>
+        </View>
+        <Text style={styles.detail}>{[where, tx.description].filter(Boolean).join(' · ')}</Text>
+      </Pressable>
       {tx.syncState === 'rejected' ? (
-        <Text style={base.error}>{`No se pudo guardar: ${tx.syncError ?? ''}`}</Text>
+        <Text style={base.error}>
+          {deleteRejected ? tx.syncError : `No se pudo guardar: ${tx.syncError ?? ''}`}
+        </Text>
+      ) : null}
+      {tx.syncState === 'rejected' && deleteRejected ? (
+        <TextButton label="Reintentar borrado" onPress={() => transactionService.remove(tx.id)} />
       ) : null}
     </View>
   );
@@ -110,6 +126,7 @@ export const NEGATIVE_COLOR = '#b91c1c';
 
 const styles = StyleSheet.create({
   row: { borderBottomWidth: 1, borderBottomColor: '#e5e7eb', paddingVertical: 8, gap: 2 },
+  content: { gap: 2 },
   line: { flexDirection: 'row', justifyContent: 'space-between' },
   detail: { color: '#4b5563', fontSize: 13 },
   header: { fontSize: 13, fontWeight: '700', color: '#374151', marginTop: 12 },

@@ -21,6 +21,9 @@ export interface RecordForm {
   description: string;
 }
 
+/** Marca del motivo cuando el servidor rechazó un borrado (FR-037): la fila muestra "no se pudo borrar". */
+export const DELETE_REJECTED_PREFIX = 'No se pudo borrar: ';
+
 export type SaveResult =
   | { ok: true; transaction: LocalTransactionRecord }
   | { ok: false; errors: Record<string, string> };
@@ -66,53 +69,124 @@ export function createTransactionService({ context, now, newId, today }: Transac
     flushIfOnline(ctx);
   }
 
+  /** Siempre más nuevo que lo guardado, aunque el reloj del teléfono vaya atrasado. */
+  function nextUpdatedAt(previous: LocalTransactionRecord): string {
+    return new Date(Math.max(now(), Date.parse(previous.updatedAt) + 1)).toISOString();
+  }
+
+  /** Arma y valida el movimiento del formulario con las mismas reglas que el servidor. */
+  function build(
+    ctx: LedgerContext,
+    form: RecordForm,
+    base: { id: string; createdAt: string; updatedAt: string },
+  ): SaveResult {
+    const errors: Record<string, string> = {};
+    const account = form.accountId ? ctx.accounts.findById(form.accountId) : null;
+    if (!account || account.deletedAt !== null) errors.accountId = 'Elige una cuenta';
+
+    let amount = '';
+    if (account) {
+      const parsed = parseAmount(form.amountText, account.currency);
+      if (parsed.ok) amount = parsed.value;
+      else errors.amount = parsed.error;
+    }
+    if (form.categorySlug === null) errors.categorySlug = 'Elige una categoría';
+    if (!account || Object.keys(errors).length > 0) return { ok: false, errors };
+
+    const record: LocalTransactionRecord = {
+      ...base,
+      type: form.type,
+      accountId: account.id,
+      amount,
+      currency: account.currency,
+      toAccountId: null,
+      toAmount: null,
+      toCurrency: null,
+      categorySlug: form.categorySlug,
+      description: form.description.trim() === '' ? null : form.description.trim(),
+      occurredOn: form.occurredOn || today(),
+      deletedAt: null,
+      syncState: 'pending',
+      syncError: null,
+    };
+
+    const parsed = transactionInputSchema.safeParse(toInput(record));
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        errors[String(issue.path[0] ?? 'body')] ??= issue.message;
+      }
+      return { ok: false, errors };
+    }
+    return { ok: true, transaction: record };
+  }
+
   return {
     /** Registra un gasto o un ingreso (historia 1). Valida con las mismas reglas que el servidor. */
     record(form: RecordForm): SaveResult {
       const ctx = requireContext();
-      const errors: Record<string, string> = {};
-      const account = form.accountId ? ctx.accounts.findById(form.accountId) : null;
-      if (!account || account.deletedAt !== null) errors.accountId = 'Elige una cuenta';
-
-      let amount = '';
-      if (account) {
-        const parsed = parseAmount(form.amountText, account.currency);
-        if (parsed.ok) amount = parsed.value;
-        else errors.amount = parsed.error;
-      }
-      if (form.categorySlug === null) errors.categorySlug = 'Elige una categoría';
-      if (!account || Object.keys(errors).length > 0) return { ok: false, errors };
-
       const at = new Date(now()).toISOString();
-      const record: LocalTransactionRecord = {
-        id: newId(),
-        type: form.type,
-        accountId: account.id,
-        amount,
-        currency: account.currency,
-        toAccountId: null,
-        toAmount: null,
-        toCurrency: null,
-        categorySlug: form.categorySlug,
-        description: form.description.trim() === '' ? null : form.description.trim(),
-        occurredOn: form.occurredOn || today(),
-        createdAt: at,
-        updatedAt: at,
+      const built = build(ctx, form, { id: newId(), createdAt: at, updatedAt: at });
+      if (!built.ok) return built;
+      persist(ctx, built.transaction);
+      return built;
+    },
+
+    /**
+     * Edita un movimiento (historia 4): mismas reglas que al crearlo. Al pasarlo a una cuenta de
+     * otra moneda el monto se vuelve a escribir en la nueva moneda, nunca se convierte (FR-025).
+     */
+    update(id: string, form: RecordForm): SaveResult {
+      const ctx = requireContext();
+      const previous = ctx.ledger.findById(id);
+      if (!previous || previous.deletedAt !== null) {
+        return { ok: false, errors: { body: 'El movimiento ya no existe' } };
+      }
+      const built = build(ctx, form, {
+        id,
+        createdAt: previous.createdAt,
+        updatedAt: nextUpdatedAt(previous),
+      });
+      if (!built.ok) return built;
+      persist(ctx, built.transaction);
+      return built;
+    },
+
+    /** Borrado lógico al instante (FR-026): sale de los saldos y del historial y encola el `DELETE`. */
+    remove(id: string): void {
+      const ctx = requireContext();
+      const previous = ctx.ledger.findById(id);
+      if (!previous) return;
+      const at = nextUpdatedAt(previous);
+      ctx.ledger.softDelete(id, at);
+      ctx.outbox.enqueue(
+        {
+          entity: 'transaction',
+          entityId: id,
+          operation: 'delete',
+          payload: {
+            method: 'DELETE',
+            path: `/v1/transactions/${id}`,
+            body: { updatedAt: at },
+          },
+        },
+        { compact: true },
+      );
+      refreshLedger(ctx);
+      flushIfOnline(ctx);
+    },
+
+    /** "Deshacer": el movimiento vuelve tal como estaba, con un `PUT` más nuevo que el borrado. */
+    restore(id: string): void {
+      const ctx = requireContext();
+      const previous = ctx.ledger.findById(id);
+      if (!previous) return;
+      persist(ctx, {
+        ...previous,
         deletedAt: null,
+        updatedAt: nextUpdatedAt(previous),
         syncState: 'pending',
         syncError: null,
-      };
-
-      const parsed = transactionInputSchema.safeParse(toInput(record));
-      if (!parsed.success) {
-        for (const issue of parsed.error.issues) {
-          errors[String(issue.path[0] ?? 'body')] ??= issue.message;
-        }
-        return { ok: false, errors };
-      }
-
-      persist(ctx, record);
-      return { ok: true, transaction: record };
+      });
     },
 
     /**
@@ -127,11 +201,21 @@ export function createTransactionService({ context, now, newId, today }: Transac
       refreshLedger(ctx);
     },
 
-    /** El servidor lo rechazó sin arreglo: se queda en el teléfono, marcado (FR-037). */
-    markRejected(id: string, body: unknown): void {
+    /**
+     * El servidor lo rechazó sin arreglo: se queda en el teléfono, marcado (FR-037). Si lo
+     * rechazado era un borrado, el movimiento vuelve a verse como "no se pudo borrar" y se puede
+     * reintentar.
+     */
+    markRejected(id: string, body: unknown, operation = 'upsert'): void {
       const ctx = context();
       if (!ctx) return;
-      ctx.ledger.markSync(id, 'rejected', rejectionMessage(body));
+      if (operation === 'delete') {
+        const local = ctx.ledger.findById(id);
+        if (local) ctx.ledger.restore(id, local.updatedAt);
+        ctx.ledger.markSync(id, 'rejected', `${DELETE_REJECTED_PREFIX}${rejectionMessage(body)}`);
+      } else {
+        ctx.ledger.markSync(id, 'rejected', rejectionMessage(body));
+      }
       refreshLedger(ctx);
     },
 
@@ -184,7 +268,8 @@ export function transactionOutboxHandlers(service: TransactionService = transact
         item.entityId,
         (item.payload as { body?: { updatedAt?: string } }).body?.updatedAt,
       ),
-    onRejected: (item: OutboxItem, body: unknown) => service.markRejected(item.entityId, body),
+    onRejected: (item: OutboxItem, body: unknown) =>
+      service.markRejected(item.entityId, body, item.operation),
     onConflict: (item: OutboxItem, body: unknown) =>
       service.adoptServerVersion(item.entityId, body),
   };
