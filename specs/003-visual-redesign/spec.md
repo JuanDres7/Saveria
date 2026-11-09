@@ -8,6 +8,17 @@
 
 **Input**: User description: "Rediseño visual de la app: que Saveria deje de verse como un prototipo y tenga una identidad visual propia, cálida y tranquila, aplicada de forma coherente a todas las pantallas que ya existen, sin agregar funciones nuevas. La dirección visual sale de la imagen de referencia `inspiracion/Inspiracion.png`: se toma su estilo (verdes oliva sobre fondo crema, tarjetas muy redondeadas, íconos de línea, barra de navegación inferior, filtros en chips, movimientos con ícono redondo y monto en rojo o verde, mensajes amables), no sus funciones bancarias."
 
+## Clarifications
+
+### Session 2026-11-09
+
+- Q: ¿Cómo se dibujan los íconos de línea fina, si la app no trae ninguna librería de íconos y la constitución prohíbe agregar herramientas sin una enmienda? → A: Se enmienda la constitución para permitir librerías y herramientas útiles para la interfaz (íconos, formas vectoriales, etc.); el plan elige cuáles. La enmienda es el primer paso de esta feature.
+- Q: ¿Qué secciones lleva la barra de navegación inferior? → A: Cuatro: Inicio, Movimientos, Cuentas y Ajustes. Registrar y transferir se alcanzan desde Inicio y desde cada cuenta, sin pestaña propia.
+- Q: ¿Qué muestra la tarjeta grande de balance de Inicio? → A: El total cuando todas las cuentas activas están en la moneda principal; si no, el saldo de la cuenta por defecto, diciéndolo claramente. Las demás cuentas van debajo.
+- Q: ¿Habrá modo oscuro en esta feature? → A: Sí, claro y oscuro: dos paletas y todas las pantallas probadas en ambos modos.
+- Q: ¿Qué tipografía se usa? → A: La del sistema, sin descargar fuentes.
+- Q: ¿Cuánto tono amable y motivador llevan los textos? → A: Cercano y breve: saludo por nombre y mensajes amables solo donde no hay datos o tras lograr algo; nunca en acciones delicadas.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Inicio con identidad propia (Priority: P1)
@@ -112,7 +123,7 @@ sección actual se ve marcada.
 **Acceptance Scenarios**:
 
 1. **Given** el usuario en una sección principal, **When** mira la parte inferior, **Then** ve la
-   barra con las secciones principales y la actual marcada.
+   barra con cuatro secciones (Inicio, Movimientos, Cuentas y Ajustes) y la actual marcada.
 2. **Given** la barra de navegación, **When** toca otra sección, **Then** llega a ella con un solo
    toque y vuelve donde estaba al regresar.
 3. **Given** una pantalla de detalle o de formulario (editar, transferir, ajustar saldo), **When**
@@ -120,6 +131,9 @@ sección actual se ve marcada.
 4. **Given** el usuario sin conexión, **When** navega por la barra, **Then** todo funciona igual.
 5. **Given** una persona sin sesión o en el onboarding, **When** ve la app, **Then** no aparece la
    barra (solo existe con la sesión iniciada y el onboarding terminado).
+6. **Given** que registrar y transferir no tienen sección propia, **When** el usuario está en Inicio o
+   en el detalle de una cuenta, **Then** alcanza "Registrar movimiento" y "Transferir" desde ahí con
+   un toque.
 
 ---
 
@@ -178,6 +192,36 @@ siendo inequívocos.
 
 ---
 
+---
+
+### User Story 7 - Modo claro y modo oscuro (Priority: P2)
+
+El usuario usa Saveria con el aspecto claro (crema y verdes) o con un aspecto oscuro, según como
+tenga configurado su teléfono. En los dos se lee bien y conserva la misma identidad: mismos íconos,
+mismas formas y el mismo tono verde reconocible.
+
+**Why this priority**: mucha gente usa su teléfono en modo oscuro, sobre todo de noche; una app que
+maneja dinero debe leerse cómoda en ambos. Va después de las pantallas principales porque reutiliza
+todo lo anterior.
+
+**Independent Test**: se recorren todas las pantallas con el teléfono en modo claro y en modo
+oscuro y se comprueba que ninguna pierde legibilidad, información ni identidad.
+
+**Acceptance Scenarios**:
+
+1. **Given** un teléfono en modo claro, **When** el usuario abre la app, **Then** ve la paleta crema y
+   verde oliva.
+2. **Given** un teléfono en modo oscuro, **When** el usuario abre la app, **Then** ve una paleta oscura
+   con los mismos verdes como acento, y todo el texto y los íconos se leen con claridad.
+3. **Given** el usuario con la app abierta, **When** cambia el modo del teléfono, **Then** la app
+   cambia de aspecto sin cerrarse, sin perder la pantalla en la que estaba ni lo que tenía escrito.
+4. **Given** gastos, ingresos y saldos negativos, **When** se ven en modo oscuro, **Then** el rojo y el
+   verde se distinguen y se leen, y siguen acompañados de su signo.
+5. **Given** los avisos, las tarjetas, los chips y los campos, **When** se ven en modo oscuro,
+   **Then** se distinguen del fondo con el mismo nivel de claridad que en modo claro.
+
+---
+
 ### Edge Cases
 
 - Textos largos: un nombre de cuenta de 40 caracteres o un monto de 12 dígitos no se corta ni rompe
@@ -192,7 +236,11 @@ siendo inequívocos.
 - Sin conexión o con envío pendiente: los mismos avisos de antes, con la nueva presentación.
 - Personas que no distinguen el rojo del verde: gastos e ingresos se diferencian también por el signo
   y por el ícono, no solo por el color.
-- Formas y figuras de fondo: nunca quedan detrás del texto de modo que lo hagan difícil de leer.
+- Formas y figuras de fondo: nunca quedan detrás del texto de modo que lo hagan difícil de leer, ni
+  en modo claro ni en modo oscuro.
+- Cambio de modo con la app abierta, o con un formulario a medias: no se pierde lo escrito ni la
+  pantalla actual.
+- Pantallas de arranque y de carga: tampoco "destellan" en blanco al abrir en modo oscuro.
 
 ## Requirements *(mandatory)*
 
@@ -201,14 +249,14 @@ siendo inequívocos.
 **Identidad visual**
 
 - **FR-001**: Todas las pantallas existentes MUST usar una misma paleta basada en verdes oliva (uno
-  oscuro para la acción principal y uno claro para fondos de apoyo) sobre un fondo crema, tomando como
-  referencia la imagen `inspiracion/Inspiracion.png`.
+  oscuro para la acción principal y uno claro para fondos de apoyo) sobre un fondo crema en modo
+  claro, tomando como referencia la imagen `inspiracion/Inspiracion.png`.
 - **FR-002**: Las tarjetas, los campos, los botones y los chips MUST tener esquinas muy redondeadas y
   una sombra o borde suave, y los mismos estilos en todas las pantallas.
 - **FR-003**: El botón de acción principal MUST ser ancho, de verde oscuro, con texto claro y, cuando
   corresponda, un ícono; los botones secundarios y los enlaces MUST verse distintos del principal.
-- **FR-004**: La app MUST usar una sola familia tipográfica y una escala de tamaños fija para títulos,
-  subtítulos, texto, ayudas y cifras, igual en todas las pantallas.
+- **FR-004**: La app MUST usar la tipografía del sistema (sin descargar fuentes) con una escala de
+  tamaños y pesos fija para títulos, subtítulos, texto, ayudas y cifras, igual en todas las pantallas.
 - **FR-005**: Los íconos MUST ser de línea fina y del mismo estilo en toda la app.
 - **FR-006**: Las pantallas principales MUST tener formas orgánicas suaves de fondo que decoran sin
   competir con el contenido.
@@ -225,24 +273,27 @@ siendo inequívocos.
   en ese orden visual.
 - **FR-011**: Inicio MUST mostrar, de arriba abajo, un saludo con el nombre del usuario, una tarjeta
   grande de balance, las cuentas de dinero y los últimos movimientos.
-- **FR-012**: La tarjeta de balance MUST seguir las reglas de la feature 002: el total solo aparece
-  cuando todas las cuentas activas están en la moneda principal; las cuentas archivadas no suman.
+- **FR-012**: La tarjeta de balance MUST mostrar el total cuando todas las cuentas activas están en la
+  moneda principal y, si no, el saldo de la cuenta por defecto indicando con claridad de qué cuenta
+  es; las demás cuentas van debajo. Las cuentas archivadas no suman (reglas de la feature 002).
 - **FR-013**: Una pantalla o lista sin datos MUST mostrar un mensaje amable que invite a la primera
   acción, en vez de quedar vacía.
 
 **Navegación**
 
 - **FR-014**: Con la sesión iniciada y el onboarding terminado MUST existir una barra de navegación
-  inferior con las secciones principales, íconos de línea, la sección actual marcada y acceso a cada
-  sección con un solo toque.
+  inferior con cuatro secciones (Inicio, Movimientos, Cuentas y Ajustes), íconos de línea, la sección
+  actual marcada y acceso a cada sección con un solo toque. Registrar y transferir no tienen sección
+  propia: se alcanzan desde Inicio y desde cada cuenta.
 - **FR-015**: La barra MUST ocultarse sin sesión, durante el onboarding y en el bloqueo por correo sin
   verificar, y MUST NOT tapar el botón de guardar de los formularios.
 - **FR-016**: Las pantallas de detalle y de formulario MUST conservar una forma clara de volver atrás.
 
 **Textos**
 
-- **FR-017**: Los textos de la app MUST estar en español de Colombia, con un tono cercano y amable, y
-  los mensajes de error MUST seguir siendo claros y concretos.
+- **FR-017**: Los textos de la app MUST estar en español de Colombia, con un tono cercano y breve: saludo
+  por nombre y mensajes amables solo donde no hay datos o tras lograr algo; el resto de los textos y
+  los mensajes de error MUST ser claros y concretos.
 - **FR-018**: Las acciones delicadas (borrar la cuenta, borrar un movimiento, cerrar sesión con
   cambios pendientes) MUST mantener textos inequívocos, sin tono motivador ni eufemismos.
 
@@ -268,11 +319,21 @@ siendo inequívocos.
 - **FR-026**: Ninguna información MUST depender solo del color: siempre hay también signo, ícono o
   texto.
 
+**Modo claro y modo oscuro**
+
+- **FR-027**: La app MUST tener dos variantes de la identidad: una clara (crema y verdes) y una oscura,
+  con los mismos verdes como acento, los mismos íconos y las mismas formas.
+- **FR-028**: La app MUST seguir automáticamente el modo que tenga el teléfono, y cambiar de aspecto
+  al instante si el usuario lo cambia con la app abierta; no hay un interruptor propio en esta feature.
+- **FR-029**: Todos los requisitos de legibilidad y accesibilidad (FR-008, FR-023 a FR-026) MUST
+  cumplirse en ambos modos, incluidos el rojo y el verde del dinero, los avisos y los campos.
+- **FR-030**: Cambiar de modo MUST NOT perder la pantalla actual ni lo que el usuario tenía escrito.
+
 ### Key Entities
 
 - **Identidad visual (tema)**: conjunto de colores con nombre por su significado (acción principal,
-  fondo, texto, dinero que entra, dinero que sale, avisos), tipografías, tamaños de texto, radios,
-  sombras y espacios; es la única fuente de la apariencia.
+  fondo, texto, dinero que entra, dinero que sale, avisos), tamaños de texto, radios, sombras y
+  espacios, con una variante clara y una oscura; es la única fuente de la apariencia.
 - **Ícono de categoría**: imagen de línea asociada a cada una de las 26 categorías, y a las
   transferencias y los ajustes; solo representa, no cambia los datos del movimiento.
 - **Sección de navegación**: cada destino de la barra inferior, con su ícono, su nombre y su estado de
@@ -285,7 +346,7 @@ siendo inequívocos.
 - **SC-001**: El 100 % de las pantallas existentes usa la misma paleta, tipografía, radios e
   íconos; no queda ninguna con el aspecto de prototipo.
 - **SC-002**: Todo el texto cumple un contraste de al menos 4,5 a 1 con su fondo (3 a 1 en texto grande
-  e íconos), medido en las pantallas principales.
+  e íconos), medido en las pantallas principales, en modo claro y en modo oscuro.
 - **SC-003**: Todo elemento tocable mide al menos 48 por 48 unidades de pantalla de área de toque.
 - **SC-004**: Registrar un gasto típico sigue tomando máximo 3 toques más el monto y menos de 5
   segundos, igual que antes del rediseño.
@@ -296,30 +357,29 @@ siendo inequívocos.
 - **SC-007**: Un cambio de identidad (por ejemplo, el color de la acción principal) se hace en un solo
   lugar y se refleja en el 100 % de las pantallas.
 - **SC-008**: El dueño del proyecto aprueba cada grupo de pantallas comparándolo con la imagen de
-  referencia y con las propuestas elegidas antes de implementar.
+  referencia y con las propuestas elegidas antes de implementar, en modo claro y en modo oscuro.
+- **SC-009**: El 100 % de las pantallas se recorre en modo claro y en modo oscuro sin perder
+  legibilidad ni información, y el cambio de modo con la app abierta no pierde la pantalla ni lo
+  escrito.
 
 ## Assumptions
 
 - La imagen `inspiracion/Inspiracion.png` es de una app bancaria modificada por el dueño del proyecto;
   sirve para el estilo, no para las funciones. Antes de implementar se le muestran propuestas visuales
-  para que elija (paleta exacta, tipografía, ícono de categoría, forma de las tarjetas).
-- Valores por defecto que debe confirmar `/speckit-clarify`:
-  - **Barra de navegación**: cuatro secciones (Inicio, Movimientos, Cuentas y Ajustes), con el botón
-    de registrar siempre a mano; "Transferir" se alcanza desde Inicio y desde cada cuenta.
-  - **Modo oscuro**: fuera de esta feature.
-  - **Tipografía**: la del sistema, sin descargar fuentes, para no agregar herramientas.
-  - **Íconos de categoría**: un conjunto de íconos de línea, uno por categoría, agrupado por colores
+  para que elija (paleta clara y oscura, estilo de íconos, forma de las tarjetas).
+- Decisiones ya confirmadas (ver Clarifications): barra de cuatro secciones, tarjeta de balance con el
+  total o la cuenta por defecto, modo claro y oscuro, tipografía del sistema y tono cercano y breve.
+- Valores por defecto que debe confirmar `/speckit-plan`:
+  - **Íconos de categoría**: un conjunto de íconos de línea, uno por categoría, agrupados por tonos
     suaves de la misma paleta.
-  - **Tono de los textos**: cercano y breve, con un mensaje amable solo donde no hay datos o tras una
-    acción lograda; nunca en acciones delicadas.
-  - **Tarjeta de balance**: muestra el total si existe (todas las cuentas activas en la moneda
-    principal); si no, el saldo de la cuenta por defecto; las demás cuentas van debajo.
-- La constitución prohíbe agregar herramientas sin una enmienda: el plan debe usar solo lo que ya trae
-  la app y confirmar si hace falta algo más (por ejemplo, una librería de íconos o de gráficos
-  vectoriales) antes de adoptarlo.
+  - **Modo oscuro**: se activa solo con el modo del teléfono; no hay un interruptor propio.
+- **Constitución**: esta feature incluye una enmienda (primer paso) que permite librerías y
+  herramientas útiles para la interfaz (íconos, formas vectoriales y similares), antes prohibidas sin
+  enmienda. Quedan prohibidos igual los servicios y herramientas de otro tipo de la lista de la
+  constitución. El plan elige las librerías concretas, justificando cada una.
 - Solo Android, solo español de Colombia, en teléfono; tabletas, iOS y otros idiomas quedan fuera.
 - Los colores y medidas ya viven en un solo archivo (`apps/mobile/src/theme.ts`, sin colores sueltos),
   así que el rediseño parte de ahí.
-- Fuera de alcance: modo oscuro, animaciones elaboradas, ilustraciones nuevas más allá de formas de
-  fondo e íconos, gráficos, resumen del mes, metas, mapa, foto de perfil y cualquier otra función de
-  la imagen que Saveria aún no tiene.
+- Fuera de alcance: interruptor propio de modo claro/oscuro, animaciones elaboradas, ilustraciones
+  nuevas más allá de formas de fondo e íconos, gráficos, resumen del mes, metas, mapa, foto de perfil y
+  cualquier otra función de la imagen que Saveria aún no tiene.
