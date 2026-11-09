@@ -18,6 +18,7 @@ export default function AppLayout() {
           <Stack.Screen name="transactions/new" />
           <Stack.Screen name="transactions/index" />
           <Stack.Screen name="transactions/[id]" />
+          <Stack.Screen name="transfer" />
           <Stack.Screen name="accounts/index" />
           <Stack.Screen name="accounts/new" />
           <Stack.Screen name="accounts/archived" />

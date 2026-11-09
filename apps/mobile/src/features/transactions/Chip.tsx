@@ -5,16 +5,19 @@ export function Chip({
   label,
   checked,
   onPress,
+  accessibilityLabel,
 }: {
   label: string;
   checked: boolean;
   onPress(): void;
+  /** Si el texto solo no basta (por ejemplo "Hacia Nequi" frente al "Nequi" de origen) */
+  accessibilityLabel?: string;
 }) {
   return (
     <Pressable
       role="radio"
       aria-checked={checked}
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       onPress={onPress}
       style={[styles.chip, checked ? styles.chipChecked : null]}
     >

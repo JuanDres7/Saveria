@@ -62,6 +62,10 @@ export default function Home() {
           onPress={() => router.push('/transactions/new')}
         />
       ) : null}
+      {/* Transferir necesita dos cuentas activas. */}
+      {primary && summary.active.length >= 2 ? (
+        <TextButton label="Transferir" onPress={() => router.push('/transfer')} />
+      ) : null}
 
       {recent.length > 0 ? (
         <View>

@@ -24,6 +24,18 @@ export interface RecordForm {
 /** Marca del motivo cuando el servidor rechazó un borrado (FR-037): la fila muestra "no se pudo borrar". */
 export const DELETE_REJECTED_PREFIX = 'No se pudo borrar: ';
 
+/** Lo que llena el formulario de una transferencia. Los montos llegan tal como los escribió el usuario. */
+export interface TransferForm {
+  fromAccountId: string | null;
+  toAccountId: string | null;
+  /** Monto que sale, en la moneda de la cuenta de origen */
+  amountText: string;
+  /** Monto que entra, en la moneda de la cuenta de destino; solo si las monedas difieren */
+  toAmountText: string;
+  occurredOn: string;
+  description: string;
+}
+
 export type SaveResult =
   | { ok: true; transaction: LocalTransactionRecord }
   | { ok: false; errors: Record<string, string> };
@@ -120,6 +132,65 @@ export function createTransactionService({ context, now, newId, today }: Transac
     return { ok: true, transaction: record };
   }
 
+  /**
+   * Arma y valida una transferencia con las mismas reglas que el servidor (FR-027 a FR-030): una
+   * sola fila con origen y destino, sin categoría. Con la misma moneda el monto que entra es el
+   * que sale; con monedas distintas se escribe el que entra, sin calcular ninguna tasa.
+   */
+  function buildTransfer(
+    ctx: LedgerContext,
+    form: TransferForm,
+    base: { id: string; createdAt: string; updatedAt: string },
+  ): SaveResult {
+    const errors: Record<string, string> = {};
+    const from = form.fromAccountId ? ctx.accounts.findById(form.fromAccountId) : null;
+    const to = form.toAccountId ? ctx.accounts.findById(form.toAccountId) : null;
+    if (!from || from.deletedAt !== null) errors.accountId = 'Elige la cuenta de origen';
+    if (!to || to.deletedAt !== null) errors.toAccountId = 'Elige la cuenta de destino';
+    if (from && to && from.id === to.id) {
+      errors.toAccountId = 'La cuenta de destino debe ser distinta a la de origen';
+    }
+    if (!from || !to) return { ok: false, errors };
+
+    let amount = '';
+    const out = parseAmount(form.amountText, from.currency);
+    if (out.ok) amount = out.value;
+    else errors.amount = out.error;
+
+    let toAmount = amount;
+    if (from.currency !== to.currency) {
+      const entering = parseAmount(form.toAmountText, to.currency);
+      if (entering.ok) toAmount = entering.value;
+      else errors.toAmount = entering.error;
+    }
+    if (Object.keys(errors).length > 0) return { ok: false, errors };
+
+    const record: LocalTransactionRecord = {
+      ...base,
+      type: 'transfer',
+      accountId: from.id,
+      amount,
+      currency: from.currency,
+      toAccountId: to.id,
+      toAmount,
+      toCurrency: to.currency,
+      categorySlug: null,
+      description: form.description.trim() === '' ? null : form.description.trim(),
+      occurredOn: form.occurredOn || today(),
+      deletedAt: null,
+      syncState: 'pending',
+      syncError: null,
+    };
+    const parsed = transactionInputSchema.safeParse(toInput(record));
+    if (!parsed.success) {
+      for (const issue of parsed.error.issues) {
+        errors[String(issue.path[0] ?? 'body')] ??= issue.message;
+      }
+      return { ok: false, errors };
+    }
+    return { ok: true, transaction: record };
+  }
+
   return {
     /** Registra un gasto o un ingreso (historia 1). Valida con las mismas reglas que el servidor. */
     record(form: RecordForm): SaveResult {
@@ -142,6 +213,33 @@ export function createTransactionService({ context, now, newId, today }: Transac
         return { ok: false, errors: { body: 'El movimiento ya no existe' } };
       }
       const built = build(ctx, form, {
+        id,
+        createdAt: previous.createdAt,
+        updatedAt: nextUpdatedAt(previous),
+      });
+      if (!built.ok) return built;
+      persist(ctx, built.transaction);
+      return built;
+    },
+
+    /** Transfiere entre dos cuentas propias (historia 5): una sola fila, atómica (FR-030). */
+    transfer(form: TransferForm): SaveResult {
+      const ctx = requireContext();
+      const at = new Date(now()).toISOString();
+      const built = buildTransfer(ctx, form, { id: newId(), createdAt: at, updatedAt: at });
+      if (!built.ok) return built;
+      persist(ctx, built.transaction);
+      return built;
+    },
+
+    /** Edita una transferencia: los dos saldos cambian juntos, nunca una mitad sola (5.5). */
+    updateTransfer(id: string, form: TransferForm): SaveResult {
+      const ctx = requireContext();
+      const previous = ctx.ledger.findById(id);
+      if (!previous || previous.deletedAt !== null) {
+        return { ok: false, errors: { body: 'El movimiento ya no existe' } };
+      }
+      const built = buildTransfer(ctx, form, {
         id,
         createdAt: previous.createdAt,
         updatedAt: nextUpdatedAt(previous),

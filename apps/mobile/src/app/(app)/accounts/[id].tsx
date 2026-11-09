@@ -83,6 +83,10 @@ export default function AccountDetail() {
             label="Guardar cambios"
             onPress={() => done(accountService.update(id, form))}
           />
+          <TextButton
+            label="Transferir desde esta cuenta"
+            onPress={() => router.push(`/transfer?from=${id}`)}
+          />
           {account.isDefault ? null : (
             <TextButton
               label="Usar como cuenta por defecto"

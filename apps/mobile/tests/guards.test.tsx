@@ -132,6 +132,7 @@ const APP_SCREENS = [
   'transactions/new',
   'transactions/index',
   'transactions/[id]',
+  'transfer',
   'accounts/index',
   'accounts/new',
   'accounts/archived',

@@ -5,6 +5,7 @@ import { styles as base, TextButton } from '../../../features/auth/components';
 import { openLedgerContext, refreshLedger, useLedger } from '../../../features/transactions/ledger';
 import { transactionTitle } from '../../../features/transactions/RecentList';
 import { TransactionForm } from '../../../features/transactions/TransactionForm';
+import { TransferFormView } from '../../../features/transactions/TransferFormView';
 import { transactionService } from '../../../features/transactions/transaction-service';
 import { useUndo } from '../../../features/transactions/UndoSnackbar';
 
@@ -22,9 +23,12 @@ export default function EditTransaction() {
   const selectable = useMemo(
     () =>
       accounts.filter(
-        (account) => account.archivedAt === null || account.id === transaction?.accountId,
+        (account) =>
+          account.archivedAt === null ||
+          account.id === transaction?.accountId ||
+          account.id === transaction?.toAccountId,
       ),
-    [accounts, transaction?.accountId],
+    [accounts, transaction?.accountId, transaction?.toAccountId],
   );
 
   if (!transaction || transaction.deletedAt !== null) return null;
@@ -38,7 +42,33 @@ export default function EditTransaction() {
 
   const deleteButton = <TextButton label="Borrar" onPress={remove} />;
 
-  // Transferencias y ajustes se editan en sus propias historias; aquí solo se pueden borrar.
+  if (transaction.type === 'transfer') {
+    return (
+      <TransferFormView
+        key={transaction.id}
+        title="Editar transferencia"
+        submitLabel="Guardar cambios"
+        accounts={selectable}
+        initial={{
+          fromAccountId: transaction.accountId,
+          toAccountId: transaction.toAccountId,
+          amountText: transaction.amount,
+          toAmountText: transaction.toAmount ?? '',
+          occurredOn: transaction.occurredOn,
+          description: transaction.description ?? '',
+        }}
+        onSubmit={(form) => {
+          const result = transactionService.updateTransfer(transaction.id, form);
+          if (!result.ok) return result.errors;
+          router.back();
+          return null;
+        }}
+        footerExtra={deleteButton}
+      />
+    );
+  }
+
+  // Los ajustes se editan en su propia historia; aquí solo se pueden borrar.
   if (transaction.type !== 'expense' && transaction.type !== 'income') {
     return (
       <ScrollView contentContainerStyle={styles.content}>
