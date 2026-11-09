@@ -1,0 +1,118 @@
+import { emailSchema, PRIVACY_POLICY_VERSION, passwordSchema } from '@saveria/shared';
+import type { Profile, User } from '../../domain/entities';
+import { DomainError } from '../../domain/errors';
+import type { AuthResponseDto, DeviceInput } from '../dto';
+import type { UnitOfWork } from '../ports/repositories';
+import type { Clock, PasswordHasher, Random, TokenService } from '../ports/services';
+import { toMe } from './get-me';
+import { issueSession } from './issue-session';
+import {
+  createSendVerificationEmail,
+  type SendVerificationEmailDeps,
+} from './send-verification-email';
+
+export interface RegisterInput {
+  email: string;
+  password: string;
+  policyVersion: string;
+  policyAccepted: boolean;
+  device: DeviceInput;
+  ip: string;
+}
+
+/** FR-035a: intentos de registro por IP. Frena el envío masivo de correos y el sondeo de cuentas. */
+export const REGISTER_LIMIT = 10;
+export const REGISTER_WINDOW_SEC = 60 * 60;
+
+/** Sin repositorios fuera de la transacción: todo lo que escribe pasa por `uow`. */
+export interface RegisterDeps extends SendVerificationEmailDeps {
+  uow: UnitOfWork;
+  hasher: PasswordHasher;
+  tokens: TokenService;
+  random: Random;
+  clock: Clock;
+}
+
+function validate(input: RegisterInput): { email: string; password: string } {
+  const email = emailSchema.safeParse(input.email);
+  const password = passwordSchema.safeParse(input.password);
+  const fields: Record<string, string> = {};
+  if (!email.success) fields.email = email.error.issues[0]?.message ?? 'Correo inválido';
+  if (!password.success) {
+    fields.password = password.error.issues[0]?.message ?? 'Contraseña inválida';
+  }
+  if (!email.success || !password.success) throw new DomainError('validation_error', { fields });
+  return { email: email.data, password: password.data };
+}
+
+/**
+ * Crea la cuenta (usuario + perfil inicial) e inicia sesión (FR-001 a FR-004). Después envía el
+ * correo de verificación (FR-031).
+ */
+export function createRegister(deps: RegisterDeps) {
+  const sendVerificationEmail = createSendVerificationEmail(deps);
+
+  return async function register(input: RegisterInput): Promise<AuthResponseDto> {
+    const { email, password } = validate(input);
+    if (!input.policyAccepted || input.policyVersion !== PRIVACY_POLICY_VERSION) {
+      throw new DomainError('policy_not_accepted');
+    }
+
+    // Cuenta todo intento con datos válidos, también los de un correo ya registrado: si no, se
+    // podría probar sin límite qué correos tienen cuenta. Va antes de bcrypt, que es lento.
+    const limit = await deps.rateLimiter.hit(
+      `rl:register:${input.ip}`,
+      REGISTER_LIMIT,
+      REGISTER_WINDOW_SEC,
+    );
+    if (!limit.allowed) {
+      throw new DomainError('too_many_attempts', { retryAfterSec: limit.retryAfterSec });
+    }
+
+    // bcrypt es lento: se calcula antes de abrir la transacción.
+    const passwordHash = await deps.hasher.hash(password);
+    const now = deps.clock.now();
+
+    const user: User = {
+      id: deps.random.uuidV7(),
+      email,
+      passwordHash,
+      emailVerifiedAt: null,
+      policyVersion: input.policyVersion,
+      policyAcceptedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    };
+    const profile: Profile = {
+      id: user.id,
+      aiName: null,
+      countryCode: null,
+      city: null,
+      primaryCurrency: null,
+      referenceCurrencies: [],
+      aiMode: 'manual',
+      onboardingStep: 'ai_name',
+      createdAt: now,
+      updatedAt: now,
+      deletedAt: null,
+    };
+
+    const result = await deps.uow.run(async (repos) => {
+      // Mensaje genérico: no revela que el correo ya tiene una cuenta (escenario 1.3).
+      if ((await repos.users.create(user)) === 'email_taken') {
+        throw new DomainError('email_unavailable');
+      }
+      await repos.profiles.create(profile);
+      const { tokens } = await issueSession(deps, repos.sessions, {
+        userId: user.id,
+        device: input.device,
+      });
+      return { tokens, me: toMe(user, profile, null, now) };
+    });
+
+    // Fuera de la transacción: si el correo no sale, la cuenta igual queda creada y el usuario
+    // puede pedir el reenvío (spec, Assumptions).
+    await sendVerificationEmail(user).catch(() => undefined);
+    return result;
+  };
+}

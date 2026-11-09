@@ -1,0 +1,35 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.6.2/schema.json",
+  "files": {
+    "includes": [
+      "apps/**/*.{ts,tsx,js,json}",
+      "packages/**/*.{ts,tsx,js,json}",
+      "*.json",
+      "!**/node_modules",
+      "!**/drizzle",
+      "!apps/mobile/android",
+      "!apps/mobile/ios",
+      "!apps/mobile/assets",
+      "!apps/mobile/.expo",
+      "!apps/mobile/expo-env.d.ts",
+      "!**/schema.d.ts"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 100
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  }
+}

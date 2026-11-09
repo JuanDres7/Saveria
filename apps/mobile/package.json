@@ -1,0 +1,59 @@
+{
+  "name": "@saveria/mobile",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "dependencies": {
+    "@hookform/resolvers": "^6",
+    "@react-native-community/netinfo": "12.0.1",
+    "@saveria/shared": "workspace:*",
+    "drizzle-orm": "0.45.4",
+    "expo": "~58.0.17",
+    "expo-constants": "~58.0.13",
+    "expo-crypto": "~58.0.7",
+    "expo-dev-client": "~58.0.14",
+    "expo-device": "~58.0.5",
+    "expo-file-system": "~58.0.10",
+    "expo-font": "~58.0.9",
+    "expo-linking": "~58.0.14",
+    "expo-router": "~58.0.25",
+    "expo-secure-store": "~58.0.2",
+    "expo-splash-screen": "~58.0.11",
+    "expo-sqlite": "~58.0.13",
+    "expo-status-bar": "~58.0.4",
+    "expo-system-ui": "~58.0.6",
+    "openapi-fetch": "^0.17",
+    "react": "19.3.0",
+    "react-hook-form": "^7.90",
+    "react-native": "0.88.0",
+    "react-native-safe-area-context": "~5.10.1",
+    "react-native-screens": "~4.30.0",
+    "zod": "^4.6",
+    "zustand": "^5"
+  },
+  "devDependencies": {
+    "@testing-library/react-native": "^14",
+    "@types/jest": "^30.0.0",
+    "@types/react": "~19.3.0",
+    "drizzle-kit": "^0.31",
+    "jest-expo": "~58.0.12",
+    "openapi-typescript": "^7.13",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo run:android",
+    "test": "jest",
+    "api:types": "openapi-typescript ../../specs/001-auth-onboarding/contracts/openapi.yaml -o src/api/schema.d.ts",
+    "db:generate": "drizzle-kit generate && bun scripts/embed-migrations.mjs"
+  },
+  "private": true,
+  "jest": {
+    "preset": "jest-expo",
+    "setupFiles": [
+      "<rootDir>/jest.setup.ts"
+    ],
+    "testMatch": [
+      "<rootDir>/tests/**/*.test.{ts,tsx}"
+    ]
+  }
+}

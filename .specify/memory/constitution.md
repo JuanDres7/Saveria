@@ -1,15 +1,14 @@
 <!--
 Sync Impact Report
-- Version change: 1.0.0 → 1.1.0 (MINOR: nueva dependencia del stack y guía ampliada)
+- Version change: 1.1.0 → 1.1.1 (PATCH: aclaración de redacción, sin cambio de intención)
 - Principios modificados:
-  VI. Privacidad y protección de datos (se añade la regla de enlaces de un solo uso y mensajes
-  que no revelan si un correo existe)
-- Secciones modificadas: Stack y restricciones técnicas (se añade correo transaccional)
+  III. Offline primero (la regla de UUID del cliente aplica a las entidades que se pueden crear
+  sin conexión; las que solo se crean en línea pueden usar UUID del servidor)
 - Secciones añadidas: ninguna
 - Secciones eliminadas: ninguna
 - Plantillas dependientes: sin cambios; leen esta constitución en tiempo de ejecución.
-- Specs afectadas: specs/001-auth-onboarding (verificación de correo y recuperación de
-  contraseña pasan a formar parte del MVP).
+- Specs afectadas: specs/001-auth-onboarding (user_profiles usa el id del usuario, creado en
+  línea al registrarse; queda conforme). Hallazgo C1 de /speckit-analyze.
 - TODOs diferidos: ninguno.
 -->
 
@@ -52,7 +51,9 @@ dinero y la confianza en la app.
 
 La app MUST permitir registrar, editar y consultar movimientos sin conexión.
 
-- Los identificadores de todas las entidades sincronizables MUST ser UUID generados en el cliente.
+- Las entidades que se pueden crear sin conexión MUST usar UUID generados en el cliente. Las que
+  solo se crean en línea (por ejemplo el perfil, creado junto con el usuario al registrarse)
+  pueden usar el UUID del servidor, pero MUST cumplir las demás reglas de sincronización.
 - Toda tabla sincronizable MUST tener `created_at`, `updated_at` y `deleted_at` (borrado lógico).
 - Los cambios locales y los relatos para la IA MUST guardarse en una cola local y enviarse cuando
   vuelva la conexión.
@@ -186,4 +187,4 @@ proyecto. Cuando un documento de `docs/` contradiga esta constitución, manda la
 - **Cumplimiento**: cada plan verifica la constitución en su *Constitution Check*;
   `/speckit-analyze` revisa la coherencia entre spec, plan y tareas antes de implementar.
 
-**Version**: 1.1.0 | **Ratified**: 2026-10-22 | **Last Amended**: 2026-10-22
+**Version**: 1.1.1 | **Ratified**: 2026-10-22 | **Last Amended**: 2026-10-22
