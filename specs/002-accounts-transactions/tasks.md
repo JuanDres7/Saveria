@@ -183,14 +183,14 @@ todas las historias
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T050 [P] [US5] Pruebas unitarias en `apps/api/tests/unit/save-transaction-transfer.test.ts`: misma cuenta de origen y destino → `validation_error`; `toCurrency` distinta de la moneda de `toAccountId` → `validation_error`; con categoría → `validation_error` (FR-028); misma moneda con `toAmount` distinto de `amount` → `validation_error`; cuenta de destino de otro usuario → `validation_error`
-- [ ] T051 [P] [US5] Pruebas de integración en `apps/api/tests/integration/us5-transfers.test.ts`: 100.000 COP de una cuenta a otra mueven ambos saldos en una sola fila (5.1); 10 USD → 40.000 COP (5.3); borrarla devuelve los dos saldos a la vez (5.5, FR-030)
-- [ ] T052 [P] [US5] Pruebas de la app en `apps/mobile/tests/us5-transfer.test.tsx`: no pide categoría (5.2); con monedas distintas pide el monto que sale y el que entra (5.3); no deja elegir la misma cuenta (5.4); aparece una sola vez en el historial general y en el filtro de cada cuenta (5.1, 2.3); editar o borrar cambia los dos saldos juntos (5.5)
+- [X] T050 [P] [US5] Pruebas unitarias en `apps/api/tests/unit/save-transaction-transfer.test.ts`: misma cuenta de origen y destino → `validation_error`; `toCurrency` distinta de la moneda de `toAccountId` → `validation_error`; con categoría → `validation_error` (FR-028); misma moneda con `toAmount` distinto de `amount` → `validation_error`; cuenta de destino de otro usuario → `validation_error`
+- [X] T051 [P] [US5] Pruebas de integración en `apps/api/tests/integration/us5-transfers.test.ts`: 100.000 COP de una cuenta a otra mueven ambos saldos en una sola fila (5.1); 10 USD → 40.000 COP (5.3); borrarla devuelve los dos saldos a la vez (5.5, FR-030)
+- [X] T052 [P] [US5] Pruebas de la app en `apps/mobile/tests/us5-transfer.test.tsx`: no pide categoría (5.2); con monedas distintas pide el monto que sale y el que entra (5.3); no deja elegir la misma cuenta (5.4); aparece una sola vez en el historial general y en el filtro de cada cuenta (5.1, 2.3); editar o borrar cambia los dos saldos juntos (5.5)
 
 ### Implementation for User Story 5
 
-- [ ] T053 [US5] Completar las reglas de `transfer` en `apps/api/src/application/use-cases/save-transaction.ts` (cuenta de destino del usuario, `to_currency` = moneda de la cuenta de destino)
-- [ ] T054 [US5] Agregar `transfer(input)` en `apps/mobile/src/features/transactions/transaction-service.ts` (si las monedas son iguales, `toAmount = amount`) y crear `apps/mobile/src/app/(app)/transfer.tsx` (origen, destino sin la de origen, monto y, si las monedas difieren, el segundo monto); entrada desde el "+" de Inicio y desde cada cuenta
+- [X] T053 [US5] Completar las reglas de `transfer` en `apps/api/src/application/use-cases/save-transaction.ts` (cuenta de destino del usuario, `to_currency` = moneda de la cuenta de destino)
+- [X] T054 [US5] Agregar `transfer(input)` en `apps/mobile/src/features/transactions/transaction-service.ts` (si las monedas son iguales, `toAmount = amount`) y crear `apps/mobile/src/app/(app)/transfer.tsx` (origen, destino sin la de origen, monto y, si las monedas difieren, el segundo monto); entrada desde el "+" de Inicio y desde cada cuenta
 
 **Checkpoint**: las cuentas no se descuadran al mover dinero entre ellas
 

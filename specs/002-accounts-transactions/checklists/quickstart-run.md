@@ -76,3 +76,20 @@ comprobó cada cambio también en el servidor.
 
 **Nota**: cada lectura de pantalla con `uiautomator` tarda unos 2 s; al probar "Deshacer" hay que
 tocarlo enseguida o el aviso (6 s) ya se fue.
+
+## Historia 5: transferir entre cuentas (2026-11-09)
+
+Cuenta de prueba nueva `qs002.us5@mail.com` / `clave1234` (creada por la API, "Efectivo" en COP).
+En la app se crearon "Nequi" (COP) y "Ahorros USD" (USD) y se registró un ingreso de 500.000 en
+Efectivo. Cada paso se comprobó también en el servidor.
+
+| Escenario | Paso | Resultado |
+|---|---|---|
+| — | Inicio con una sola cuenta de dinero | ✅ No aparece "Transferir"; con tres cuentas sí |
+| 5.2 / 5.4 | Abrir "Transferir" | ✅ "Desde: Efectivo" elegido; "Hacia" ofrece solo Nequi y Ahorros USD (nunca la de origen); no hay categoría |
+| 5.1 | Efectivo → Nequi, `100.000` | ✅ Efectivo $ 400.000, Nequi $ 100.000; en el servidor **una sola fila** `transfer 100000 COP → 100000 COP`, sin categoría; en Inicio aparece una vez como "Efectivo → Nequi" |
+| 5.3 | Efectivo → Ahorros USD | ✅ Pide "Monto que sale (COP)" y "Monto que entra (USD)" y avisa "Cada cuenta usa su moneda: no se calcula ninguna tasa"; `40.000` COP → `10` USD: Efectivo $ 360.000, USD 10,00; servidor `40000 COP → 10 USD` |
+| 5.5 | Editar la primera transferencia a `150.000` | ✅ Los dos saldos cambian juntos: Efectivo $ 310.000, Nequi $ 150.000 |
+| 5.5 | Borrarla | ✅ Los dos saldos vuelven a la vez: Efectivo $ 460.000, Nequi $ 0; en el servidor la fila queda con `deleted_at` |
+| 2.3 | Filtro por cuenta con transferencias | Cubierto por `apps/mobile/tests/us5-transfer.test.tsx` (aparece una sola vez en "Todas", con "-" en el origen y "+" en el destino) |
+| 5.4 (misma cuenta), FR-030 sin red | Reglas del servicio y cola | Cubiertos por las pruebas automáticas (servicio, servidor y outbox) |
