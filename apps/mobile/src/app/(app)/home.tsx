@@ -71,6 +71,7 @@ export default function Home() {
         </View>
       ) : null}
 
+      <TextButton label="Cuentas de dinero" onPress={() => router.push('/accounts')} />
       <TextButton label="Configuración" onPress={() => router.push('/settings')} />
       <TextButton label="Cerrar sesión" onPress={() => void authService.logout()} />
     </ScrollView>

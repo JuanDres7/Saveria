@@ -1,3 +1,4 @@
+import { accountOutboxHandlers } from '../../src/features/accounts/account-service';
 import type { LocalAccountRecord } from '../../src/features/accounts/local-accounts';
 import {
   type LedgerContext,
@@ -8,7 +9,7 @@ import {
 import type { LocalTransactionRecord } from '../../src/features/transactions/local-transactions';
 import { transactionOutboxHandlers } from '../../src/features/transactions/transaction-service';
 import { createHttpSender } from '../../src/outbox/http-sender';
-import { createOutbox } from '../../src/outbox/outbox';
+import { createOutbox, type OutboxItem } from '../../src/outbox/outbox';
 import { type Me, useSession } from '../../src/session/session-store';
 import { makeMe } from './fixtures';
 import { MemoryAccounts, MemoryLedger, MemoryOutboxStore } from './memory';
@@ -60,6 +61,9 @@ export function makeTxRecord(
   };
 }
 
+const handlersFor = (item: OutboxItem) =>
+  item.entity === 'account' ? accountOutboxHandlers() : transactionOutboxHandlers();
+
 /** Base local en memoria con las cuentas dadas y un outbox que responde con `respond`. */
 export function setupLedger(
   accountsList: LocalAccountRecord[],
@@ -76,7 +80,12 @@ export function setupLedger(
       return respond(request);
     },
     'http://api.test',
-    transactionOutboxHandlers(),
+    {
+      // Igual que en la app: cada respuesta va al servicio de su entidad.
+      onSent: (item: OutboxItem) => handlersFor(item).onSent(item),
+      onRejected: (item: OutboxItem, body: unknown) => handlersFor(item).onRejected(item, body),
+      onConflict: (item: OutboxItem, body: unknown) => handlersFor(item).onConflict(item, body),
+    },
   );
   const ctx: LedgerContext = { accounts, ledger, outbox: createOutbox(queue, sender) };
   setLedgerContextForTests(() => ctx);

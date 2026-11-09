@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { registerAccountHandlers } from '../features/accounts/account-service';
 import { authService } from '../features/auth/auth-service';
 import { bootstrapSession } from '../features/auth/bootstrap';
 import { registerProfileConflictHandler } from '../features/profile/profile-service';
@@ -28,6 +29,7 @@ export default function RootLayout() {
     const stopVerification = verificationService.watchOnReconnect();
     registerProfileConflictHandler();
     registerTransactionHandlers();
+    registerAccountHandlers();
     void bootstrapSession();
     void authService.sendPendingRevocation();
     if (__DEV__ && process.env.EXPO_PUBLIC_SMOKE === '1') {
