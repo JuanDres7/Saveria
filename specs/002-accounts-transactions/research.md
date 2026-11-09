@@ -128,8 +128,14 @@ decisiones de diseño nuevas.
   - La moneda solo cambia si la cuenta no tiene movimientos vivos (como origen ni como destino,
     FR-019).
   - No se puede archivar la cuenta por defecto (FR-020, FR-021).
-- **Rationale**: cada regla se valida igual en el teléfono (para responder al instante sin
-  conexión) y en el servidor (que manda).
+- **Una sola fuente** (Constitución I): estas reglas son funciones puras en
+  `packages/shared/src/rules/accounts.ts`. Reciben la cuenta tal como quedaría, las demás cuentas
+  del usuario y si la cuenta tiene movimientos, y devuelven los errores por campo. El caso de uso
+  `save-account` del servidor y el servicio de cuentas del teléfono llaman a las mismas
+  funciones; ninguno las reescribe.
+- **Rationale**: el teléfono necesita responder al instante sin conexión (Constitución III) y el
+  servidor es el que manda; con una sola implementación compartida no pueden comportarse
+  distinto. El servidor además las vuelve a comprobar con sus datos, que son los que valen.
 
 ## 10. Un caso de uso por tipo de movimiento (Constitución I)
 

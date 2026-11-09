@@ -25,7 +25,8 @@ están en [research.md](research.md).
 - `accounts_one_default_per_user_idx` (existe): único parcial `(user_id) WHERE is_default AND deleted_at IS NULL`. Se agrega `AND archived_at IS NULL`.
 - `accounts_active_name_idx` (nuevo): único parcial `(user_id, lower(name)) WHERE archived_at IS NULL AND deleted_at IS NULL`.
 
-**Reglas del caso de uso** (`save-account`):
+**Reglas del caso de uso** (`save-account`; viven una sola vez en
+`packages/shared/src/rules/accounts.ts` y las usan el servidor y el teléfono):
 
 - Máximo 20 cuentas activas por usuario (FR-023).
 - No se puede archivar si `is_default`; tampoco quitar `is_default` sin marcar otra (siempre debe
@@ -101,6 +102,7 @@ importa porque las dos tablas cuelgan de `users`.
 | `src/catalog/currencies.ts` | COP pasa a `decimals: 0` (research §6) |
 | `src/money/` | `parseAmount` (entrada colombiana → decimal normalizado), `toE4` / `fromE4` con `BigInt`, `formatAmount` por moneda |
 | `src/validation/account.ts`, `src/validation/transaction.ts` | Reglas Zod compartidas por la app y el servidor |
+| `src/rules/accounts.ts` | Reglas que dependen de las demás cuentas: nombre único entre activas, máximo 20 activas, siempre una cuenta por defecto, no archivar la cuenta por defecto, moneda bloqueada con movimientos |
 
 ## Estados
 
