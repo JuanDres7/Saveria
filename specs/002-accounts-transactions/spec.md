@@ -220,7 +220,9 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   usuario vuelve a entrar (regla ya definida en la feature 001).
 - El usuario borra su cuenta de Saveria: se borran también todas sus cuentas y movimientos, en el
   servidor y en el teléfono.
-- Una cuenta archivada se puede volver a activar.
+- Una cuenta archivada se puede volver a activar. Si mientras estaba archivada se creó otra
+  activa con el mismo nombre (por ejemplo, dos "Nequi"), al reactivarla se pide renombrarla
+  primero; si ya hay 20 cuentas activas, se pide archivar otra antes.
 - Si la descripción supera el máximo, no se deja escribir más.
 
 ## Requirements *(mandatory)*
@@ -284,7 +286,10 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
   cualquier saldo, y volver a activarla después. Antes de archivar, el sistema MUST avisar el
   saldo que tiene. Una cuenta archivada no aparece en la lista principal ni al elegir cuenta para
   un movimiento nuevo, y su saldo no suma en el total (FR-013); se ve en "cuentas archivadas" con
-  su saldo, y sus movimientos se conservan y siguen visibles en el historial.
+  su saldo, y sus movimientos se conservan y siguen visibles en el historial. Reactivar una cuenta
+  MUST cumplir las mismas reglas que crearla: si su nombre ya lo usa otra cuenta activa, el
+  sistema pide renombrarla antes (FR-017); si ya hay 20 cuentas activas, pide archivar otra
+  antes (FR-023).
 - **FR-022**: Las cuentas MUST NOT poder borrarse en esta feature; solo archivarse.
 - **FR-023**: Un usuario MUST poder tener hasta 20 cuentas activas.
 
