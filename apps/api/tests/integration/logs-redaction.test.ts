@@ -1,5 +1,14 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'bun:test';
-import { type AuthJson, bearer, loginBody, postJson, registerUser } from '../support/auth-http';
+import {
+  type AuthJson,
+  bearer,
+  deleteJson,
+  loginBody,
+  onboardUser,
+  postJson,
+  putJson,
+  registerUser,
+} from '../support/auth-http';
 import { jsonBody } from '../support/http';
 import { createTestApp, type TestApp } from '../support/test-app';
 
@@ -69,6 +78,72 @@ describe('SC-006: los logs no contienen secretos', () => {
       for (const secret of secrets) expect(logs).not.toContain(secret);
       expect(logs).not.toMatch(/Bearer/i);
       expect(logs).not.toContain('token=');
+    },
+    SLOW,
+  );
+
+  it(
+    'FR-040 al guardar y borrar cuentas y movimientos no aparecen montos ni descripciones',
+    async () => {
+      const user = await onboardUser(t);
+      const nequi = crypto.randomUUID();
+      const tx = crypto.randomUUID();
+      // Valores poco comunes para que no choquen con horas ni duraciones del registro.
+      const SECRET_BALANCE = '80123';
+      const SECRET_AMOUNT = '187654';
+      const SECRET_NAME = 'Cuenta de Carlos Alberto';
+      const SECRET_NOTE = 'cena con Carlos Alberto';
+
+      await putJson(
+        t,
+        `/v1/accounts/${nequi}`,
+        {
+          name: SECRET_NAME,
+          type: 'wallet',
+          currency: 'COP',
+          initialBalance: SECRET_BALANCE,
+          isDefault: false,
+          archivedAt: null,
+          updatedAt: '2026-10-22T12:00:05.000Z',
+        },
+        user.headers,
+      );
+      const body = {
+        type: 'expense',
+        accountId: nequi,
+        amount: SECRET_AMOUNT,
+        currency: 'COP',
+        toAccountId: null,
+        toAmount: null,
+        toCurrency: null,
+        categorySlug: 'dining',
+        description: SECRET_NOTE,
+        occurredOn: '2026-10-22',
+        deletedAt: null,
+        updatedAt: '2026-10-22T12:00:06.000Z',
+      };
+      await putJson(t, `/v1/transactions/${tx}`, body, user.headers);
+      // Un envío rechazado y uno viejo (409) también pasan por el registro.
+      await putJson(t, `/v1/transactions/${tx}`, { ...body, amount: '0' }, user.headers);
+      await putJson(
+        t,
+        `/v1/transactions/${tx}`,
+        { ...body, updatedAt: '2026-10-22T12:00:01.000Z' },
+        user.headers,
+      );
+      await deleteJson(
+        t,
+        `/v1/transactions/${tx}`,
+        { updatedAt: '2026-10-22T12:00:09.000Z' },
+        user.headers,
+      );
+
+      const logs = t.logLines.join('\n');
+      expect(logs).toContain('/v1/transactions/');
+      expect(logs).toContain('/v1/accounts/');
+      for (const secret of [SECRET_BALANCE, SECRET_AMOUNT, SECRET_NAME, SECRET_NOTE, 'Carlos']) {
+        expect(logs).not.toContain(secret);
+      }
     },
     SLOW,
   );
