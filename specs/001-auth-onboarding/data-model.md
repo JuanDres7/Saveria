@@ -120,7 +120,8 @@ enlaces viejos.
 ### `accounts` (sincronizable, mínima en esta feature)
 
 Solo se crea la cuenta "Efectivo" (FR-016). La feature 002 agrega el resto de los campos y la
-gestión completa.
+gestión completa: ver `specs/002-accounts-transactions/data-model.md`, que es la definición
+vigente de la tabla.
 
 | Campo | Tipo | Reglas |
 |---|---|---|

@@ -14,7 +14,8 @@ conexión y con registro manual.
 | Funcionalidad | Estado |
 |---|---|
 | [001 — Registro, inicio de sesión y onboarding](specs/001-auth-onboarding/spec.md) | Implementada (historias 1–6) |
-| Gastos e ingresos manuales, registro por IA, sincronización, resumen del mes | Pendientes |
+| [002 — Cuentas y movimientos manuales](specs/002-accounts-transactions/spec.md) | Implementada (historias 1–6): gastos e ingresos, historial y saldos, cuentas, editar y borrar con "Deshacer", transferencias y ajuste de saldo |
+| Registro por IA, sincronización entre dispositivos, resumen del mes, tasas de cambio, rediseño | Pendientes |
 
 ## Estructura del monorepo
 
@@ -23,7 +24,8 @@ apps/
   api/        Backend: Bun + Hono + Drizzle (PostgreSQL) + Redis, Clean Architecture
   mobile/     App Android: Expo SDK 58 + React Native, SQLite cifrado (SQLCipher) por usuario
 packages/
-  shared/     Catálogos (monedas, países, política) y validaciones Zod usadas por app y backend
+  shared/     Catálogos (monedas, países, categorías, política), dinero exacto, validaciones Zod,
+              reglas de cuentas y formato de las acciones de la IA, usados por app y backend
 specs/        Una carpeta por funcionalidad (Spec Kit): spec, plan, research, data-model,
               contrato OpenAPI, quickstart y tareas
 docs/         Visión y arquitectura
@@ -37,7 +39,10 @@ spikes/       Experimentos técnicos (por ejemplo, Drizzle sobre SQLCipher)
 
 La guía completa, con los requisitos de Windows (Bun 1.4, Docker, JDK 21, Android SDK, ninja 1.12)
 y un recorrido manual de 14 pasos, está en
-[`specs/001-auth-onboarding/quickstart.md`](specs/001-auth-onboarding/quickstart.md). En resumen:
+[`specs/001-auth-onboarding/quickstart.md`](specs/001-auth-onboarding/quickstart.md); el recorrido
+de cuentas y movimientos (15 pasos) está en
+[`specs/002-accounts-transactions/quickstart.md`](specs/002-accounts-transactions/quickstart.md).
+En resumen:
 
 ```powershell
 bun install
@@ -56,6 +61,7 @@ En desarrollo los correos no se envían: quedan como archivos `.html` en `apps/a
 bun test --cwd apps/api            # unitarias, de contrato e integración (necesita Docker)
 bun test --cwd packages/shared
 bun run --cwd apps/mobile test     # jest-expo
+bun run --cwd apps/mobile test:sqlite   # consultas locales contra un SQLite real (Bun)
 bunx biome check .
 ```
 

@@ -174,8 +174,9 @@ decisiones de diseño nuevas.
     acción en el mismo `TransactionInput` que arma el formulario manual. Busca la cuenta por
     nombre entre las activas sin distinguir mayúsculas; si no la encuentra usa la cuenta por
     defecto y agrega `accountId` a los inferidos; si falta la fecha pone `today` y la marca como
-    inferida. Si falta algo que no se puede suponer (el monto o, en una transferencia, la cuenta
-    de destino), no inventa nada: devuelve `{ status: 'incomplete', missing: [...] }` para que la
+    inferida. Si falta algo que no se puede suponer (el monto, la categoría de un gasto o ingreso o,
+    en una transferencia, la cuenta de destino y, entre monedas distintas, el monto que entra), no
+    inventa nada: devuelve `{ status: 'incomplete', missing: [...] }` para que la
     pantalla de confirmación lo pregunte. El resultado completo se valida con
     `transactionInputSchema`, así que una categoría de ingreso en un gasto se rechaza igual que
     en el formulario.

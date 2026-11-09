@@ -24,7 +24,7 @@ bunx biome check .
 Esperado: todo en verde. Las pruebas de contrato validan las respuestas contra el contrato de
 la 002, que incluye el de la 001.
 
-## 2. App en el celular (por cable USB)
+## 2. App en el emulador (o en un celular por cable USB)
 
 Igual que en la 001, sin cambiar el firewall del PC:
 
@@ -60,7 +60,7 @@ Con una cuenta nueva y el onboarding terminado en COP. Anotar los resultados en
 | 12 | Intentar archivar la cuenta por defecto | Pide elegir antes otra cuenta por defecto | 3.7 |
 | 13 | Intentar cambiar la moneda de "Nequi" (tiene movimientos) | No se permite | 3.8 |
 | 14 | Forzar un rechazo del servidor (ver nota) | El movimiento sigue en el historial con "no se pudo guardar" y el motivo; al corregirlo se envía | FR-037 |
-| 15 | Abrir el historial con 5.000 movimientos de prueba (script de siembra) en modo avión | Historial y saldos en menos de 1 s | SC-004 |
+| 15 | Arrancar Metro con `EXPO_PUBLIC_SEED_TRANSACTIONS=5000`, entrar y esperar a ver `[SEED] … sembrados` en el log; abrir el historial en modo avión | El log da los tiempos de saldos y primera página (menos de 1 s) y el historial se abre y desplaza sin esperas | SC-004 |
 
 **Nota del paso 14**: con el backend apagado, editar la base local no es práctico; la forma
 simple es registrar un gasto en una cuenta y, antes de que se envíe, borrar esa cuenta en el
