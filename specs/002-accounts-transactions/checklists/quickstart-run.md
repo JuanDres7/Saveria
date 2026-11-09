@@ -58,3 +58,21 @@ teléfono (consulta a `accounts` en la base de desarrollo).
 | 3.5 | Crear "nequi" | ✅ "Ya tienes una cuenta activa con ese nombre" |
 | — | Servidor | ✅ `Efectivo viejo` (activa, no por defecto), `Nequi` (por defecto, 80.000), `efectivo` |
 | 3.9, FR-037 | Sin red y rechazo del servidor | Cubiertos por `apps/mobile/tests/us3-accounts.test.tsx` |
+
+## Historia 4: editar y borrar un movimiento (2026-11-09)
+
+Mismo entorno y misma cuenta de prueba. Se creó "Restaurantes y domicilios" de 18.000 y
+"Transporte" de 3.700 desde la app (saldo de Nequi, la cuenta por defecto: $ 58.300) y se
+comprobó cada cambio también en el servidor.
+
+| Escenario | Paso | Resultado |
+|---|---|---|
+| 4.1 | Tocar el gasto de restaurantes → monto `20.000` → "Guardar cambios" | ✅ El saldo baja otros 2.000 ($ 56.300); en el servidor `dining 20000` |
+| 4.4 | Tocar el gasto de transporte → "Borrar" | ✅ Desaparece al instante, el saldo sube a $ 60.000 y aparece "Movimiento borrado · Deshacer"; en el servidor queda con `deleted_at` |
+| 4.4 | Esperar sin tocar "Deshacer" | ✅ El aviso desaparece solo (a los 6 s) y el borrado se mantiene |
+| 4.5 | Borrar el gasto de restaurantes y tocar "Deshacer" enseguida | ✅ Vuelve el movimiento y el saldo; en el servidor sigue vivo |
+| 4.6 | Modo avión: crear "Mercado" de 5.000, editarlo a 9.000 y borrarlo; quitar el modo avión | ✅ El servidor recibió un solo `DELETE` (204) y no creó ningún movimiento de 5.000 ni de 9.000 |
+| 4.2, 4.3, FR-037 | Cambiar cuenta o fecha, cambiar a otra moneda, borrado rechazado, cuenta archivada en el selector | Cubiertos por `apps/mobile/tests/us4-edit-delete.test.tsx` |
+
+**Nota**: cada lectura de pantalla con `uiautomator` tarda unos 2 s; al probar "Deshacer" hay que
+tocarlo enseguida o el aviso (6 s) ya se fue.
