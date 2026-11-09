@@ -154,3 +154,34 @@ decisiones de diseño nuevas.
 - **Deshacer**: un aviso inferior ("Movimiento borrado · Deshacer") visible 5 s (FR-026).
 - **Listas largas**: el historial usa una lista virtualizada por secciones (día) con paginación
   local de 50 en 50 (SC-004).
+
+## 12. Formato de las acciones que propondrá la IA (Constitución I y II)
+
+- **Decision**: `packages/shared/src/ai-actions/transactions.ts` define desde ya, sin ninguna IA
+  conectada:
+  - Tres tipos de acción con los nombres de la Constitución II: `create_expense`,
+    `create_income` y `create_transfer`. El ajuste de saldo no tiene acción de IA: es una
+    corrección del usuario, no algo que se cuente en un relato.
+  - Datos de cada acción: `amount` (texto decimal), `categorySlug`, `accountName` (y
+    `toAccountName`, `toAmount` en transferencias), `occurredOn` y `description`, todos
+    opcionales salvo el tipo, porque la IA puede no encontrarlos en el relato. La IA da el
+    **nombre** de la cuenta, nunca su id interno.
+  - `inferred`: la lista de campos que la IA adivinó (Constitución II: todo dato inferido se
+    muestra marcado).
+  - `version: 1` en el mensaje completo (Constitución VII: el contrato con la IA está versionado
+    y se valida en los dos lados), validado con un esquema Zod.
+  - `actionToTransactionInput(action, { accounts, defaultAccountId, today })`: convierte la
+    acción en el mismo `TransactionInput` que arma el formulario manual. Busca la cuenta por
+    nombre entre las activas sin distinguir mayúsculas; si no la encuentra usa la cuenta por
+    defecto y agrega `accountId` a los inferidos; si falta la fecha pone `today` y la marca como
+    inferida. Si falta algo que no se puede suponer (el monto o, en una transferencia, la cuenta
+    de destino), no inventa nada: devuelve `{ status: 'incomplete', missing: [...] }` para que la
+    pantalla de confirmación lo pregunte. El resultado completo se valida con
+    `transactionInputSchema`, así que una categoría de ingreso en un gasto se rechaza igual que
+    en el formulario.
+- **Rationale**: la Constitución I pide que un módulo nuevo defina a la vez su formulario y su
+  tipo de acción para la IA. Con el formato y la conversión listos, la feature 004 solo tiene que
+  producir estas acciones y mostrarlas: la IA y el formulario llegan al mismo caso de uso
+  (`save-transaction`) sin código paralelo.
+- **Fuera de esta feature** (004): Gemini, el microservicio FastAPI, las instrucciones para el
+  modelo, la pantalla de confirmación y el modo automático.

@@ -248,7 +248,9 @@ ajuste de −5.000 y el saldo queda en 115.000 sin que cambie ningún otro movim
 - **FR-008**: El sistema MUST impedir registrar movimientos y crear cuentas mientras el usuario no
   tenga moneda principal (regla FR-015 de la feature 001).
 - **FR-009**: El registro manual MUST pasar por el mismo caso de uso que usará después el registro
-  por IA; no se duplica la lógica de guardar movimientos.
+  por IA; no se duplica la lógica de guardar movimientos. El formato de las acciones que
+  propondrá la IA para gastos, ingresos y transferencias queda definido en esta feature, aunque
+  la IA llegue después (feature 004).
 
 **Historial y saldos**
 

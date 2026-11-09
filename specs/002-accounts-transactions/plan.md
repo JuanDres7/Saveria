@@ -61,7 +61,7 @@ logs sin montos ni descripciones (FR-040); body de máximo 16 KB; un solo desarr
 
 | Principio | Cómo se cumple | Estado |
 |---|---|---|
-| I. Dos puertas, un caso de uso | `save-transaction` concentra los cuatro tipos y la 004 lo reutilizará. Ninguna regla se escribe dos veces: las de movimientos están en `packages/shared/src/validation/transaction.ts` y las de cuentas en `packages/shared/src/rules/accounts.ts`; el servidor y el teléfono llaman a las mismas funciones (research §9, §10) | ✅ |
+| I. Dos puertas, un caso de uso | `save-transaction` concentra los cuatro tipos y la 004 lo reutilizará. Ninguna regla se escribe dos veces: las de movimientos están en `packages/shared/src/validation/transaction.ts` y las de cuentas en `packages/shared/src/rules/accounts.ts`; el servidor y el teléfono llaman a las mismas funciones (research §9, §10). El tipo de acción para la IA se define junto con el formulario: `packages/shared/src/ai-actions/transactions.ts` fija el formato versionado de `create_expense`, `create_income` y `create_transfer` y su conversión a la misma entrada del formulario (research §12); la IA en sí llega en la 004 | ✅ |
 | II. La IA propone | No hay IA en esta feature. Cuenta y fecha por defecto los elige el formulario a la vista del usuario, no se infieren | N/A |
 | III. Offline primero | UUID del cliente en cuentas y movimientos; `created_at`/`updated_at`/`deleted_at` en ambas tablas; borrado lógico; outbox. La estrategia de conflicto entre dispositivos se define en la 006; aquí solo LWW de un dispositivo (research §3) | ✅ |
 | IV. Precisión monetaria y multimoneda | `numeric(19,4)` + `char(3)`; texto en el contrato; enteros exactos en SQLite (research §5); el movimiento usa la moneda de su cuenta; transferencias y ajustes sin categoría. **Totales consolidados**: la regla exige convertir con tasas, que llegan en la 008. Para no violarla, la 002 no muestra totales que mezclen monedas y solo suma cuando todas las cuentas activas están en la moneda principal (FR-012, FR-013) | ✅ |
@@ -129,7 +129,8 @@ packages/shared/src/
 ├── catalog/currencies.ts         # COP → decimals 0
 ├── money/                        # nuevo: parseAmount, toE4/fromE4 (BigInt), formatAmount
 ├── validation/account.ts, transaction.ts   # nuevas reglas Zod
-└── rules/accounts.ts             # nuevo: reglas entre cuentas (una sola fuente, Constitución I)
+├── rules/accounts.ts             # nuevo: reglas entre cuentas (una sola fuente, Constitución I)
+└── ai-actions/transactions.ts    # nuevo: formato de las acciones de la IA y su conversión
 
 apps/api/
 ├── drizzle/                      # migración nueva (enums, accounts, transactions, índices)
