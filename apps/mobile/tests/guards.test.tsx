@@ -129,6 +129,15 @@ describe('RootLayout', () => {
 /** Pantallas de la app con sesión y onboarding terminado. */
 const APP_SCREENS = [
   'home',
+  'transactions/new',
+  'transactions/index',
+  'transactions/[id]',
+  'transfer',
+  'accounts/index',
+  'accounts/new',
+  'accounts/archived',
+  'accounts/[id]',
+  'accounts/[id]/adjust',
   'settings/index',
   'settings/change-password',
   'settings/delete-account',

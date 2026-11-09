@@ -33,7 +33,7 @@ export const CURRENCIES: readonly Currency[] = [
   { code: 'BOB', name: 'Boliviano', symbol: 'Bs', decimals: 2 },
   { code: 'BRL', name: 'Real brasileño', symbol: 'R$', decimals: 2 },
   { code: 'CLP', name: 'Peso chileno', symbol: '$', decimals: 0 },
-  { code: 'COP', name: 'Peso colombiano', symbol: '$', decimals: 2 },
+  { code: 'COP', name: 'Peso colombiano', symbol: '$', decimals: 0 },
   { code: 'CRC', name: 'Colón costarricense', symbol: '₡', decimals: 2 },
   { code: 'CUP', name: 'Peso cubano', symbol: '$', decimals: 2 },
   { code: 'DOP', name: 'Peso dominicano', symbol: 'RD$', decimals: 2 },

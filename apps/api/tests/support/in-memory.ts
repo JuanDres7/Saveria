@@ -1,3 +1,4 @@
+import { fromE4, toE4 } from '@saveria/shared';
 import type {
   AccountRepository,
   OneTimeTokenRepository,
@@ -5,6 +6,7 @@ import type {
   Repositories,
   SessionRepository,
   SessionRotation,
+  TransactionRepository,
   UnitOfWork,
   UserRepository,
 } from '../../src/application/ports/repositories';
@@ -22,6 +24,7 @@ import type {
   Profile,
   RevokeReason,
   Session,
+  Transaction,
   User,
 } from '../../src/domain/entities';
 
@@ -32,6 +35,7 @@ export class InMemoryStore {
   sessions = new Map<string, Session>();
   tokens = new Map<string, OneTimeToken>();
   accounts = new Map<string, Account>();
+  transactions = new Map<string, Transaction>();
 
   snapshot() {
     return structuredClone({
@@ -40,6 +44,7 @@ export class InMemoryStore {
       sessions: this.sessions,
       tokens: this.tokens,
       accounts: this.accounts,
+      transactions: this.transactions,
     });
   }
 
@@ -49,6 +54,7 @@ export class InMemoryStore {
     this.sessions = snapshot.sessions;
     this.tokens = snapshot.tokens;
     this.accounts = snapshot.accounts;
+    this.transactions = snapshot.transactions;
   }
 }
 
@@ -91,6 +97,8 @@ class InMemoryUsers implements UserRepository {
     this.store.profiles.delete(id);
     for (const [key, a] of this.store.accounts)
       if (a.userId === id) this.store.accounts.delete(key);
+    for (const [key, t] of this.store.transactions)
+      if (t.userId === id) this.store.transactions.delete(key);
     for (const [key, t] of this.store.tokens) if (t.userId === id) this.store.tokens.delete(key);
     // Igual que ON DELETE SET NULL: las sesiones sobreviven sin usuario.
     for (const s of this.store.sessions.values()) if (s.userId === id) s.userId = null;
@@ -208,14 +216,29 @@ class InMemoryOneTimeTokens implements OneTimeTokenRepository {
 class InMemoryAccounts implements AccountRepository {
   constructor(private readonly store: InMemoryStore) {}
 
+  /** Imita los índices únicos parciales de PostgreSQL (data-model.md). */
+  private checkUnique(account: Account) {
+    const others = [...this.store.accounts.values()].filter(
+      (a) => a.userId === account.userId && a.id !== account.id && a.deletedAt === null,
+    );
+    const active = (a: Account) => a.archivedAt === null && a.deletedAt === null;
+    if (active(account) && account.isDefault && others.some((a) => active(a) && a.isDefault)) {
+      throw new Error('unique violation: una cuenta por defecto por usuario');
+    }
+    if (
+      active(account) &&
+      others.some((a) => active(a) && a.name.toLowerCase() === account.name.toLowerCase())
+    ) {
+      throw new Error('unique violation: nombre de cuenta activa repetido');
+    }
+  }
+
   async create(account: Account) {
-    const secondDefault =
-      account.isDefault &&
-      account.deletedAt === null &&
-      [...this.store.accounts.values()].some(
-        (a) => a.userId === account.userId && a.isDefault && a.deletedAt === null,
-      );
-    if (secondDefault) throw new Error('unique violation: una cuenta por defecto por usuario');
+    this.checkUnique(account);
+    this.store.accounts.set(account.id, structuredClone(account));
+  }
+  async upsert(account: Account) {
+    this.checkUnique(account);
     this.store.accounts.set(account.id, structuredClone(account));
   }
   async findById(id: string) {
@@ -224,9 +247,52 @@ class InMemoryAccounts implements AccountRepository {
   async findDefaultByUser(userId: string) {
     return copy(
       [...this.store.accounts.values()].find(
-        (a) => a.userId === userId && a.isDefault && a.deletedAt === null,
+        (a) => a.userId === userId && a.isDefault && a.archivedAt === null && a.deletedAt === null,
       ),
     );
+  }
+  async listByUser(userId: string) {
+    return [...this.store.accounts.values()]
+      .filter((a) => a.userId === userId && a.deletedAt === null)
+      .map((a) => structuredClone(a));
+  }
+  async clearDefaultExcept(userId: string, accountId: string, at: Date) {
+    for (const a of this.store.accounts.values()) {
+      if (a.userId === userId && a.id !== accountId && a.isDefault) {
+        a.isDefault = false;
+        a.updatedAt = at;
+      }
+    }
+  }
+}
+
+class InMemoryTransactions implements TransactionRepository {
+  constructor(private readonly store: InMemoryStore) {}
+
+  async upsert(transaction: Transaction) {
+    this.store.transactions.set(transaction.id, structuredClone(transaction));
+  }
+  async findById(id: string) {
+    return copy(this.store.transactions.get(id));
+  }
+  async existsForAccount(accountId: string) {
+    return [...this.store.transactions.values()].some(
+      (t) => t.deletedAt === null && (t.accountId === accountId || t.toAccountId === accountId),
+    );
+  }
+  async balanceOf(accountId: string) {
+    const account = this.store.accounts.get(accountId);
+    let total = toE4(account?.initialBalance ?? '0');
+    for (const t of this.store.transactions.values()) {
+      if (t.deletedAt !== null) continue;
+      if (t.accountId === accountId) {
+        total += t.type === 'income' || t.type === 'adjustment' ? toE4(t.amount) : -toE4(t.amount);
+      }
+      if (t.type === 'transfer' && t.toAccountId === accountId && t.toAmount !== null) {
+        total += toE4(t.toAmount);
+      }
+    }
+    return fromE4(total);
   }
 }
 
@@ -237,6 +303,7 @@ export function createInMemoryRepositories(store: InMemoryStore): Repositories {
     sessions: new InMemorySessions(store),
     oneTimeTokens: new InMemoryOneTimeTokens(store),
     accounts: new InMemoryAccounts(store),
+    transactions: new InMemoryTransactions(store),
   };
 }
 

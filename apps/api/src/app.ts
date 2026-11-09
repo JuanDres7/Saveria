@@ -6,6 +6,7 @@ import { createChangeEmail } from './application/use-cases/change-email';
 import { createChangePassword } from './application/use-cases/change-password';
 import { createCompleteOnboarding } from './application/use-cases/complete-onboarding';
 import { createDeleteAccount } from './application/use-cases/delete-account';
+import { createDeleteTransaction } from './application/use-cases/delete-transaction';
 import { createForgotPassword } from './application/use-cases/forgot-password';
 import { createGetMe } from './application/use-cases/get-me';
 import { createLogin } from './application/use-cases/login';
@@ -14,6 +15,8 @@ import { createRefresh } from './application/use-cases/refresh';
 import { createRegister } from './application/use-cases/register';
 import { createResendVerification } from './application/use-cases/resend-verification';
 import { createCheckResetLink, createResetPassword } from './application/use-cases/reset-password';
+import { createSaveAccount } from './application/use-cases/save-account';
+import { createSaveTransaction } from './application/use-cases/save-transaction';
 import { createUpdateProfile } from './application/use-cases/update-profile';
 import {
   createCheckVerificationLink,
@@ -26,10 +29,12 @@ import { limitBodySize } from './interfaces/http/middleware/body-limit';
 import { clientIp } from './interfaces/http/middleware/client-ip';
 import { createErrorHandler, notFoundHandler } from './interfaces/http/middleware/error-handler';
 import { requestLogger } from './interfaces/http/middleware/request-logger';
+import { accountRoutes } from './interfaces/http/routes/accounts';
 import { authRoutes } from './interfaces/http/routes/auth';
 import { legalRoutes } from './interfaces/http/routes/legal';
 import { linkPageHeaders, linkRoutes } from './interfaces/http/routes/links';
 import { meRoutes } from './interfaces/http/routes/me';
+import { transactionRoutes } from './interfaces/http/routes/transactions';
 
 /** Lo que `createApp` necesita del contenedor; las pruebas pueden pasar un subconjunto. */
 export type AppDeps = Pick<Container, 'config' | 'logger'> & Partial<Container>;
@@ -69,6 +74,15 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
       deleteAccount: createDeleteAccount(deps),
     }),
   );
+  app.route('/v1/accounts', accountRoutes({ auth, saveAccount: createSaveAccount(deps) }));
+  app.route(
+    '/v1/transactions',
+    transactionRoutes({
+      auth,
+      saveTransaction: createSaveTransaction(deps),
+      deleteTransaction: createDeleteTransaction(deps),
+    }),
+  );
   app.route(
     '/',
     linkRoutes({
@@ -86,7 +100,7 @@ export interface AppOptions {
 }
 
 const OPENAPI_FILE = fileURLToPath(
-  new URL('../../../specs/001-auth-onboarding/contracts/openapi.yaml', import.meta.url),
+  new URL('../../../specs/002-accounts-transactions/contracts/openapi.yaml', import.meta.url),
 );
 
 export function createApp(deps: AppDeps, options: AppOptions = {}) {

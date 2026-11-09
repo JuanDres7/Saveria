@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { UserDb } from '../../db/open-user-db';
 import { accounts, meta, profile } from '../../db/schema';
 import type { Me } from '../../session/session-store';
+import { e4Value } from '../accounts/local-accounts';
 
 export type ProfileFields = Me['profile'];
 export type LocalAccount = NonNullable<Me['defaultAccount']>;
@@ -70,6 +71,7 @@ export class DrizzleLocalStore implements LocalStore {
       name: account.name,
       currency: account.currency,
       initialBalance: account.initialBalance,
+      initialBalanceE4: e4Value(account.initialBalance),
       isDefault: account.isDefault,
       updatedAt: now,
     };

@@ -1,9 +1,11 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
+import { registerAccountHandlers } from '../features/accounts/account-service';
 import { authService } from '../features/auth/auth-service';
 import { bootstrapSession } from '../features/auth/bootstrap';
 import { registerProfileConflictHandler } from '../features/profile/profile-service';
+import { registerTransactionHandlers } from '../features/transactions/transaction-service';
 import { verificationService } from '../features/verification/verification-service';
 import { watchOutbox } from '../outbox/user-outbox';
 import { routeGroupFor } from '../session/guards';
@@ -26,10 +28,16 @@ export default function RootLayout() {
     // muestra cuando el servidor lo confirma (FR-032).
     const stopVerification = verificationService.watchOnReconnect();
     registerProfileConflictHandler();
+    registerTransactionHandlers();
+    registerAccountHandlers();
     void bootstrapSession();
     void authService.sendPendingRevocation();
     if (__DEV__ && process.env.EXPO_PUBLIC_SMOKE === '1') {
       void import('../dev/smoke').then((smoke) => smoke.runSmoke());
+    }
+    const seedCount = Number(process.env.EXPO_PUBLIC_SEED_TRANSACTIONS);
+    if (__DEV__ && Number.isInteger(seedCount) && seedCount > 0) {
+      void import('../dev/seed-transactions').then((seed) => seed.runSeed(seedCount));
     }
     return () => {
       stopWatching();

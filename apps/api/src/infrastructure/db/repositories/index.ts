@@ -5,6 +5,7 @@ import type { DbExecutor } from './executor';
 import { DrizzleOneTimeTokenRepository } from './one-time-token-repository';
 import { DrizzleProfileRepository } from './profile-repository';
 import { DrizzleSessionRepository } from './session-repository';
+import { DrizzleTransactionRepository } from './transaction-repository';
 import { DrizzleUserRepository } from './user-repository';
 
 export function createRepositories(db: DbExecutor): Repositories {
@@ -14,6 +15,7 @@ export function createRepositories(db: DbExecutor): Repositories {
     sessions: new DrizzleSessionRepository(db),
     oneTimeTokens: new DrizzleOneTimeTokenRepository(db),
     accounts: new DrizzleAccountRepository(db),
+    transactions: new DrizzleTransactionRepository(db),
   };
 }
 

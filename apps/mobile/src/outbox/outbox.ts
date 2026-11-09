@@ -1,4 +1,4 @@
-import { asc, eq, count as sqlCount } from 'drizzle-orm';
+import { and, asc, eq, ne, count as sqlCount } from 'drizzle-orm';
 import * as Crypto from 'expo-crypto';
 import type { UserDb } from '../db/open-user-db';
 import { outbox } from '../db/schema';
@@ -37,6 +37,12 @@ export interface OutboxStore {
   remove(id: string): void;
   markFailed(id: string, error: string, nextAttemptAt: number): void;
   count(): number;
+  /**
+   * Compactar: si la entidad ya tiene cambios pendientes (salvo `exceptId`, el que se está
+   * enviando), el más antiguo pasa a llevar este cambio y conserva su lugar en la cola; los demás
+   * se borran. Devuelve su id, o `null` si no había nada pendiente.
+   */
+  replacePending(change: NewOutboxItem, exceptId: string | null): string | null;
 }
 
 export class DrizzleOutboxStore implements OutboxStore {
@@ -73,6 +79,36 @@ export class DrizzleOutboxStore implements OutboxStore {
   count(): number {
     return this.db.select({ n: sqlCount() }).from(outbox).get()?.n ?? 0;
   }
+
+  replacePending(change: NewOutboxItem, exceptId: string | null): string | null {
+    const pending = this.db
+      .select({ id: outbox.id })
+      .from(outbox)
+      .where(
+        and(
+          eq(outbox.entity, change.entity),
+          eq(outbox.entityId, change.entityId),
+          exceptId === null ? undefined : ne(outbox.id, exceptId),
+        ),
+      )
+      .orderBy(asc(outbox.createdAt), asc(outbox.id))
+      .all();
+    const [first, ...rest] = pending;
+    if (!first) return null;
+    this.db
+      .update(outbox)
+      .set({
+        operation: change.operation,
+        payload: change.payload,
+        attempts: 0,
+        lastError: null,
+        nextAttemptAt: 0,
+      })
+      .where(eq(outbox.id, first.id))
+      .run();
+    for (const { id } of rest) this.db.delete(outbox).where(eq(outbox.id, id)).run();
+    return first.id;
+  }
 }
 
 const BASE_BACKOFF_MS = 1_000;
@@ -103,6 +139,8 @@ export function createOutbox(store: OutboxStore, send: Sender, options: OutboxOp
   let running: Promise<FlushSummary> | null = null;
   // `createdAt` define el orden de envío: dos cambios en el mismo milisegundo no pueden empatar.
   let lastCreatedAt = 0;
+  // El cambio que se está enviando: compactar nunca lo toca.
+  let inFlightId: string | null = null;
 
   async function run(): Promise<FlushSummary> {
     const summary: FlushSummary = { sent: 0, discarded: 0, remaining: 0, stoppedBy: null };
@@ -118,10 +156,13 @@ export function createOutbox(store: OutboxStore, send: Sender, options: OutboxOp
       }
 
       let result: SendResult;
+      inFlightId = item.id;
       try {
         result = await send(item);
       } catch (error) {
         result = { status: 'retry', error: error instanceof Error ? error.message : 'error' };
+      } finally {
+        inFlightId = null;
       }
 
       if (result.status === 'retry') {
@@ -139,8 +180,16 @@ export function createOutbox(store: OutboxStore, send: Sender, options: OutboxOp
   }
 
   return {
-    /** Guarda un cambio para enviarlo cuando haya conexión y sesión. */
-    enqueue(item: NewOutboxItem): string {
+    /**
+     * Guarda un cambio para enviarlo cuando haya conexión y sesión. Con `compact` (cambios que
+     * llevan el registro completo, como cuentas y movimientos) reemplaza al cambio pendiente de la
+     * misma entidad en su mismo lugar de la cola: llega solo el estado final (research §3).
+     */
+    enqueue(item: NewOutboxItem, { compact = false }: { compact?: boolean } = {}): string {
+      if (compact) {
+        const replaced = store.replacePending(item, inFlightId);
+        if (replaced) return replaced;
+      }
       const id = newId();
       lastCreatedAt = Math.max(now(), lastCreatedAt + 1);
       store.insert({

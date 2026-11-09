@@ -43,7 +43,8 @@
     "start": "expo start",
     "android": "expo run:android",
     "test": "jest",
-    "api:types": "openapi-typescript ../../specs/001-auth-onboarding/contracts/openapi.yaml -o src/api/schema.d.ts",
+    "test:sqlite": "bun test tests-sqlite",
+    "api:types": "openapi-typescript ../../specs/002-accounts-transactions/contracts/openapi.yaml -o src/api/schema.d.ts",
     "db:generate": "drizzle-kit generate && bun scripts/embed-migrations.mjs"
   },
   "private": true,

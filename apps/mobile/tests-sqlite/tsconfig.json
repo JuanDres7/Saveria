@@ -1,0 +1,9 @@
+{
+  "//": "Pruebas de SQL local con bun:sqlite: tienen sus propios tipos para no mezclar los de Bun con los de la app.",
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["bun"]
+  },
+  "include": ["./**/*.ts", "../expo-env.d.ts"],
+  "exclude": []
+}

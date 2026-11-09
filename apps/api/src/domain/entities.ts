@@ -1,4 +1,4 @@
-import type { AiMode, OnboardingStep } from '@saveria/shared';
+import type { AccountType, AiMode, OnboardingStep, TransactionType } from '@saveria/shared';
 
 export interface User {
   id: string;
@@ -69,10 +69,33 @@ export interface Account {
   id: string;
   userId: string;
   name: string;
+  type: AccountType;
   currency: string;
   /** Decimal exacto como texto, nunca número de punto flotante */
   initialBalance: string;
   isDefault: boolean;
+  archivedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+/** Gasto, ingreso, transferencia (origen + destino en una fila) o ajuste (monto con signo). */
+export interface Transaction {
+  id: string;
+  userId: string;
+  type: TransactionType;
+  accountId: string;
+  /** Decimal exacto como texto */
+  amount: string;
+  currency: string;
+  toAccountId: string | null;
+  toAmount: string | null;
+  toCurrency: string | null;
+  categorySlug: string | null;
+  description: string | null;
+  /** Día local del movimiento, `YYYY-MM-DD` */
+  occurredOn: string;
   createdAt: Date;
   updatedAt: Date;
   deletedAt: Date | null;

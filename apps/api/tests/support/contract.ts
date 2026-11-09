@@ -5,7 +5,7 @@ import addFormats from 'ajv-formats';
 import { parse } from 'yaml';
 
 const OPENAPI_PATH = fileURLToPath(
-  new URL('../../../../specs/001-auth-onboarding/contracts/openapi.yaml', import.meta.url),
+  new URL('../../../../specs/002-accounts-transactions/contracts/openapi.yaml', import.meta.url),
 );
 
 type Json = Record<string, unknown>;

@@ -1,4 +1,11 @@
-import type { Account, OneTimeToken, Profile, Session, User } from '../../src/domain/entities';
+import type {
+  Account,
+  OneTimeToken,
+  Profile,
+  Session,
+  Transaction,
+  User,
+} from '../../src/domain/entities';
 
 const NOW = new Date('2026-10-22T12:00:00.000Z');
 const DAY = 24 * 60 * 60 * 1000;
@@ -81,9 +88,36 @@ export function makeAccount(userId: string, overrides: Partial<Account> = {}): A
     id: testId(),
     userId,
     name: 'Efectivo',
+    type: 'cash',
     currency: 'COP',
     initialBalance: '0',
     isDefault: true,
+    archivedAt: null,
+    createdAt: NOW,
+    updatedAt: NOW,
+    deletedAt: null,
+    ...overrides,
+  };
+}
+
+export function makeTransaction(
+  userId: string,
+  accountId: string,
+  overrides: Partial<Transaction> = {},
+): Transaction {
+  return {
+    id: testId(),
+    userId,
+    type: 'expense',
+    accountId,
+    amount: '18000',
+    currency: 'COP',
+    toAccountId: null,
+    toAmount: null,
+    toCurrency: null,
+    categorySlug: 'dining',
+    description: null,
+    occurredOn: NOW.toISOString().slice(0, 10),
     createdAt: NOW,
     updatedAt: NOW,
     deletedAt: null,

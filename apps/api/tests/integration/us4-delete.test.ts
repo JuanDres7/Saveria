@@ -65,6 +65,13 @@ async function userWithData() {
   return { userId: phone.me.id, phone: phone.tokens, tablet: tablet.tokens };
 }
 
+/** Cuántos movimientos tiene el usuario (feature 002). */
+async function transactionsOf(userId: string): Promise<number> {
+  const [row] =
+    await db.client`SELECT count(*)::int AS n FROM transactions WHERE user_id = ${userId}`;
+  return row?.n ?? 0;
+}
+
 async function rowsOf(userId: string) {
   const [counts] = await db.client`
     SELECT
@@ -226,6 +233,85 @@ describe('historia 4: borrar la cuenta', () => {
       expect(await rowsOf(userId)).toMatchObject({ users: 1, profiles: 1, accounts: 1 });
       expect((await getMe(phone.accessToken)).status).toBe(200);
       expect((await getMe(tablet.accessToken)).status).toBe(200);
+    },
+    SLOW,
+  );
+});
+
+describe('FR-041: borrar la cuenta también borra sus cuentas y movimientos', () => {
+  it(
+    'no queda ninguna cuenta de dinero ni movimiento del usuario, y los de otro usuario siguen',
+    async () => {
+      const { userId, phone } = await userWithData();
+      const auth = bearer(phone.accessToken);
+      const nequi = crypto.randomUUID();
+      const put = (path: string, body: unknown) => putJson(t, path, body, auth);
+      await put(`/v1/accounts/${nequi}`, {
+        name: 'Nequi',
+        type: 'wallet',
+        currency: 'COP',
+        initialBalance: '80000',
+        isDefault: false,
+        archivedAt: null,
+        updatedAt: '2026-10-22T12:00:05.000Z',
+      });
+      const movement = (accountId: string, overrides: Record<string, unknown> = {}) => ({
+        type: 'expense',
+        accountId,
+        amount: '18000',
+        currency: 'COP',
+        toAccountId: null,
+        toAmount: null,
+        toCurrency: null,
+        categorySlug: 'dining',
+        description: null,
+        occurredOn: '2026-10-22',
+        deletedAt: null,
+        updatedAt: '2026-10-22T12:00:06.000Z',
+        ...overrides,
+      });
+      await put(`/v1/transactions/${crypto.randomUUID()}`, movement(ACCOUNT_ID));
+      await put(`/v1/transactions/${crypto.randomUUID()}`, {
+        ...movement(ACCOUNT_ID),
+        type: 'transfer',
+        categorySlug: null,
+        toAccountId: nequi,
+        toAmount: '5000',
+        toCurrency: 'COP',
+        amount: '5000',
+      });
+      expect(await rowsOf(userId)).toMatchObject({ accounts: 2 });
+      expect(await transactionsOf(userId)).toBe(2);
+
+      // Otro usuario con sus propios datos: no debe verse afectado.
+      const other = await registerUser(t, { email: 'otro@mail.com', device: OTHER_DEVICE });
+      const otherAuth = bearer(other.tokens.accessToken);
+      await putJson(
+        t,
+        '/v1/me/profile',
+        profileBody({ primaryCurrency: 'COP', onboardingStep: 'ai_mode' }),
+        otherAuth,
+      );
+      const otherAccount = crypto.randomUUID();
+      await postJson(
+        t,
+        '/v1/me/onboarding/complete',
+        { defaultAccountId: otherAccount },
+        otherAuth,
+      );
+      await putJson(
+        t,
+        `/v1/transactions/${crypto.randomUUID()}`,
+        movement(otherAccount),
+        otherAuth,
+      );
+
+      const res = await deleteMe({ password: 'clave1234' }, auth);
+      expect(res.status).toBe(204);
+
+      expect(await rowsOf(userId)).toMatchObject({ users: 0, accounts: 0 });
+      expect(await transactionsOf(userId)).toBe(0);
+      expect(await transactionsOf(other.me.id)).toBe(1);
     },
     SLOW,
   );

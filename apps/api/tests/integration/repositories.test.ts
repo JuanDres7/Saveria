@@ -5,6 +5,7 @@ import {
   makeProfile,
   makeSession,
   makeToken,
+  makeTransaction,
   makeUser,
   testId,
 } from '../support/builders';
@@ -289,12 +290,62 @@ describe('OneTimeTokenRepository', () => {
 });
 
 describe('AccountRepository', () => {
-  it('guarda el saldo inicial como decimal exacto en texto', async () => {
+  it('guarda el saldo inicial como decimal exacto y lo devuelve sin ceros de relleno', async () => {
     const user = makeUser();
     await repos.users.create(user);
     const account = makeAccount(user.id, { initialBalance: '1234.5' });
     await repos.accounts.create(account);
-    expect((await repos.accounts.findById(account.id))?.initialBalance).toBe('1234.5000');
+    expect((await repos.accounts.findById(account.id))?.initialBalance).toBe('1234.5');
+  });
+
+  it('la migración deja las cuentas existentes como efectivo y activas', async () => {
+    const user = makeUser();
+    await repos.users.create(user);
+    const id = testId();
+    // Como las filas creadas antes de la 002: sin tipo ni archivado.
+    await client`insert into accounts (id, user_id, name, currency, is_default)
+      values (${id}, ${user.id}, 'Efectivo', 'COP', true)`;
+    expect(await repos.accounts.findById(id)).toMatchObject({ type: 'cash', archivedAt: null });
+  });
+
+  it('upsert crea y luego reemplaza la cuenta sin duplicarla', async () => {
+    const user = makeUser();
+    await repos.users.create(user);
+    const account = makeAccount(user.id);
+    await repos.accounts.upsert(account);
+    await repos.accounts.upsert({ ...account, name: 'Billetera', updatedAt: at });
+    const all = await repos.accounts.listByUser(user.id);
+    expect(all).toHaveLength(1);
+    expect(all[0]?.name).toBe('Billetera');
+  });
+
+  it('nombre único entre activas sin distinguir mayúsculas; una archivada no lo ocupa', async () => {
+    const user = makeUser();
+    await repos.users.create(user);
+    await repos.accounts.create(makeAccount(user.id, { name: 'Nequi', isDefault: false }));
+    await expect(
+      repos.accounts.create(makeAccount(user.id, { name: 'nequi', isDefault: false })),
+    ).rejects.toThrow();
+
+    const other = makeUser();
+    await repos.users.create(other);
+    await repos.accounts.create(
+      makeAccount(other.id, { name: 'Nequi', isDefault: false, archivedAt: at }),
+    );
+    await repos.accounts.create(makeAccount(other.id, { name: 'nequi', isDefault: false }));
+  });
+
+  it('clearDefaultExcept deja marcar otra cuenta por defecto sin chocar con el índice', async () => {
+    const user = makeUser();
+    await repos.users.create(user);
+    const efectivo = makeAccount(user.id);
+    const nequi = makeAccount(user.id, { name: 'Nequi', isDefault: false });
+    await repos.accounts.create(efectivo);
+    await repos.accounts.create(nequi);
+    await repos.accounts.clearDefaultExcept(user.id, nequi.id, at);
+    await repos.accounts.upsert({ ...nequi, isDefault: true, updatedAt: at });
+    expect((await repos.accounts.findDefaultByUser(user.id))?.id).toBe(nequi.id);
+    expect((await repos.accounts.findById(efectivo.id))?.isDefault).toBe(false);
   });
 
   it('findDefaultByUser devuelve la cuenta por defecto y no las borradas', async () => {
@@ -313,11 +364,108 @@ describe('AccountRepository', () => {
     const user = makeUser();
     await repos.users.create(user);
     await repos.accounts.create(makeAccount(user.id));
-    await expect(repos.accounts.create(makeAccount(user.id))).rejects.toThrow();
+    await expect(repos.accounts.create(makeAccount(user.id, { name: 'Nequi' }))).rejects.toThrow();
     // otro usuario sí puede tener la suya
     const other = makeUser();
     await repos.users.create(other);
     await repos.accounts.create(makeAccount(other.id));
+  });
+});
+
+describe('TransactionRepository', () => {
+  async function setup() {
+    const user = makeUser();
+    await repos.users.create(user);
+    const efectivo = makeAccount(user.id, { initialBalance: '100000' });
+    const nequi = makeAccount(user.id, { name: 'Nequi', isDefault: false });
+    const usd = makeAccount(user.id, {
+      name: 'Ahorros USD',
+      isDefault: false,
+      currency: 'USD',
+      initialBalance: '50.25',
+    });
+    for (const account of [efectivo, nequi, usd]) await repos.accounts.create(account);
+    return { user, efectivo, nequi, usd };
+  }
+
+  const transfer = (amount: string, toAccountId: string, toAmount: string) => ({
+    type: 'transfer' as const,
+    categorySlug: null,
+    amount,
+    toAccountId,
+    toAmount,
+    toCurrency: 'COP',
+  });
+
+  it('upsert es idempotente y guarda montos exactos', async () => {
+    const { user, efectivo } = await setup();
+    const tx = makeTransaction(user.id, efectivo.id, { amount: '18000' });
+    await repos.transactions.upsert(tx);
+    await repos.transactions.upsert(tx);
+    expect(await repos.transactions.findById(tx.id)).toMatchObject({
+      amount: '18000',
+      categorySlug: 'dining',
+      occurredOn: tx.occurredOn,
+    });
+  });
+
+  it('balanceOf suma ingresos, gastos, ajustes y transferencias, sin los borrados', async () => {
+    const { user, efectivo, nequi, usd } = await setup();
+    const rows = [
+      makeTransaction(user.id, efectivo.id, {
+        type: 'income',
+        categorySlug: 'salary',
+        amount: '50000',
+      }),
+      makeTransaction(user.id, efectivo.id, { amount: '30000' }),
+      makeTransaction(user.id, efectivo.id, {
+        type: 'adjustment',
+        categorySlug: null,
+        amount: '-5000',
+      }),
+      makeTransaction(user.id, efectivo.id, transfer('20000', nequi.id, '20000')),
+      makeTransaction(user.id, usd.id, {
+        ...transfer('10.25', nequi.id, '40000'),
+        currency: 'USD',
+      }),
+      makeTransaction(user.id, efectivo.id, { amount: '99999', deletedAt: at }),
+    ];
+    for (const row of rows) await repos.transactions.upsert(row);
+
+    // 100.000 + 50.000 − 30.000 − 5.000 − 20.000 = 95.000
+    expect(await repos.transactions.balanceOf(efectivo.id)).toBe('95000');
+    // 0 + 20.000 + 40.000 = 60.000
+    expect(await repos.transactions.balanceOf(nequi.id)).toBe('60000');
+    // 50,25 − 10,25 = 40
+    expect(await repos.transactions.balanceOf(usd.id)).toBe('40');
+  });
+
+  it('existsForAccount ve movimientos como origen y como destino, no los borrados', async () => {
+    const { user, efectivo, nequi, usd } = await setup();
+    expect(await repos.transactions.existsForAccount(nequi.id)).toBe(false);
+    await repos.transactions.upsert(
+      makeTransaction(user.id, efectivo.id, transfer('18000', nequi.id, '18000')),
+    );
+    expect(await repos.transactions.existsForAccount(nequi.id)).toBe(true);
+    await repos.transactions.upsert(
+      makeTransaction(user.id, usd.id, { currency: 'USD', amount: '1', deletedAt: at }),
+    );
+    expect(await repos.transactions.existsForAccount(usd.id)).toBe(false);
+  });
+
+  it('la base rechaza un gasto sin categoría (CHECK por tipo)', async () => {
+    const { user, efectivo } = await setup();
+    await expect(
+      repos.transactions.upsert(makeTransaction(user.id, efectivo.id, { categorySlug: null })),
+    ).rejects.toThrow();
+  });
+
+  it('borrar el usuario borra sus movimientos en cascada (FR-041)', async () => {
+    const { user, efectivo } = await setup();
+    const tx = makeTransaction(user.id, efectivo.id);
+    await repos.transactions.upsert(tx);
+    await repos.users.delete(user.id);
+    expect(await repos.transactions.findById(tx.id)).toBeNull();
   });
 });
 

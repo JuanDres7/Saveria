@@ -1,8 +1,10 @@
-import { AI_MODES, ONBOARDING_STEPS } from '@saveria/shared';
+import { ACCOUNT_TYPES, AI_MODES, ONBOARDING_STEPS, TRANSACTION_TYPES } from '@saveria/shared';
 import { sql } from 'drizzle-orm';
 import {
   boolean,
   char,
+  check,
+  date,
   index,
   numeric,
   pgEnum,
@@ -23,6 +25,8 @@ export const oneTimeTokenKindEnum = pgEnum('one_time_token_kind', [
   'email_verification',
   'password_reset',
 ]);
+export const accountTypeEnum = pgEnum('account_type', ACCOUNT_TYPES);
+export const transactionTypeEnum = pgEnum('transaction_type', TRANSACTION_TYPES);
 export const revokeReasonEnum = pgEnum('session_revoke_reason', [
   'logout',
   'password_changed',
@@ -110,7 +114,7 @@ export const oneTimeTokens = pgTable(
   (table) => [index('one_time_tokens_user_kind_idx').on(table.userId, table.kind)],
 );
 
-/** Cuenta de dinero. En esta feature solo se crea "Efectivo"; la feature 002 amplía esto. */
+/** Cuenta de dinero (feature 002: data-model.md). */
 export const accounts = pgTable(
   'accounts',
   {
@@ -120,16 +124,79 @@ export const accounts = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
     name: varchar('name', { length: 40 }).notNull(),
+    /** Las cuentas creadas antes de la 002 ("Efectivo") quedan como `cash` */
+    type: accountTypeEnum('type').notNull().default('cash'),
     currency: char('currency', { length: 3 }).notNull(),
     initialBalance: numeric('initial_balance', { precision: 19, scale: 4 }).notNull().default('0'),
     isDefault: boolean('is_default').notNull().default(false),
+    archivedAt: timestamptz('archived_at'),
     createdAt: timestamptz('created_at').notNull().defaultNow(),
+    /** Viene del cliente: base del last-write-wins */
     updatedAt: timestamptz('updated_at').notNull().defaultNow(),
     deletedAt: timestamptz('deleted_at'),
   },
   (table) => [
     uniqueIndex('accounts_one_default_per_user_idx')
       .on(table.userId)
-      .where(sql`${table.isDefault} AND ${table.deletedAt} IS NULL`),
+      .where(
+        sql`${table.isDefault} AND ${table.archivedAt} IS NULL AND ${table.deletedAt} IS NULL`,
+      ),
+    uniqueIndex('accounts_active_name_idx')
+      .on(table.userId, sql`lower(${table.name})`)
+      .where(sql`${table.archivedAt} IS NULL AND ${table.deletedAt} IS NULL`),
+  ],
+);
+
+/**
+ * Gasto, ingreso, transferencia o ajuste (data-model.md). Una transferencia es una sola fila con
+ * origen y destino, así las dos cuentas cambian juntas (FR-030).
+ */
+export const transactions = pgTable(
+  'transactions',
+  {
+    id: uuid('id').primaryKey(),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    type: transactionTypeEnum('type').notNull(),
+    accountId: uuid('account_id')
+      .notNull()
+      .references(() => accounts.id),
+    amount: numeric('amount', { precision: 19, scale: 4 }).notNull(),
+    currency: char('currency', { length: 3 }).notNull(),
+    toAccountId: uuid('to_account_id').references(() => accounts.id),
+    toAmount: numeric('to_amount', { precision: 19, scale: 4 }),
+    toCurrency: char('to_currency', { length: 3 }),
+    categorySlug: varchar('category_slug', { length: 32 }),
+    description: varchar('description', { length: 120 }),
+    /** Día local del movimiento según el teléfono */
+    occurredOn: date('occurred_on', { mode: 'string' }).notNull(),
+    createdAt: timestamptz('created_at').notNull().defaultNow(),
+    /** Viene del cliente: base del last-write-wins */
+    updatedAt: timestamptz('updated_at').notNull().defaultNow(),
+    deletedAt: timestamptz('deleted_at'),
+  },
+  (table) => [
+    check(
+      'transactions_fields_by_type_chk',
+      sql`(
+        (${table.type} IN ('expense', 'income') AND ${table.amount} > 0
+          AND ${table.categorySlug} IS NOT NULL AND ${table.toAccountId} IS NULL
+          AND ${table.toAmount} IS NULL AND ${table.toCurrency} IS NULL)
+        OR (${table.type} = 'transfer' AND ${table.amount} > 0 AND ${table.categorySlug} IS NULL
+          AND ${table.toAccountId} IS NOT NULL AND ${table.toAccountId} <> ${table.accountId}
+          AND ${table.toAmount} > 0 AND ${table.toCurrency} IS NOT NULL)
+        OR (${table.type} = 'adjustment' AND ${table.amount} <> 0 AND ${table.categorySlug} IS NULL
+          AND ${table.toAccountId} IS NULL AND ${table.toAmount} IS NULL
+          AND ${table.toCurrency} IS NULL)
+      )`,
+    ),
+    index('transactions_user_occurred_idx')
+      .on(table.userId, table.occurredOn.desc(), table.createdAt.desc())
+      .where(sql`${table.deletedAt} IS NULL`),
+    index('transactions_account_idx').on(table.accountId).where(sql`${table.deletedAt} IS NULL`),
+    index('transactions_to_account_idx')
+      .on(table.toAccountId)
+      .where(sql`${table.deletedAt} IS NULL`),
   ],
 );
