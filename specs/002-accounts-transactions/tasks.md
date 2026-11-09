@@ -227,7 +227,7 @@ todas las historias
 - [X] T063 Crear `packages/shared/src/ai-actions/transactions.ts`: tipos y esquema Zod del mensaje (`version: 1`, lista de acciones `create_expense` | `create_income` | `create_transfer` con datos opcionales e `inferred`) y `actionToTransactionInput(action, { accounts, defaultAccountId, today })` según research §12; exportar desde `packages/shared/src/index.ts`. Sin Gemini ni microservicio de IA (feature 004)
 - [X] T064 [P] Actualizar `README.md` (qué incluye la 002 y enlace a `specs/002-accounts-transactions/quickstart.md`) y la nota de `accounts` en `specs/001-auth-onboarding/data-model.md` (apuntar a `specs/002-accounts-transactions/data-model.md`)
 - [X] T065 Ejecutar `bunx biome check .`, `bun test --cwd apps/api`, `bun test --cwd packages/shared`, `bun run --cwd apps/mobile test` y `bun run --cwd apps/mobile test:sqlite`; todo en verde
-- [ ] T066 Hacer el recorrido manual de `specs/002-accounts-transactions/quickstart.md` (pasos 1–15, revisión de logs y cronómetro del paso 1 para SC-001: menos de 5 s) en el celular por cable USB y registrar el resultado en `specs/002-accounts-transactions/checklists/quickstart-run.md`
+- [X] T066 Hacer el recorrido manual de `specs/002-accounts-transactions/quickstart.md` (pasos 1–15, revisión de logs y cronómetro del paso 1 para SC-001: menos de 5 s) en el emulador `saveria_spike` (el usuario no usa su celular para las pruebas) y registrar el resultado en `specs/002-accounts-transactions/checklists/quickstart-run.md`
 
 ---
 

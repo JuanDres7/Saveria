@@ -105,3 +105,44 @@ un saldo conocido y cada paso se comprobó también en el servidor.
 | 6.3 | Volver a "Ajustar saldo" con saldo real `115.000` (igual al actual) | ✅ "El saldo ya coincide: no se crea ningún ajuste"; el botón queda deshabilitado (comprobado en la prueba automática) |
 | 6.2 | Inicio | ✅ El movimiento aparece como "Ajuste de saldo", sin categoría |
 | 6.4 | Tocar el ajuste → "Borrar" | ✅ Dice "Los ajustes no se editan: bórralo y haz uno nuevo."; al borrar el saldo vuelve a $ 120.000; en el servidor el ajuste queda con `deleted_at` |
+
+## Recorrido completo del quickstart (T066, 2026-11-09)
+
+**Entorno**: emulador `saveria_spike` (Android 16) en lugar de un celular por cable (el usuario no
+usa su celular para las pruebas), development build sin reinstalar, Metro con
+`EXPO_PUBLIC_API_URL=http://localhost:8000`, backend local con PostgreSQL y Redis en Docker,
+`adb reverse` de 8081 y 8000. Cuenta de prueba nueva `qs002.final@mail.com` / `clave1234` (creada
+por la API, "Efectivo" en COP). Cada paso se comprobó también en el servidor.
+
+**Pruebas automáticas antes del recorrido (T065)**: `bunx biome check .` sin errores; `tsc --noEmit`
+sin errores en api, mobile y shared; api 456/456; shared 118/118; mobile (jest) 264/264;
+mobile (SQLite real) 16/16.
+
+| # | Paso | Resultado |
+|---|---|---|
+| 1 | "Registrar movimiento", `18000`, "Restaurantes y domicilios", "Guardar" | ✅ **3 toques más el monto en 1,5 s** (SC-001: menos de 5 s); saldo -$ 18.000 |
+| 2 | Cambiar a "Ingreso" | ✅ Solo las 8 categorías de ingreso y ninguna de gasto |
+| 3 | Guardar vacío; `18000,50` en COP | ✅ "Escribe un monto" y "Elige una categoría"; "Los montos en COP van sin decimales" |
+| 4 | Modo avión → 2 gastos → quitar el modo avión | ✅ Servidor: 1 antes, 1 sin red, 3 con red; sin duplicados |
+| 5 | Crear "Nequi" (billetera, COP, saldo inicial `80.000`) y marcarla por defecto | ✅ Saldo $ 80.000; "Efectivo" deja de ser la cuenta por defecto (servidor: `Nequi wallet 80000 por defecto`) |
+| 6 | Crear otra cuenta "nequi" | ✅ "Ya tienes una cuenta activa con ese nombre" |
+| 7 | "Ahorros USD" (US$ 50) y transferir `10` USD → `40.000` COP a Nequi | ✅ Pide los dos montos y avisa que no hay tasa; USD 40,00 y Nequi $ 120.000; servidor: una fila `transfer 10 USD → 40000 COP` |
+| 8 | Inicio con cuentas en COP y USD | ✅ Cada saldo en su moneda y **ningún "Total"** |
+| 9 | Editar el gasto a `20.000`; borrar otro y "Deshacer" | ✅ Efectivo -$ 32.700; el movimiento deshecho sigue vivo; servidor `dining 20000` |
+| 10 | "Ajustar saldo" de Nequi a `115.000` | ✅ "Diferencia: -$ 5.000"; servidor `adjustment -5000` sin categoría |
+| 11 | Archivar "Ahorros USD" (con saldo) | ✅ Avisa "Esta cuenta tiene US$ 40,00"; sale de la lista y aparece en "Cuentas archivadas"; con todas las activas en COP Inicio vuelve a mostrar "Total: $ 82.300" |
+| 12 | Archivar la cuenta por defecto | ✅ "No puedes archivar la cuenta por defecto. Elige otra cuenta por defecto antes" |
+| 13 | Cambiar la moneda de Nequi (tiene movimientos) | ✅ "No puedes cambiar la moneda de una cuenta que ya tiene movimientos" |
+| 14 | Forzar un rechazo: gasto en "Daviplata" sin red, borrar esa cuenta en el servidor con SQL, volver la red | ✅ El gasto sigue en Inicio con "No se pudo guardar: La cuenta no existe" |
+| 15 | Metro con `EXPO_PUBLIC_SEED_TRANSACTIONS=5000`; historial en modo avión | ✅ Log del emulador (base cifrada): **saldos de 4 cuentas en 8 ms y primera página en 11 ms**; el historial abre con 50 y al desplazarse carga hasta 150, sin conexión (SC-004). La siembra tarda unos 56 s (solo desarrollo) |
+
+**Revisión de logs (SC-006)**: el servidor escribió 28 líneas (13 `PUT`, 5 `POST`, 7 `GET`, 1
+`DELETE`) con solo método, ruta, estado y duración. No hay montos, nombres de cuenta,
+descripciones, correos, contraseñas ni tokens. La prueba automática
+`apps/api/tests/integration/logs-redaction.test.ts` lo cubre en cada ejecución.
+
+**Incidencias del recorrido (de la herramienta de prueba, no de la app)**:
+- Un toque a ciegas con coordenadas guardadas abrió Configuración y escribió en "Nombre para la
+  IA", pero no se guardó (el servidor no cambió). Después se leyó la posición de cada botón antes
+  de tocar.
+- Dos "atrás" seguidos desde Inicio salen de la aplicación; hay que cuidar cuántos se envían.
