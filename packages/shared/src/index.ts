@@ -1,3 +1,4 @@
+export * from './ai-actions/transactions';
 export * from './catalog/categories';
 export * from './catalog/countries';
 export * from './catalog/currencies';
