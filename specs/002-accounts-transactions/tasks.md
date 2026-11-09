@@ -102,7 +102,7 @@ todas las historias
 - [ ] T025 [US1] Crear `apps/api/src/interfaces/http/routes/transactions.ts` con `PUT /v1/transactions/:id` (200, 409 con el registro del servidor, errores según el contrato) y montarla en `apps/api/src/app.ts` bajo `/v1/transactions` con el middleware de autenticación; agregar `toTransactionDto` en `apps/api/src/application/dto.ts`
 - [ ] T026 [US1] Implementar `apps/mobile/src/features/transactions/transaction-service.ts`: `record(input)` genera el UUID con `expo-crypto`, normaliza el monto con `parseAmount`, valida con `transactionInputSchema`, guarda local (`sync_state = pending`), encola `PUT /v1/transactions/{id}` con el registro completo y envía si hay red; registra en el despachador del outbox `onSent` → `synced` y `onRejected` → `rejected` con el mensaje del servidor; `onConflict` adopta la versión del servidor
 - [ ] T027 [P] [US1] Crear la pantalla `apps/mobile/src/app/(app)/transactions/new.tsx`: selector gasto/ingreso, monto con foco y teclado numérico, cuadrícula de categorías del tipo elegido (`categoriesFor`), chips de cuenta (cuentas activas, la de por defecto elegida) y de fecha (hoy; sin fechas futuras), descripción opcional `maxLength 120`, "Guardar"; mensajes de error por campo
-- [ ] T028 [US1] Agregar en `apps/mobile/src/app/(app)/home.tsx` el botón "+" que abre `transactions/new` (solo si hay `primaryCurrency`, FR-008) y mostrar en cada movimiento la marca "no se pudo guardar" con el motivo cuando `sync_state = rejected`
+- [ ] T028 [US1] Agregar en `apps/mobile/src/app/(app)/home.tsx` el botón "+" que abre `transactions/new` (solo si hay `primaryCurrency`, FR-008) y una lista simple de los **últimos 5 movimientos** (más reciente primero, con monto y moneda, categoría, cuenta y fecha) leída del historial local de T018, para que el gasto recién guardado se vea en Inicio desde esta historia (escenario 1.4); cada movimiento con `sync_state = rejected` muestra la marca "no se pudo guardar" con el motivo. US2 (T031) amplía esta pantalla
 
 **Checkpoint**: se pueden anotar gastos e ingresos de verdad (MVP de la feature)
 
@@ -121,7 +121,7 @@ todas las historias
 ### Implementation for User Story 2
 
 - [ ] T030 [US2] Implementar `apps/mobile/src/features/transactions/ledger.ts`: hook o selector que expone saldos por cuenta (`balances()` de T018 formateados con `formatAmount`), el total solo cuando todas las cuentas activas están en la moneda principal y sin contar archivadas, y el historial paginado agrupado por día
-- [ ] T031 [US2] Rehacer `apps/mobile/src/app/(app)/home.tsx`: saludo (se conserva), tarjetas de saldo por cuenta activa (negativo en rojo), total cuando aplique, últimos movimientos y enlace "Ver todo"
+- [ ] T031 [US2] Ampliar `apps/mobile/src/app/(app)/home.tsx`: saludo (se conserva), tarjetas de saldo por cuenta activa (negativo en rojo), total cuando aplique, la lista de últimos movimientos de T028 agrupada por día y enlace "Ver todo" al historial completo
 - [ ] T032 [P] [US2] Crear `apps/mobile/src/app/(app)/transactions/index.tsx`: historial completo con lista virtualizada por secciones (día), paginación de 50 en 50 y filtro por cuenta (research §11)
 
 **Checkpoint**: US1 + US2 = anotar y ver el resultado (el hábito diario)
