@@ -40,3 +40,21 @@ resuelve.
 | 2.3 | Filtro por cuenta | ✅ Chips "Todas" y "Efectivo"; con transferencias se prueba en la historia 5 |
 | 2.6 | Modo avión → cerrar y abrir la app | ✅ Inicio muestra los saldos y los movimientos guardados en el teléfono |
 | 2.4, 2.5, FR-014 | Varias monedas, archivadas, saldo negativo | Cubiertos por `apps/mobile/tests/us2-history.test.tsx`; se repiten en el emulador al tener cuentas (historia 3) |
+
+## Historia 3: gestionar cuentas (2026-11-08)
+
+Mismo entorno y misma cuenta de prueba. Se comprobó también que el servidor quedara igual que el
+teléfono (consulta a `accounts` en la base de desarrollo).
+
+| Escenario | Paso | Resultado |
+|---|---|---|
+| 3.1 / 3.2 | "Cuentas de dinero" → "Nueva cuenta": "Nequi", billetera digital | ✅ COP preseleccionada; la cuenta aparece en la lista. Al editarla con saldo inicial `80.000` muestra "$ 80.000 COP" |
+| 3.3 | "Usar como cuenta por defecto" en Nequi | ✅ La lista la marca como "Cuenta por defecto" y "Registrar movimiento" la trae elegida |
+| 2.5 | Gasto de 30.000 en Nequi | ✅ Inicio muestra las dos tarjetas y "Total: $ 50.000 COP" |
+| 3.8 | Detalle de Nequi (con movimientos) | ✅ "No puedes cambiar la moneda de una cuenta que ya tiene movimientos"; no se ofrecen otras monedas |
+| 3.7 | "Archivar" en Nequi (cuenta por defecto) | ✅ "No puedes archivar la cuenta por defecto. Elige otra cuenta por defecto antes" |
+| 3.6 | "Archivar" en Efectivo | ✅ Aviso "Esta cuenta tiene $ 0 COP…"; al confirmar sale de la lista y aparece en "Cuentas archivadas" |
+| FR-021 | Crear otra "efectivo" y reactivar la archivada | ✅ Pide cambiarle el nombre; renombrada "Efectivo viejo" se reactiva |
+| 3.5 | Crear "nequi" | ✅ "Ya tienes una cuenta activa con ese nombre" |
+| — | Servidor | ✅ `Efectivo viejo` (activa, no por defecto), `Nequi` (por defecto, 80.000), `efectivo` |
+| 3.9, FR-037 | Sin red y rechazo del servidor | Cubiertos por `apps/mobile/tests/us3-accounts.test.tsx` |
