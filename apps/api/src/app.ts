@@ -6,6 +6,7 @@ import { createChangeEmail } from './application/use-cases/change-email';
 import { createChangePassword } from './application/use-cases/change-password';
 import { createCompleteOnboarding } from './application/use-cases/complete-onboarding';
 import { createDeleteAccount } from './application/use-cases/delete-account';
+import { createDeleteTransaction } from './application/use-cases/delete-transaction';
 import { createForgotPassword } from './application/use-cases/forgot-password';
 import { createGetMe } from './application/use-cases/get-me';
 import { createLogin } from './application/use-cases/login';
@@ -76,7 +77,11 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
   app.route('/v1/accounts', accountRoutes({ auth, saveAccount: createSaveAccount(deps) }));
   app.route(
     '/v1/transactions',
-    transactionRoutes({ auth, saveTransaction: createSaveTransaction(deps) }),
+    transactionRoutes({
+      auth,
+      saveTransaction: createSaveTransaction(deps),
+      deleteTransaction: createDeleteTransaction(deps),
+    }),
   );
   app.route(
     '/',
