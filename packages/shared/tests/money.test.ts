@@ -42,6 +42,11 @@ describe('parseAmount (entrada al estilo colombiano)', () => {
     expect(parseAmount('18 mil', 'COP').ok).toBe(false);
   });
 
+  it('el cero solo se acepta si se pide (saldo inicial de una cuenta)', () => {
+    expect(parseAmount('0', 'COP').ok).toBe(false);
+    expect(parseAmount('0', 'COP', { allowZero: true })).toEqual({ ok: true, value: '0' });
+  });
+
   it('el signo solo se acepta si se pide', () => {
     expect(parseAmount('-5.000', 'COP').ok).toBe(false);
     expect(parseAmount('-5.000', 'COP', { allowNegative: true })).toEqual({

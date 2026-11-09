@@ -83,7 +83,7 @@ export type ParseAmountResult = { ok: true; value: string } | { ok: false; error
 export function parseAmount(
   input: string,
   currency: string,
-  options: { allowNegative?: boolean } = {},
+  options: { allowNegative?: boolean; allowZero?: boolean } = {},
 ): ParseAmountResult {
   let text = input.replace(/[\s$]/g, '');
   if (text === '') return { ok: false, error: 'Escribe un monto' };
@@ -135,7 +135,9 @@ export function parseAmount(
     allowZero: true,
   });
   if (error) return { ok: false, error };
-  if (toE4(value) === 0n) return { ok: false, error: 'El monto debe ser mayor que cero' };
+  if (toE4(value) === 0n && !options.allowZero) {
+    return { ok: false, error: 'El monto debe ser mayor que cero' };
+  }
   return { ok: true, value };
 }
 
