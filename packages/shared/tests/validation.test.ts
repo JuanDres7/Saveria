@@ -50,9 +50,9 @@ describe('catálogo de monedas', () => {
     );
   });
 
-  it('CLP y PYG no tienen decimales; el resto tiene 2', () => {
+  it('CLP, COP y PYG no tienen decimales; el resto tiene 2', () => {
     for (const c of CURRENCIES) {
-      expect(c.decimals).toBe(c.code === 'CLP' || c.code === 'PYG' ? 0 : 2);
+      expect(c.decimals).toBe(['CLP', 'COP', 'PYG'].includes(c.code) ? 0 : 2);
     }
   });
 
