@@ -21,3 +21,22 @@ quedan con fecha 2026-11-09.
 | 1.5 | "Guardar" sin nada | ✅ "Escribe un monto" y "Elige una categoría" |
 | 1.6 | `18000,50` en COP | ✅ "Los montos en COP van sin decimales" |
 | FR-037 | Rechazo del servidor | Cubierto por la prueba automática `apps/mobile/tests/us1-record.test.tsx` |
+
+## Historia 2: ver el historial y el saldo (2026-11-08)
+
+Mismo entorno. El emulador arranca sin datos guardados (`-no-snapshot-save`) y la 002 no descarga
+del servidor lo registrado en otro dispositivo (feature 006), así que se empezó con "Efectivo" en
+$ 0 y se crearon tres movimientos desde la app.
+
+**Nota del entorno**: la primera vez que se abre la development build por enlace justo después de
+arrancar el emulador, Android la cierra con "App react context shouldn't be created before". Es
+de la development build, no de Saveria: cerrar la app (`am force-stop`) y abrirla de nuevo lo
+resuelve.
+
+| Escenario | Paso | Resultado |
+|---|---|---|
+| 2.1 | Ingreso de 50.000 (hoy), gasto de 18.000 (hoy), gasto de 3.700 (ayer) | ✅ Tarjeta "Efectivo · $ 28.300 COP" y "Total: $ 28.300 COP" |
+| 2.2 | Inicio y "Ver todo" | ✅ Agrupados en "Hoy" y "Ayer", del más reciente al más antiguo; gastos en rojo con "-", ingresos en verde |
+| 2.3 | Filtro por cuenta | ✅ Chips "Todas" y "Efectivo"; con transferencias se prueba en la historia 5 |
+| 2.6 | Modo avión → cerrar y abrir la app | ✅ Inicio muestra los saldos y los movimientos guardados en el teléfono |
+| 2.4, 2.5, FR-014 | Varias monedas, archivadas, saldo negativo | Cubiertos por `apps/mobile/tests/us2-history.test.tsx`; se repiten en el emulador al tener cuentas (historia 3) |

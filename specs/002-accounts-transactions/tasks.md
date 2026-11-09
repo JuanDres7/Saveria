@@ -116,13 +116,13 @@ todas las historias
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T031 [P] [US2] Pruebas de la app en `apps/mobile/tests/us2-history.test.tsx`: saldo 100.000 + 50.000 − 30.000 = 120.000 (2.1); agrupado por día y del más reciente al más antiguo con monto, moneda, categoría, cuenta y descripción (2.2); filtro por cuenta incluye las transferencias (2.3); con cuentas COP y USD no hay total (2.4, FR-012); con todas en la moneda principal sí hay total y las archivadas no suman (2.5, FR-013); con la red apagada se ve todo (2.6); un saldo negativo se muestra destacado (FR-014)
+- [X] T031 [P] [US2] Pruebas de la app en `apps/mobile/tests/us2-history.test.tsx`: saldo 100.000 + 50.000 − 30.000 = 120.000 (2.1); agrupado por día y del más reciente al más antiguo con monto, moneda, categoría, cuenta y descripción (2.2); filtro por cuenta incluye las transferencias (2.3); con cuentas COP y USD no hay total (2.4, FR-012); con todas en la moneda principal sí hay total y las archivadas no suman (2.5, FR-013); con la red apagada se ve todo (2.6); un saldo negativo se muestra destacado (FR-014)
 
 ### Implementation for User Story 2
 
-- [ ] T032 [US2] Implementar `apps/mobile/src/features/transactions/ledger.ts`: hook o selector que expone saldos por cuenta (`balances()` de T020 formateados con `formatAmount`), el total solo cuando todas las cuentas activas están en la moneda principal y sin contar archivadas, y el historial paginado agrupado por día
-- [ ] T033 [US2] Ampliar `apps/mobile/src/app/(app)/home.tsx`: saludo (se conserva), tarjetas de saldo por cuenta activa (negativo en rojo), total cuando aplique, la lista de últimos movimientos de T030 agrupada por día y enlace "Ver todo" al historial completo
-- [ ] T034 [P] [US2] Crear `apps/mobile/src/app/(app)/transactions/index.tsx`: historial completo con lista virtualizada por secciones (día), paginación de 50 en 50 y filtro por cuenta (research §11)
+- [X] T032 [US2] Implementar `apps/mobile/src/features/transactions/ledger.ts`: hook o selector que expone saldos por cuenta (`balances()` de T020 formateados con `formatAmount`), el total solo cuando todas las cuentas activas están en la moneda principal y sin contar archivadas, y el historial paginado agrupado por día
+- [X] T033 [US2] Ampliar `apps/mobile/src/app/(app)/home.tsx`: saludo (se conserva), tarjetas de saldo por cuenta activa (negativo en rojo), total cuando aplique, la lista de últimos movimientos de T030 agrupada por día y enlace "Ver todo" al historial completo
+- [X] T034 [P] [US2] Crear `apps/mobile/src/app/(app)/transactions/index.tsx`: historial completo con lista virtualizada por secciones (día), paginación de 50 en 50 y filtro por cuenta (research §11)
 
 **Checkpoint**: US1 + US2 = anotar y ver el resultado (el hábito diario)
 
