@@ -12,6 +12,7 @@ export default function AppLayout() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Protected guard={group === 'app'}>
         <Stack.Screen name="home" />
+        <Stack.Screen name="transactions/new" />
         <Stack.Screen name="settings/index" />
         <Stack.Screen name="settings/change-password" />
         <Stack.Screen name="settings/delete-account" />
