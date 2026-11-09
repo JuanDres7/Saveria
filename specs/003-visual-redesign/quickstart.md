@@ -48,7 +48,10 @@ hay un color suelto fuera de `theme/palettes.ts`.
 9. **Letra grande**: Ajustes del teléfono → Tamaño de fuente al máximo. Ninguna pantalla corta texto ni tapa un botón. (SC-005)
 10. **Rendimiento** (con 5000 movimientos): registrar un gasto ≤ 1,5 s y desplazar la lista sin trabarse (≤ 8 ms / 11 ms por cuadro),
     igual que en la 002.
-11. **Sin conexión**: modo avión y repetir el paso 4. Todo funciona igual (principio III).
+11. **Pantallas de otro tamaño**: repetir los pasos 3, 4 y 5 con un perfil de pantalla pequeña y otro grande, y con
+    navegación por gestos y por tres botones. Nada queda bajo la muesca, la barra de estado ni la barra de gestos, y la
+    barra inferior y «Deshacer» no tapan botones.
+12. **Sin conexión**: modo avión y repetir el paso 4. Todo funciona igual (principio III).
 
 ## Aprobación visual (SC-008)
 

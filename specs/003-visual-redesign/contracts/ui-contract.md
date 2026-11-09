@@ -28,6 +28,14 @@ Reglas:
 | `ScreenBackground` | `children` | Fondo `background` y formas `shape` con opacidad, detrás del contenido y fuera del orden de foco. |
 | `TabBar` | rutas de las cuatro secciones | Cuatro destinos, el actual marcado con `sage` y texto en negrita, objetivo ≥ 48 dp, oculta fuera de las cuatro secciones. |
 
+## 2b. Zonas seguras
+
+- Toda pantalla respeta los márgenes del sistema (muesca, barra de estado, barra de gestos o de botones) con
+  `useSafeAreaInsets()` de `react-native-safe-area-context`.
+- `ScreenBackground` pinta las formas hasta el borde, pero el contenido queda dentro de la zona segura.
+- `TabBar` suma el margen inferior del sistema a su alto; el aviso «Deshacer» se coloca por encima de la barra.
+- Ningún botón principal ni campo queda bajo la barra de gestos, ni con el teclado abierto.
+
 ## 3. Accesibilidad que no cambia
 
 - Los nombres accesibles (`accessibilityLabel`, `accessibilityRole`) y los `testID` que ya usan las pruebas de la 001 y la 002 se conservan.

@@ -27,7 +27,8 @@ https://claude.ai/artifact/1P4JwJozqdxgfadBRe5vCT para que las apruebes antes de
 **Language/Version**: TypeScript 6 sobre Expo SDK 58, React Native 0.88, React 19.3 (sin cambios).
 
 **Primary Dependencies**: las de la 002, más `lucide-react-native` (íconos) y `react-native-svg` 15.16.0 (la
-versión que fija Expo 58). Ninguna otra. Ver [research.md](research.md).
+versión que fija Expo 58). Ninguna otra. `react-native-safe-area-context` (~5.10.1) ya está instalada y no se
+agrega: se empieza a usar para las zonas seguras. Ver [research.md](research.md).
 
 **Storage**: N/A. No cambia el modelo de datos ni la base local. El modo claro u oscuro no se guarda: lo da el
 teléfono.
@@ -43,7 +44,8 @@ emulador (adb) en modo claro y oscuro. Las pruebas de la 001 y la 002 (api, shar
 **Performance Goals**: no empeorar lo medido en la 002: registrar un gasto ≤ 1,5 s (SC-001) y lista de 5000
 movimientos sin trabarse (SC-004: ≤ 8 ms / 11 ms por cuadro). Cambio de modo sin parpadeo ni pérdida de estado.
 
-**Constraints**: sin conexión igual que hoy; objetivos táctiles ≥ 48 dp; texto escalable; contraste ≥ 4,5:1
+**Constraints**: sin conexión igual que hoy; nada queda tapado por la muesca, la barra de estado ni la barra de
+gestos, en cualquier tamaño de pantalla; objetivos táctiles ≥ 48 dp; texto escalable; contraste ≥ 4,5:1
 (3:1 en bordes e íconos); registrar sigue en máx. 3 toques más el monto; sin funciones nuevas (FR-019).
 
 **Scale/Scope**: 23 pantallas, 11 archivos que hoy importan el tema, 15 hojas de estilo, 26 categorías (+
@@ -112,8 +114,8 @@ apps/mobile/
 │   │   ├── Icon.tsx                      # envoltorio de lucide con color del tema y tamaño fijo
 │   │   ├── CategoryIcon.tsx              # círculo con el ícono de la categoría
 │   │   ├── Card.tsx                      # tarjeta redondeada con sombra leve
-│   │   ├── ScreenBackground.tsx          # crema/oscuro + formas orgánicas (svg)
-│   │   └── TabBar.tsx                    # barra inferior de 4 secciones
+│   │   ├── ScreenBackground.tsx          # crema/oscuro + formas orgánicas (svg), respeta la zona segura
+│   │   └── TabBar.tsx                    # barra inferior de 4 secciones (suma el margen inferior del sistema)
 │   ├── features/
 │   │   ├── auth/components.tsx           # Screen, Field, PrimaryButton, Banner... restyle
 │   │   ├── transactions/                 # Chip, RecentList, TransactionForm, TransferFormView, UndoSnackbar
@@ -172,6 +174,7 @@ un flujo, falla alguna de las que ya existen.
 | Convertir la barra inferior en `Tabs` de expo-router puede mostrar la barra en pantallas de formulario o romper `guards.test.tsx` | Rutas y archivos intactos; barra propia que solo se pinta en las 4 secciones; se prueba en emulador y con `guards.test.tsx`. |
 | Importar íconos de `lucide-react-native` puede agrandar el paquete | Importar solo los íconos usados (~40) y medir el tamaño del paquete antes y después; si crece más de lo razonable, importar por archivo. |
 | Cambiar el estilo de 15 hojas puede mover botones y romper el flujo de 3 toques | Se conservan los nombres accesibles y los `testID`; el recorrido de 3 toques sigue en las pruebas de la 002. |
+| Contenido tapado por la muesca, la barra de estado o la barra de gestos (o por la barra inferior propia) en pantallas de otro tamaño | `react-native-safe-area-context` (ya instalada): `Screen` y `ScreenBackground` aplican los márgenes del sistema arriba y abajo; `TabBar` y el aviso «Deshacer» suman el margen inferior; se prueba en el emulador con pantalla pequeña, grande y con navegación por gestos y por botones. |
 | Destello blanco al abrir en oscuro | `userInterfaceStyle: "automatic"` ya está; se agrega variante oscura de la pantalla de arranque y del fondo del ícono, y se revisa en emulador. |
 
 ## Complexity Tracking

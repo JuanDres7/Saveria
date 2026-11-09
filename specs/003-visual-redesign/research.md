@@ -72,6 +72,20 @@ Paleta clara y oscura, con los contrastes calculados con la fórmula de WCAG 2.1
 - **Riesgo conocido**: el comportamiento del botón «atrás» entre pestañas y pantallas ocultas. Se verifica en emulador (ya se
   sabe que dos «atrás» desde Inicio cierran la app) y queda en la lista de comprobaciones del quickstart.
 
+### D5b. Zonas seguras y tamaños de pantalla: `react-native-safe-area-context`
+
+- **Hecho**: ya está en `package.json` (`~5.10.1`, la que fija Expo 58) porque la trae expo-router, pero hoy ninguna
+  pantalla la usa. expo-router ya envuelve la app en su `SafeAreaProvider`, así que no hay que montar nada.
+- **Decisión**: `Screen` (auth y onboarding), `ScreenBackground`, `TabBar` y el aviso «Deshacer» leen `useSafeAreaInsets()` y
+  suman el margen superior (muesca, barra de estado) e inferior (barra de gestos o de botones). Los formularios con
+  teclado mantienen su botón «Guardar» fijo sobre el teclado, sin que lo tape la barra inferior.
+- **Razón**: con la barra inferior propia y las formas de fondo a pantalla completa, sin esto los botones y la barra
+  quedarían bajo la barra de gestos en algunos teléfonos.
+- **No se agrega nada nuevo**: no cambia `package.json`, así que no hace falta la enmienda para esto.
+- **Se comprueba** en el emulador con un perfil de pantalla pequeña y otro grande, y con navegación por gestos y por
+  tres botones (`adb shell cmd overlay enable-exclusive --category com.android.internal.systemui.navbar.gestural` y
+  `...threebutton`).
+
 ### D6. Pantalla de arranque y fondo del ícono
 
 - `expo-splash-screen` admite una variante `dark` en la configuración del plugin: se pone crema `#F6F3EA` en claro y
