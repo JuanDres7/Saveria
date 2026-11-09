@@ -14,6 +14,7 @@ import { createRefresh } from './application/use-cases/refresh';
 import { createRegister } from './application/use-cases/register';
 import { createResendVerification } from './application/use-cases/resend-verification';
 import { createCheckResetLink, createResetPassword } from './application/use-cases/reset-password';
+import { createSaveAccount } from './application/use-cases/save-account';
 import { createSaveTransaction } from './application/use-cases/save-transaction';
 import { createUpdateProfile } from './application/use-cases/update-profile';
 import {
@@ -27,6 +28,7 @@ import { limitBodySize } from './interfaces/http/middleware/body-limit';
 import { clientIp } from './interfaces/http/middleware/client-ip';
 import { createErrorHandler, notFoundHandler } from './interfaces/http/middleware/error-handler';
 import { requestLogger } from './interfaces/http/middleware/request-logger';
+import { accountRoutes } from './interfaces/http/routes/accounts';
 import { authRoutes } from './interfaces/http/routes/auth';
 import { legalRoutes } from './interfaces/http/routes/legal';
 import { linkPageHeaders, linkRoutes } from './interfaces/http/routes/links';
@@ -71,6 +73,7 @@ function mountApi(app: Hono<AppEnv>, deps: Container) {
       deleteAccount: createDeleteAccount(deps),
     }),
   );
+  app.route('/v1/accounts', accountRoutes({ auth, saveAccount: createSaveAccount(deps) }));
   app.route(
     '/v1/transactions',
     transactionRoutes({ auth, saveTransaction: createSaveTransaction(deps) }),

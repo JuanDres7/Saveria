@@ -1,4 +1,4 @@
-import type { AiMode, OnboardingStep, TransactionType } from '@saveria/shared';
+import type { AccountType, AiMode, OnboardingStep, TransactionType } from '@saveria/shared';
 
 /**
  * Formas de respuesta del contrato (contracts/openapi.yaml). Se arman campo por campo a partir de
@@ -28,6 +28,19 @@ export interface AccountDto {
   currency: string;
   initialBalance: string;
   isDefault: boolean;
+}
+
+/** Cuenta completa (contrato AccountRecord); `AccountDto` es la versión corta de `Me`. */
+export interface AccountRecordDto {
+  id: string;
+  name: string;
+  type: AccountType;
+  currency: string;
+  initialBalance: string;
+  isDefault: boolean;
+  archivedAt: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 
 export interface TransactionDto {
