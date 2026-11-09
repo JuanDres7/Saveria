@@ -1,8 +1,9 @@
 import { categoriesFor, DESCRIPTION_MAX, localToday } from '@saveria/shared';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Keyboard, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { styles as base, Field, PrimaryButton } from '../../../features/auth/components';
+import { Chip, chipRow } from '../../../features/transactions/Chip';
 import { refreshLedger, useLedger } from '../../../features/transactions/ledger';
 import { transactionService } from '../../../features/transactions/transaction-service';
 
@@ -12,21 +13,6 @@ function yesterday(): string {
   const date = new Date();
   date.setDate(date.getDate() - 1);
   return localToday(date);
-}
-
-/** Opción compacta (tipo, categoría, cuenta, fecha): selección única. */
-function Chip({ label, checked, onPress }: { label: string; checked: boolean; onPress(): void }) {
-  return (
-    <Pressable
-      role="radio"
-      aria-checked={checked}
-      accessibilityLabel={label}
-      onPress={onPress}
-      style={[styles.chip, checked ? styles.chipChecked : null]}
-    >
-      <Text style={checked ? styles.chipTextChecked : null}>{label}</Text>
-    </Pressable>
-  );
 }
 
 /**
@@ -164,14 +150,5 @@ const styles = StyleSheet.create({
   screen: { flex: 1 },
   content: { padding: 24, gap: 12 },
   footer: { padding: 16, borderTopWidth: 1, borderTopColor: '#e5e7eb', backgroundColor: '#ffffff' },
-  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: {
-    borderWidth: 1,
-    borderColor: '#9ca3af',
-    borderRadius: 16,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-  },
-  chipChecked: { borderColor: '#0f766e', backgroundColor: '#0f766e' },
-  chipTextChecked: { color: '#ffffff', fontWeight: '600' },
+  row: chipRow,
 });

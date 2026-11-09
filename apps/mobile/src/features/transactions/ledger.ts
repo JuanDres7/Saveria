@@ -1,3 +1,4 @@
+import { fromE4, localToday, toE4 } from '@saveria/shared';
 import { create } from 'zustand';
 import { getOpenUserDb } from '../../db/open-user-db';
 import type { Outbox } from '../../outbox/outbox';
@@ -91,4 +92,78 @@ export function rejectionMessage(body: unknown): string {
   if (typeof field === 'string') return field;
   if (typeof error?.message === 'string') return error.message;
   return 'El servidor no lo aceptó';
+}
+
+const MONTHS = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+/** Título de un día en el historial: "Hoy", "Ayer" o "1 de octubre de 2026". */
+export function dayLabel(day: string, now: Date = new Date()): string {
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (day === localToday(now)) return 'Hoy';
+  if (day === localToday(yesterday)) return 'Ayer';
+  const [y, m, d] = day.split('-').map(Number);
+  return `${d} de ${MONTHS[(m ?? 1) - 1]} de ${y}`;
+}
+
+export interface DaySection {
+  day: string;
+  title: string;
+  data: LocalTransactionRecord[];
+}
+
+/** Agrupa movimientos ya ordenados (del más reciente al más antiguo) por día (FR-011). */
+export function groupByDay(
+  rows: readonly LocalTransactionRecord[],
+  now = new Date(),
+): DaySection[] {
+  const sections: DaySection[] = [];
+  for (const row of rows) {
+    const last = sections.at(-1);
+    if (last?.day === row.occurredOn) last.data.push(row);
+    else sections.push({ day: row.occurredOn, title: dayLabel(row.occurredOn, now), data: [row] });
+  }
+  return sections;
+}
+
+export interface AccountBalance {
+  account: LocalAccountRecord;
+  /** Texto decimal */
+  balance: string;
+  negative: boolean;
+}
+
+/**
+ * Saldos de las cuentas activas y el total. El total solo existe si todas las cuentas activas
+ * están en la moneda principal: sumar monedas distintas exige tasas de cambio (FR-012, FR-013,
+ * feature 008). Las archivadas no salen ni suman (FR-021).
+ */
+export function summarizeAccounts(
+  accounts: readonly LocalAccountRecord[],
+  balances: Readonly<Record<string, string>>,
+  primaryCurrency: string | null,
+): { active: AccountBalance[]; total: string | null } {
+  const active = accounts
+    .filter((a) => a.archivedAt === null && a.deletedAt === null)
+    .map((account) => {
+      const balance = balances[account.id] ?? account.initialBalance;
+      return { account, balance, negative: toE4(balance) < 0n };
+    });
+  const allPrimary =
+    active.length > 0 && active.every((a) => a.account.currency === primaryCurrency);
+  const total = allPrimary ? fromE4(active.reduce((sum, a) => sum + toE4(a.balance), 0n)) : null;
+  return { active, total };
 }

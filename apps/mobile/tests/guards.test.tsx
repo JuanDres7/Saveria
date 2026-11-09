@@ -130,6 +130,7 @@ describe('RootLayout', () => {
 const APP_SCREENS = [
   'home',
   'transactions/new',
+  'transactions/index',
   'settings/index',
   'settings/change-password',
   'settings/delete-account',
