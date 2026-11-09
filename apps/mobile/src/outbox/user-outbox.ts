@@ -5,12 +5,25 @@ import { createHttpSender } from './http-sender';
 import { createOutbox, DrizzleOutboxStore, type Outbox, type OutboxItem } from './outbox';
 
 type ConflictHandler = (serverBody: unknown, item: OutboxItem) => void | Promise<void>;
+type SentHandler = (item: OutboxItem) => void | Promise<void>;
 
 /** Qué hacer con un 409 según la entidad del cambio (por ejemplo, el perfil adopta el del servidor). */
 const conflictHandlers = new Map<string, ConflictHandler>();
+/** Qué hacer cuando el servidor rechaza un cambio sin arreglo (FR-037: marcarlo). */
+const rejectedHandlers = new Map<string, ConflictHandler>();
+/** Qué hacer cuando el servidor acepta un cambio (por ejemplo, marcarlo `synced`). */
+const sentHandlers = new Map<string, SentHandler>();
 
 export function onOutboxConflict(entity: string, handler: ConflictHandler): void {
   conflictHandlers.set(entity, handler);
+}
+
+export function onOutboxRejected(entity: string, handler: ConflictHandler): void {
+  rejectedHandlers.set(entity, handler);
+}
+
+export function onOutboxSent(entity: string, handler: SentHandler): void {
+  sentHandlers.set(entity, handler);
 }
 
 let current: { db: UserDb; outbox: Outbox } | null = null;
@@ -23,6 +36,8 @@ export function outboxFor(db: UserDb): Outbox {
   if (current?.db !== db) {
     const sender = createHttpSender(api.fetch, API_URL, {
       onConflict: (item, body) => conflictHandlers.get(item.entity)?.(body, item),
+      onRejected: (item, body) => rejectedHandlers.get(item.entity)?.(body, item),
+      onSent: (item) => sentHandlers.get(item.entity)?.(item),
     });
     current = { db, outbox: createOutbox(new DrizzleOutboxStore(db), sender) };
   }

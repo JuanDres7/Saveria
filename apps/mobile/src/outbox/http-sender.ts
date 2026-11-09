@@ -22,10 +22,13 @@ function isHttpPayload(payload: unknown): payload is HttpPayload {
  * - 401, 429, 5xx o sin red: pasajero, se reintenta.
  * - 409: el servidor tiene una versión más nueva. Se entrega su cuerpo a `onConflict` (por
  *   ejemplo, para adoptar el perfil del servidor) y el cambio se descarta.
- * - otro 4xx: no tiene arreglo, se descarta para no bloquear la cola.
+ * - otro 4xx: no tiene arreglo, se descarta para no bloquear la cola. Antes se entrega el cuerpo
+ *   a `onRejected`, para que el registro quede marcado "no se pudo guardar" (FR-037).
  */
 export interface HttpSenderOptions {
   onConflict?(item: OutboxItem, serverBody: unknown): void | Promise<void>;
+  onRejected?(item: OutboxItem, serverBody: unknown): void | Promise<void>;
+  onSent?(item: OutboxItem): void | Promise<void>;
 }
 
 export function createHttpSender(
@@ -50,13 +53,20 @@ export function createHttpSender(
       return { status: 'retry', error: 'sin conexión' };
     }
 
-    if (response.ok) return { status: 'sent' };
+    if (response.ok) {
+      await options.onSent?.(item);
+      return { status: 'sent' };
+    }
     if (response.status === 409 && options.onConflict) {
       const serverBody: unknown = await response.json().catch(() => null);
       await options.onConflict(item, serverBody);
     }
     if (response.status === 401 || response.status === 429 || response.status >= 500) {
       return { status: 'retry', error: `HTTP ${response.status}` };
+    }
+    if (response.status !== 409 && options.onRejected) {
+      const serverBody: unknown = await response.json().catch(() => null);
+      await options.onRejected(item, serverBody);
     }
     return { status: 'discard', reason: `HTTP ${response.status}` };
   };

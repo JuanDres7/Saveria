@@ -1,6 +1,6 @@
-import { AI_MODES, ONBOARDING_STEPS } from '@saveria/shared';
+import { ACCOUNT_TYPES, AI_MODES, ONBOARDING_STEPS, TRANSACTION_TYPES } from '@saveria/shared';
 import { sql } from 'drizzle-orm';
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
 /**
  * Base local de un usuario (SQLite cifrado con SQLCipher, un archivo por usuario).
@@ -24,18 +24,64 @@ export const profile = sqliteTable('profile', {
   updatedAt: text('updated_at').notNull(),
 });
 
-/** Copia local de las cuentas de dinero. */
+/** Estado del envío al servidor de una cuenta o un movimiento (FR-037). */
+export const SYNC_STATES = ['pending', 'synced', 'rejected'] as const;
+export type SyncState = (typeof SYNC_STATES)[number];
+
+/**
+ * Copia local de las cuentas de dinero. Los montos se guardan dos veces: como texto (el valor
+ * canónico) y como entero en diezmilésimas (`*_e4`), que es lo que suman las consultas de saldo
+ * sin punto flotante (research §5). Los `*_e4` se escriben con `CAST(texto AS INTEGER)` y se leen
+ * sumados como texto, porque un `number` de JS no alcanza para todos los montos.
+ */
 export const accounts = sqliteTable('accounts', {
   /** UUID generado en el dispositivo: la creación es idempotente y funciona sin conexión */
   id: text('id').primaryKey(),
   name: text('name').notNull(),
+  type: text('type', { enum: ACCOUNT_TYPES }).notNull().default('cash'),
   currency: text('currency').notNull(),
   initialBalance: text('initial_balance').notNull().default('0'),
+  /** En la 001 solo existía "Efectivo" con saldo inicial 0: el valor por defecto es exacto */
+  initialBalanceE4: integer('initial_balance_e4').notNull().default(0),
   isDefault: integer('is_default', { mode: 'boolean' }).notNull().default(false),
+  archivedAt: text('archived_at'),
   createdAt: text('created_at').notNull(),
   updatedAt: text('updated_at').notNull(),
   deletedAt: text('deleted_at'),
+  syncState: text('sync_state', { enum: SYNC_STATES }).notNull().default('synced'),
+  syncError: text('sync_error'),
 });
+
+/** Copia local de los movimientos (data-model.md, base local). */
+export const transactions = sqliteTable(
+  'transactions',
+  {
+    id: text('id').primaryKey(),
+    type: text('type', { enum: TRANSACTION_TYPES }).notNull(),
+    accountId: text('account_id').notNull(),
+    amount: text('amount').notNull(),
+    amountE4: integer('amount_e4').notNull(),
+    currency: text('currency').notNull(),
+    toAccountId: text('to_account_id'),
+    toAmount: text('to_amount'),
+    toAmountE4: integer('to_amount_e4'),
+    toCurrency: text('to_currency'),
+    categorySlug: text('category_slug'),
+    description: text('description'),
+    /** Día local, `YYYY-MM-DD` */
+    occurredOn: text('occurred_on').notNull(),
+    createdAt: text('created_at').notNull(),
+    updatedAt: text('updated_at').notNull(),
+    deletedAt: text('deleted_at'),
+    syncState: text('sync_state', { enum: SYNC_STATES }).notNull().default('pending'),
+    syncError: text('sync_error'),
+  },
+  (table) => [
+    index('transactions_occurred_idx').on(table.occurredOn, table.createdAt),
+    index('transactions_account_idx').on(table.accountId),
+    index('transactions_to_account_idx').on(table.toAccountId),
+  ],
+);
 
 /**
  * Cola de cambios pendientes de enviar al servidor. Las features siguientes (movimientos,

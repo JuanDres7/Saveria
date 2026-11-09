@@ -4,7 +4,7 @@ import type {
   LocalStore,
   ProfileFields,
 } from '../../src/features/profile/local-store';
-import type { OutboxItem, OutboxStore } from '../../src/outbox/outbox';
+import type { NewOutboxItem, OutboxItem, OutboxStore } from '../../src/outbox/outbox';
 
 /** Base local en memoria: perfil y cuentas de un usuario. */
 export class MemoryLocalStore implements LocalStore {
@@ -52,5 +52,23 @@ export class MemoryOutboxStore implements OutboxStore {
   }
   count() {
     return this.items.length;
+  }
+  replacePending(change: NewOutboxItem, exceptId: string | null) {
+    const pending = this.items
+      .filter(
+        (i) => i.entity === change.entity && i.entityId === change.entityId && i.id !== exceptId,
+      )
+      .sort((a, b) => a.createdAt - b.createdAt);
+    const [first, ...rest] = pending;
+    if (!first) return null;
+    Object.assign(first, {
+      operation: change.operation,
+      payload: change.payload,
+      attempts: 0,
+      lastError: null,
+      nextAttemptAt: 0,
+    });
+    this.items = this.items.filter((i) => !rest.includes(i));
+    return first.id;
   }
 }

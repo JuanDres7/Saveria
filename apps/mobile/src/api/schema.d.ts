@@ -603,6 +603,215 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/accounts/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Crear o reemplazar una cuenta (FR-015 a FR-023)
+         * @description Idempotente por `id`. Last-write-wins por `updatedAt`. Si `isDefault` es true, las demás
+         *     cuentas del usuario dejan de ser la cuenta por defecto en la misma operación. Reglas:
+         *     nombre único entre las activas (sin distinguir mayúsculas), máximo 20 activas, la cuenta
+         *     por defecto no se archiva, siempre queda una cuenta por defecto, y la moneda solo cambia
+         *     si la cuenta no tiene movimientos.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description UUID generado por el teléfono */
+                    id: components["parameters"]["EntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AccountInput"];
+                };
+            };
+            responses: {
+                /** @description Cuenta guardada (o el mismo envío repetido) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AccountRecord"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                /** @description El id pertenece a una cuenta de otro usuario (no se revela cuál) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El servidor tiene una versión igual o más nueva */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AccountRecord"];
+                    };
+                };
+                /** @description El usuario no tiene moneda principal (FR-008) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/transactions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Crear o reemplazar un movimiento (FR-001 a FR-009, FR-024 a FR-033)
+         * @description Un solo caso de uso para los cuatro tipos; la IA de la feature 004 usará el mismo.
+         *     Idempotente por `id`, last-write-wins por `updatedAt`. Con `deletedAt: null` también
+         *     restaura un movimiento borrado ("Deshacer", FR-026). Las cuentas deben ser del usuario y
+         *     cada moneda debe coincidir con la de su cuenta.
+         */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description UUID generado por el teléfono */
+                    id: components["parameters"]["EntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["TransactionInput"];
+                };
+            };
+            responses: {
+                /** @description Movimiento guardado (o el mismo envío repetido) */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TransactionRecord"];
+                    };
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                /** @description El id pertenece a un movimiento de otro usuario (no se revela cuál) */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El servidor tiene una versión igual o más nueva */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TransactionRecord"];
+                    };
+                };
+                /** @description El usuario no tiene moneda principal (FR-008) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /**
+         * Borrar un movimiento (borrado lógico, FR-026)
+         * @description Marca `deletedAt`. Idempotente y last-write-wins por `updatedAt`. Si el servidor no
+         *     conoce el id (se creó y se borró sin conexión), responde 204 sin crear nada.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    /** @description UUID generado por el teléfono */
+                    id: components["parameters"]["EntityId"];
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: date-time */
+                        updatedAt: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Borrado (o ya estaba borrado o no existía) */
+                204: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                400: components["responses"]["ValidationError"];
+                401: components["responses"]["Unauthorized"];
+                /** @description El id pertenece a un movimiento de otro usuario */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Error"];
+                    };
+                };
+                /** @description El servidor tiene una versión más nueva */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["TransactionRecord"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/v1/legal/privacy-policy": {
         parameters: {
             query?: never;
@@ -887,6 +1096,80 @@ export interface components {
             initialBalance: string;
             isDefault: boolean;
         };
+        /**
+         * @description Decimal exacto, positivo, como texto. Máximo 12 dígitos enteros; los decimales permitidos
+         *     dependen de la moneda (COP 0, USD 2). Nunca número de punto flotante.
+         */
+        Amount: string;
+        /** @description Como Amount pero con signo (saldo inicial, ajuste) */
+        SignedAmount: string;
+        /**
+         * Format: date
+         * @description Día local del movimiento según el teléfono (YYYY-MM-DD)
+         */
+        LocalDate: string;
+        /**
+         * @description Efectivo, billetera digital (Nequi, Daviplata…) o banco
+         * @enum {string}
+         */
+        AccountType: "cash" | "wallet" | "bank";
+        AccountInput: {
+            name: string;
+            type: components["schemas"]["AccountType"];
+            currency: components["schemas"]["CurrencyCode"];
+            initialBalance: components["schemas"]["SignedAmount"];
+            isDefault: boolean;
+            /** Format: date-time */
+            archivedAt: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        AccountRecord: components["schemas"]["AccountInput"] & {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
+        /** @enum {string} */
+        TransactionType: "expense" | "income" | "transfer" | "adjustment";
+        /**
+         * @description Catálogo fijo (packages/shared/src/catalog/categories.ts)
+         * @enum {string}
+         */
+        CategorySlug: "groceries" | "dining" | "transport" | "vehicle" | "housing" | "utilities" | "health" | "personal_care" | "education" | "subscriptions" | "entertainment" | "shopping" | "home_family" | "pets" | "gifts" | "travel" | "fees_taxes" | "other_expense" | "salary" | "bonus" | "freelance" | "business" | "investments" | "gifts_received" | "refunds" | "other_income";
+        /**
+         * @description Reglas por tipo:
+         *     - expense / income: `amount` > 0 y `categorySlug` del tipo correcto; sin campos `to*`.
+         *     - transfer: `amount` > 0, `toAccountId` distinta de `accountId`, `toAmount` > 0 y
+         *       `toCurrency`; sin categoría. Si las monedas son iguales, `toAmount` = `amount`.
+         *     - adjustment: `amount` con signo y distinto de cero; sin categoría ni campos `to*`.
+         *     `occurredOn` no puede ser futura (FR-007). `currency` y `toCurrency` deben coincidir con
+         *     la moneda de su cuenta.
+         */
+        TransactionInput: {
+            type: components["schemas"]["TransactionType"];
+            /** Format: uuid */
+            accountId: string;
+            amount: components["schemas"]["SignedAmount"];
+            currency: components["schemas"]["CurrencyCode"];
+            /** Format: uuid */
+            toAccountId: string | null;
+            toAmount: components["schemas"]["Amount"] | null;
+            toCurrency: components["schemas"]["CurrencyCode"] | null;
+            categorySlug: components["schemas"]["CategorySlug"] | null;
+            description: string | null;
+            occurredOn: components["schemas"]["LocalDate"];
+            /** Format: date-time */
+            deletedAt: string | null;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        TransactionRecord: components["schemas"]["TransactionInput"] & {
+            /** Format: uuid */
+            id: string;
+            /** Format: date-time */
+            createdAt: string;
+        };
         Me: {
             /** Format: uuid */
             id: string;
@@ -958,6 +1241,8 @@ export interface components {
         };
     };
     parameters: {
+        /** @description UUID generado por el teléfono */
+        EntityId: string;
         LinkToken: string;
     };
     requestBodies: never;

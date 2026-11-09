@@ -1,6 +1,7 @@
 import {
   backoffMs,
   createOutbox,
+  type NewOutboxItem,
   type OutboxItem,
   type OutboxStore,
   type Sender,
@@ -28,6 +29,24 @@ class MemoryStore implements OutboxStore {
   }
   count() {
     return this.items.length;
+  }
+  replacePending(change: NewOutboxItem, exceptId: string | null) {
+    const pending = this.items
+      .filter(
+        (i) => i.entity === change.entity && i.entityId === change.entityId && i.id !== exceptId,
+      )
+      .sort((a, b) => a.createdAt - b.createdAt);
+    const [first, ...rest] = pending;
+    if (!first) return null;
+    Object.assign(first, {
+      operation: change.operation,
+      payload: change.payload,
+      attempts: 0,
+      lastError: null,
+      nextAttemptAt: 0,
+    });
+    this.items = this.items.filter((i) => !rest.includes(i));
+    return first.id;
   }
 }
 
@@ -225,5 +244,73 @@ describe('outbox', () => {
     outbox.enqueue(change('b'));
     await outbox.flush();
     expect(outbox.count()).toBe(2);
+  });
+});
+
+describe('outbox: compactar por entidad (research §3)', () => {
+  const tx = (entityId: string, operation: string, payload: unknown) => ({
+    entity: 'transaction',
+    entityId,
+    operation,
+    payload,
+  });
+
+  it('un cambio nuevo de la misma entidad reemplaza al pendiente y conserva su lugar', async () => {
+    const sent: unknown[] = [];
+    const { store, outbox } = setup(async (item) => {
+      sent.push(item.payload);
+      return { status: 'sent' };
+    });
+    outbox.enqueue({ ...change('cuenta'), entity: 'account', payload: 'cuenta v1' });
+    outbox.enqueue(tx('t1', 'upsert', 'gasto v1'), { compact: true });
+    outbox.enqueue(
+      { ...change('cuenta'), entity: 'account', payload: 'cuenta v2' },
+      { compact: true },
+    );
+    outbox.enqueue(tx('t1', 'upsert', 'gasto v2'), { compact: true });
+    expect(store.items).toHaveLength(2);
+
+    await outbox.flush();
+    // La cuenta sigue saliendo antes que su movimiento, ya con su versión final.
+    expect(sent).toEqual(['cuenta v2', 'gasto v2']);
+  });
+
+  it('crear, editar y borrar sin red deja un solo cambio con el estado final (caso límite)', async () => {
+    const { store, outbox } = setup(async () => ({ status: 'retry', error: 'sin red' }));
+    outbox.enqueue(tx('t1', 'upsert', 'creado'), { compact: true });
+    outbox.enqueue(tx('t1', 'upsert', 'editado'), { compact: true });
+    outbox.enqueue(tx('t1', 'delete', 'borrado'), { compact: true });
+    expect(store.items).toHaveLength(1);
+    expect(store.items[0]).toMatchObject({ operation: 'delete', payload: 'borrado' });
+  });
+
+  it('el reemplazo reinicia los reintentos del cambio', async () => {
+    const { store, outbox } = setup(async () => ({ status: 'retry', error: 'sin red' }));
+    outbox.enqueue(tx('t1', 'upsert', 'v1'), { compact: true });
+    await outbox.flush();
+    expect(store.items[0]?.attempts).toBe(1);
+    outbox.enqueue(tx('t1', 'upsert', 'v2'), { compact: true });
+    expect(store.items[0]).toMatchObject({ attempts: 0, lastError: null, nextAttemptAt: 0 });
+  });
+
+  it('un cambio que se está enviando no se toca: el nuevo va detrás', async () => {
+    const sent: unknown[] = [];
+    let outbox!: ReturnType<typeof setup>['outbox'];
+    const ctx = setup(async (item) => {
+      sent.push(item.payload);
+      if (item.payload === 'v1') outbox.enqueue(tx('t1', 'upsert', 'v2'), { compact: true });
+      return { status: 'sent' };
+    });
+    outbox = ctx.outbox;
+    outbox.enqueue(tx('t1', 'upsert', 'v1'), { compact: true });
+    await outbox.flush();
+    expect(sent).toEqual(['v1', 'v2']);
+  });
+
+  it('sin compact, cada cambio se encola aparte (perfil, onboarding)', () => {
+    const { store, outbox } = setup();
+    outbox.enqueue(change('u1', 'a'));
+    outbox.enqueue(change('u1', 'b'));
+    expect(store.items).toHaveLength(2);
   });
 });

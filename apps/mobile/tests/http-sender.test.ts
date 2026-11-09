@@ -57,6 +57,54 @@ describe('createHttpSender', () => {
     expect(onConflict).toHaveBeenCalledWith(expect.objectContaining({ entity: 'profile' }), server);
   });
 
+  it.each([400, 404, 422])(
+    'un %s llama a onRejected con el cuerpo del servidor (FR-037)',
+    async (status) => {
+      const onRejected = jest.fn();
+      const body = { code: 'validation_error', message: 'Datos inválidos' };
+      const send = createHttpSender(
+        async () =>
+          new Response(JSON.stringify(body), {
+            status,
+            headers: { 'content-type': 'application/json' },
+          }),
+        BASE,
+        { onRejected },
+      );
+      expect((await send(item(PROFILE))).status).toBe('discard');
+      expect(onRejected).toHaveBeenCalledWith(expect.objectContaining({ entity: 'profile' }), body);
+    },
+  );
+
+  it('un DELETE rechazado también llama a onRejected', async () => {
+    const onRejected = jest.fn();
+    const send = createHttpSender(async () => new Response('{}', { status: 400 }), BASE, {
+      onRejected,
+    });
+    await send(item({ method: 'DELETE', path: '/v1/transactions/t1', body: { updatedAt: 'x' } }));
+    expect(onRejected).toHaveBeenCalledTimes(1);
+  });
+
+  it('401, 409 y 429 no llaman a onRejected', async () => {
+    for (const status of [401, 409, 429]) {
+      const onRejected = jest.fn();
+      const send = createHttpSender(async () => new Response('{}', { status }), BASE, {
+        onRejected,
+      });
+      await send(item(PROFILE));
+      expect(onRejected).not.toHaveBeenCalled();
+    }
+  });
+
+  it('un 2xx llama a onSent', async () => {
+    const onSent = jest.fn();
+    const send = createHttpSender(async () => new Response(null, { status: 204 }), BASE, {
+      onSent,
+    });
+    expect((await send(item(PROFILE))).status).toBe('sent');
+    expect(onSent).toHaveBeenCalledWith(expect.objectContaining({ entity: 'profile' }));
+  });
+
   it('sin red se reintenta', async () => {
     const send = createHttpSender(async () => {
       throw new TypeError('Network request failed');
