@@ -17,6 +17,7 @@ bun run --cwd apps/api dev                 # http://localhost:8000
 bun test --cwd apps/api            # unitarias + contrato + integración (requiere compose arriba)
 bun test --cwd packages/shared     # catálogo de categorías, dinero exacto, validaciones
 bun run --cwd apps/mobile test     # jest-expo
+bun run --cwd apps/mobile test:sqlite  # consultas locales contra un SQLite real (Bun)
 bunx biome check .
 ```
 
