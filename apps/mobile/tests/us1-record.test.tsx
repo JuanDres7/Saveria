@@ -1,5 +1,5 @@
 import { localToday } from '@saveria/shared';
-import { act, fireEvent, render, screen } from '@testing-library/react-native';
+import { act, fireEvent, render, screen, within } from '@testing-library/react-native';
 import { Keyboard } from 'react-native';
 import type { LocalAccountRecord } from '../src/features/accounts/local-accounts';
 import {
@@ -152,7 +152,9 @@ describe('historia 1: registrar un gasto o un ingreso', () => {
     expect(requests).toHaveLength(0);
     await render(<Home />);
     expect(screen.getByText('Restaurantes y domicilios')).toBeTruthy();
-    expect(screen.getByText('-$ 18.000')).toBeTruthy();
+    // El monto del movimiento va en su fila; el saldo, en la tarjeta de «Efectivo» y en el balance.
+    const fila = screen.getByRole('button', { name: 'Restaurantes y domicilios 18000' });
+    expect(within(fila).getByText('-$ 18.000')).toBeTruthy();
     expect(screen.getByText('-$ 18.000 COP')).toBeTruthy(); // saldo de "Efectivo"
 
     // Vuelve la red: el outbox envía el registro completo y el movimiento queda enviado.

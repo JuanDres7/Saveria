@@ -1,10 +1,22 @@
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { useSession } from '../../session/session-store';
+import { type Theme, useStyles } from '../../theme';
 import { AuthError } from '../auth/auth-service';
-import { styles, TextButton } from '../auth/components';
+import { TextButton } from '../auth/components';
 import { ChangeEmailForm } from './ChangeEmailForm';
 import { verificationService } from './verification-service';
+
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    banner: {
+      backgroundColor: t.colors.warningBackground,
+      borderRadius: t.radius.control,
+      padding: 12,
+    },
+    title: { ...t.type.bodyStrong, fontSize: 16, color: t.colors.warningText },
+    text: { ...t.type.body, color: t.colors.warningText },
+  });
 
 /** Fecha corta en español, por ejemplo "31 de octubre". */
 export function formatDeadline(iso: string): string {
@@ -17,6 +29,7 @@ export function formatDeadline(iso: string): string {
  * corregir la dirección (FR-034).
  */
 export function VerifyBanner() {
+  const styles = useStyles(makeStyles);
   const me = useSession((s) => s.me);
   const isOnline = useSession((s) => s.isOnline);
   const [message, setMessage] = useState<string | null>(null);
@@ -38,11 +51,11 @@ export function VerifyBanner() {
 
   return (
     <View role="alert" style={styles.banner}>
-      <Text style={[styles.optionLabel, styles.bannerText]}>Confirma tu correo</Text>
-      <Text style={styles.bannerText}>
+      <Text style={styles.title}>Confirma tu correo</Text>
+      <Text style={styles.text}>
         {`Te enviamos un enlace a ${me.email}. Tienes hasta el ${formatDeadline(me.verificationDeadline)} para confirmarlo.`}
       </Text>
-      {message ? <Text style={styles.bannerText}>{message}</Text> : null}
+      {message ? <Text style={styles.text}>{message}</Text> : null}
       {isOnline && !sending ? (
         <TextButton label="Reenviar correo" onPress={() => void resend()} />
       ) : null}

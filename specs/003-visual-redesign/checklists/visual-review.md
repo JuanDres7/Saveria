@@ -25,3 +25,20 @@ aparecen casi invisibles: esas dos piezas aún usan colores fijos de antes del r
 desaparece al migrarlas en su historia.
 
 El engranaje redondo arriba a la derecha es el botón «Tools» de la app de desarrollo de Expo, no forma parte de Saveria.
+
+## Inicio (historia 1, T032), 2026-11-10
+
+Cuenta `qs002.final@mail.com` en el emulador, con la API local y 14 movimientos de ejemplo sembrados (`EXPO_PUBLIC_SEED_TRANSACTIONS=14`).
+
+| Comprobación | Resultado |
+|---|---|
+| Saludo en la letra de identidad | «Hola, qs002.final» y los títulos de sección en Bricolage Grotesque; el resto del texto, en la del sistema. |
+| Tarjeta de balance | Verde oscuro con forma de hoja (esquinas 34 y 12) y nervaduras; «$ 80.000 COP» (luego «$ 69.929 COP» con los movimientos); «En 1 cuenta». En modo oscuro pasa a `#2C3720` y se lee igual. |
+| Cifra grande | Se ve nítida y sin saltos; el monto de las listas, en la letra del sistema con cifras tabulares (alinean). La cifra del balance queda en la letra de identidad. |
+| Cuentas | Fila horizontal con una cuenta; ícono del tipo, nombre y saldo. |
+| Movimientos | Fila simple con círculo de categoría (arena para «Restaurantes y domicilios», verde base para el «Salario»), título, cuenta y descripción. Gastos con «−» en el color del texto; ingreso en verde con «+». |
+| Aviso de correo sin verificar | Ahora sigue el tema; en modo oscuro tiene el fondo y el texto oscuros del aviso (antes quedaba en claro). El resto de su restyle es de la historia 6. |
+| Estado vacío | Cuenta nueva: «Aún no tienes movimientos. Registra el primero con «Registrar movimiento».» (provisional hasta que exista el «+»). |
+| Pruebas | 435 de la app en verde, `tsc` y lint sin errores. |
+
+Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas de claro y oscuro.

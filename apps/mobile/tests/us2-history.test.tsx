@@ -73,7 +73,7 @@ describe('historia 2: ver el historial y el saldo', () => {
     const headers = screen.getAllByRole('header').map((h) => h.props.children);
     expect(headers).toEqual(['Hoy', 'Ayer', '1 de octubre de 2026']);
     expect(screen.getByText('Salario')).toBeTruthy();
-    expect(screen.getByText('$ 2.000.000')).toBeTruthy();
+    expect(screen.getByText('+$ 2.000.000')).toBeTruthy();
     expect(screen.getByText('Efectivo · Quincena')).toBeTruthy();
     expect(screen.getByText('-$ 3.700')).toBeTruthy();
     expect(screen.getByText('Transporte')).toBeTruthy();
@@ -118,7 +118,7 @@ describe('historia 2: ver el historial y el saldo', () => {
     await render(<Home />);
     expect(within(card('Efectivo')).getByText('$ 50.000 COP')).toBeTruthy();
     expect(within(card('Ahorros USD')).getByText('US$ 10,00 USD')).toBeTruthy();
-    expect(screen.queryByText(/^Total/)).toBeNull();
+    expect(screen.queryByLabelText(/^Total/)).toBeNull();
   });
 
   it('2.5 con todas en la moneda principal hay total, sin contar las archivadas', async () => {
@@ -139,7 +139,7 @@ describe('historia 2: ver el historial y el saldo', () => {
       }),
     ]);
     await render(<Home />);
-    expect(screen.getByText('Total: $ 80.000 COP')).toBeTruthy();
+    expect(screen.getByLabelText('Total: $ 80.000 COP')).toBeTruthy();
     // Las archivadas no salen en Inicio.
     expect(screen.queryByLabelText('Saldo de Vieja COP')).toBeNull();
   });

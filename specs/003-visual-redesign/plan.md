@@ -157,11 +157,15 @@ historia se revisa en emulador en los dos modos y la aprueba el dueño del proye
 
 ## Pruebas existentes que cambian a propósito
 
-Solo estas tres; cualquier otra que falle indica un error del rediseño, no de la prueba.
+Solo estas; cualquier otra que falle indica un error del rediseño, no de la prueba. Todas cambian porque cambia lo que
+la spec pidió (FR-008, FR-012, FR-014), no por comodidad.
 
 | Prueba | Qué comprueba hoy | Cómo queda | Cuándo |
 |---|---|---|---|
 | `tests/us2-history.test.tsx:164` | Saldo negativo de una cuenta en `#b91c1c` | Lee el color de `lightColors.negative` | Base (al crear las paletas) |
+| `tests/us2-history.test.tsx:76` | El ingreso se ve como `$ 2.000.000` | `+$ 2.000.000`: los ingresos llevan signo «+» (FR-008) | US1 |
+| `tests/us2-history.test.tsx:121 y 142` | El total es un texto `Total: $ 80.000 COP` | Es el nombre accesible de la tarjeta de balance (`getByLabelText`); la cifra y la moneda van en textos separados (FR-012) | US1 |
+| `tests/us1-record.test.tsx:155` | `-$ 18.000` es único en Inicio | Se busca dentro de la fila del movimiento: el balance también muestra esa cifra | US1 |
 | `tests/us2-onboarding.test.tsx:347` | Sin moneda principal, Inicio no tiene «Registrar movimiento» | La regla se comprueba sobre el «+» en `us4-tabbar.test.tsx` | US4 |
 | `tests/us2-onboarding.test.tsx:357` | Con moneda principal, Inicio tiene «Registrar movimiento» | Igual: pasa al «+»; en Inicio se conserva la comprobación de «Efectivo» y su saldo | US4 |
 

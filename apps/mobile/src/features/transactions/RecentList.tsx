@@ -1,9 +1,11 @@
 import { categoryBySlug, formatAmount } from '@saveria/shared';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../theme';
+import { type Theme, useStyles } from '../../theme';
+import { CategoryIcon } from '../../ui/CategoryIcon';
+import { ADJUSTMENT_VISUAL, TRANSFER_VISUAL, visualForSlug } from '../../ui/category-icons';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
-import { styles as base, TextButton } from '../auth/components';
+import { TextButton } from '../auth/components';
 import type { DaySection } from './ledger';
 import type { LocalTransactionRecord } from './local-transactions';
 import { DELETE_REJECTED_PREFIX, transactionService } from './transaction-service';
@@ -21,6 +23,13 @@ export function transactionTitle(tx: LocalTransactionRecord): string {
   return category?.name ?? TYPE_LABELS[tx.type];
 }
 
+/** El ícono y el tono de un movimiento: los de su categoría, o los de su tipo si no tiene. */
+function transactionVisual(tx: LocalTransactionRecord) {
+  if (tx.type === 'transfer') return TRANSFER_VISUAL;
+  if (tx.type === 'adjustment') return ADJUSTMENT_VISUAL;
+  return visualForSlug(tx.categorySlug);
+}
+
 type Tone = 'out' | 'in' | 'neutral';
 
 /**
@@ -33,9 +42,11 @@ function signedAmount(tx: LocalTransactionRecord, fromAccountId?: string): [stri
     case 'expense':
       return [`-${formatAmount(tx.amount, tx.currency)}`, 'out'];
     case 'income':
-      return [formatAmount(tx.amount, tx.currency), 'in'];
+      return [`+${formatAmount(tx.amount, tx.currency)}`, 'in'];
     case 'adjustment':
-      return [formatAmount(tx.amount, tx.currency), tx.amount.startsWith('-') ? 'out' : 'in'];
+      return tx.amount.startsWith('-')
+        ? [formatAmount(tx.amount, tx.currency), 'out']
+        : [`+${formatAmount(tx.amount, tx.currency)}`, 'in'];
     case 'transfer':
       if (fromAccountId === tx.toAccountId && tx.toAmount && tx.toCurrency) {
         return [`+${formatAmount(tx.toAmount, tx.toCurrency)}`, 'in'];
@@ -46,10 +57,35 @@ function signedAmount(tx: LocalTransactionRecord, fromAccountId?: string): [stri
   }
 }
 
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    row: {
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: t.colors.divider,
+      paddingVertical: 4,
+      gap: 2,
+    },
+    content: { minHeight: 56, flexDirection: 'row', alignItems: 'center', gap: 12 },
+    text: { flex: 1, gap: 1 },
+    title: { ...t.type.bodyStrong, fontWeight: '500', color: t.colors.text },
+    detail: { ...t.type.caption, color: t.colors.textMuted },
+    amount: { ...t.type.amount, color: t.colors.text },
+    // Un gasto va en el color del texto con su «−»; solo el ingreso lleva color propio (FR-008).
+    in: { color: t.colors.positive, fontWeight: '700' },
+    header: {
+      ...t.type.caption,
+      fontWeight: '700',
+      color: t.colors.textMuted,
+      marginTop: 12,
+      marginBottom: 2,
+    },
+    error: { ...t.type.caption, color: t.colors.negative },
+  });
+
 /**
- * Un movimiento: título, monto, cuenta (u origen → destino) y descripción. La fecha la da el
- * encabezado del día. Al tocarlo se abre para editarlo o borrarlo. Si el servidor lo rechazó,
- * muestra el motivo (FR-037); si lo rechazado fue un borrado, ofrece reintentarlo.
+ * Un movimiento: ícono de su categoría, título, monto, cuenta (u origen → destino) y descripción. La
+ * fecha la da el encabezado del día. Al tocarlo se abre para editarlo o borrarlo. Si el servidor lo
+ * rechazó, muestra el motivo (FR-037); si lo rechazado fue un borrado, ofrece reintentarlo.
  */
 export function TransactionRow({
   tx,
@@ -61,6 +97,7 @@ export function TransactionRow({
   /** Cuenta desde la que se mira (filtro del historial), para el signo de las transferencias. */
   fromAccountId?: string;
 }) {
+  const styles = useStyles(makeStyles);
   const name = (id: string | null) => accounts.find((a) => a.id === id)?.name;
   const where =
     tx.type === 'transfer' ? `${name(tx.accountId)} → ${name(tx.toAccountId)}` : name(tx.accountId);
@@ -74,14 +111,15 @@ export function TransactionRow({
         onPress={() => router.push(`/transactions/${tx.id}`)}
         style={styles.content}
       >
-        <View style={styles.line}>
-          <Text style={base.optionLabel}>{transactionTitle(tx)}</Text>
-          <Text style={styles[tone]}>{amount}</Text>
+        <CategoryIcon visual={transactionVisual(tx)} testID="category-icon" />
+        <View style={styles.text}>
+          <Text style={styles.title}>{transactionTitle(tx)}</Text>
+          <Text style={styles.detail}>{[where, tx.description].filter(Boolean).join(' · ')}</Text>
         </View>
-        <Text style={styles.detail}>{[where, tx.description].filter(Boolean).join(' · ')}</Text>
+        <Text style={[styles.amount, tone === 'in' ? styles.in : null]}>{amount}</Text>
       </Pressable>
       {tx.syncState === 'rejected' ? (
-        <Text style={base.error}>
+        <Text style={styles.error}>
           {deleteRejected ? tx.syncError : `No se pudo guardar: ${tx.syncError ?? ''}`}
         </Text>
       ) : null}
@@ -94,6 +132,7 @@ export function TransactionRow({
 
 /** Encabezado de un día ("Hoy", "Ayer", "1 de octubre de 2026"). */
 export function DayHeader({ title }: { title: string }) {
+  const styles = useStyles(makeStyles);
   return (
     <Text accessibilityRole="header" style={styles.header}>
       {title}
@@ -122,16 +161,3 @@ export function DaySections({
     </View>
   );
 }
-
-export const NEGATIVE_COLOR = colors.negative;
-
-const styles = StyleSheet.create({
-  row: { borderBottomWidth: 1, borderBottomColor: colors.divider, paddingVertical: 8, gap: 2 },
-  content: { gap: 2 },
-  line: { flexDirection: 'row', justifyContent: 'space-between' },
-  detail: { color: colors.textMuted, fontSize: 13 },
-  header: { fontSize: 13, fontWeight: '700', color: colors.textStrong, marginTop: 12 },
-  out: { color: NEGATIVE_COLOR, fontWeight: '600' },
-  in: { color: colors.positive, fontWeight: '600' },
-  neutral: { color: colors.text, fontWeight: '600' },
-});
