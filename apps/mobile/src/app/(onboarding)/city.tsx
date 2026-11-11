@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text } from 'react-native';
-import { Field, PrimaryButton, Screen, styles } from '../../features/auth/components';
+import { Body, Field, FieldError, PrimaryButton, Screen } from '../../features/auth/components';
+import { StepProgress } from '../../features/onboarding/StepProgress';
 import { profileService } from '../../features/profile/profile-service';
 import { useSession } from '../../session/session-store';
 
@@ -30,7 +30,8 @@ export default function City() {
 
   return (
     <Screen title="¿En qué ciudad vives?">
-      <Text>Paso 3 de 5. Ayuda a la IA a entender tus gastos.</Text>
+      <StepProgress step={3} />
+      <Body muted>Ayuda a la IA a entender tus gastos.</Body>
       <Field
         label="Ciudad"
         autoCapitalize="words"
@@ -38,7 +39,7 @@ export default function City() {
         onChangeText={setValue}
         error={tooLong ? `Máximo ${MAX} caracteres` : undefined}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <FieldError message={error} /> : null}
       <PrimaryButton label="Continuar" disabled={tooLong} onPress={() => void next()} />
     </Screen>
   );

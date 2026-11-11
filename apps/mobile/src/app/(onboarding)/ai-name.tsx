@@ -1,7 +1,14 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text } from 'react-native';
-import { Field, PrimaryButton, Screen, styles, TextButton } from '../../features/auth/components';
+import {
+  Body,
+  Field,
+  FieldError,
+  PrimaryButton,
+  Screen,
+  TextButton,
+} from '../../features/auth/components';
+import { StepProgress } from '../../features/onboarding/StepProgress';
 import { profileService } from '../../features/profile/profile-service';
 import { useSession } from '../../session/session-store';
 
@@ -27,7 +34,8 @@ export default function AiName() {
 
   return (
     <Screen title="¿Cómo quieres que la IA te llame?">
-      <Text>Paso 1 de 5. Es opcional: si lo dejas vacío usaremos tu correo.</Text>
+      <StepProgress step={1} />
+      <Body muted>Es opcional: si lo dejas vacío usaremos tu correo.</Body>
       <Field
         label="Nombre para la IA"
         autoCapitalize="words"
@@ -35,7 +43,7 @@ export default function AiName() {
         onChangeText={setValue}
         error={tooLong ? `Máximo ${MAX} caracteres` : undefined}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <FieldError message={error} /> : null}
       <PrimaryButton
         label="Continuar"
         disabled={tooLong}

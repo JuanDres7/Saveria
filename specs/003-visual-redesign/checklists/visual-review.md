@@ -61,3 +61,19 @@ Emulador con la API local y la cuenta `qs002.final@mail.com` (dos cuentas: Nequi
 | Pruebas | 451 pruebas de la app en verde, `tsc` y lint sin errores. |
 
 Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas de Registrar, Editar y Transferir.
+
+## Entrar y empezar (historia 3, T042), 2026-11-10
+
+Recorrido en el emulador sin sesión: bienvenida → crear cuenta → los cinco pasos del onboarding → Inicio, y después cerrar sesión → iniciar sesión → «olvidé mi contraseña». Cuenta nueva creada con la API local.
+
+| Comprobación | Resultado |
+|---|---|
+| Bienvenida | Parte superior verde oscuro con la forma de la marca (esquina inferior derecha muy redonda) y las nervaduras de la hoja; la marca «Saveria» con su ícono en la letra de identidad; mensaje breve; «Crear cuenta» ancho y «Ya tengo cuenta» como vínculo de 48 dp. |
+| Crear cuenta | «Volver» redondo arriba, campos con borde suave, ayuda en gris verdoso y la casilla de la política con una marca de verificación al elegirla (no solo color). |
+| Onboarding | «Paso N de 5» y una barra de cinco tramos que se llena paso a paso; una sola acción principal por pantalla; las opciones elegidas llevan borde, fondo y una marca. |
+| Iniciar sesión y recuperar contraseña | Mismos campos y botones, con «Volver» y vínculos de al menos 48 dp. En modo oscuro todo se lee: el texto corrido ya no sale negro. |
+| Flujo completo | Cuenta creada, los cinco pasos y llegada a Inicio con «Total: $ 0 COP» y el aviso de correo sin verificar con los colores del tema. |
+| Lint | `biome.json` ahora permite el componente `Body` como texto corrido en `apps/mobile` (regla `noReactNativeRawText`), solo para esa carpeta. |
+| Pruebas | 476 pruebas de la app en verde, `tsc` y lint sin errores. |
+
+Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas de la bienvenida, crear cuenta, onboarding e iniciar sesión.

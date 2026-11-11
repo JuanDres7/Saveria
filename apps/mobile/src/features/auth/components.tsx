@@ -2,12 +2,42 @@ import { Check, CircleAlert, type LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, type TextInputProps, View } from 'react-native';
 import { colors, radius, type Theme, useStyles, useTheme } from '../../theme';
+import { BackButton } from '../../ui/BackButton';
 import { Icon } from '../../ui/Icon';
 import { ScreenBackground } from '../../ui/ScreenBackground';
 
 const makeStyles = (t: Theme) =>
   StyleSheet.create({
     screen: { flex: 1, justifyContent: 'center', padding: 24, gap: 16 },
+    screenTop: { justifyContent: 'flex-start', paddingTop: 12 },
+    backRow: { alignItems: 'flex-start' },
+    body: { ...t.type.body, color: t.colors.text },
+    bodyMuted: { ...t.type.body, color: t.colors.textMuted },
+    checkHit: {
+      minWidth: t.touch,
+      minHeight: t.touch,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkBox: {
+      width: 26,
+      height: 26,
+      borderWidth: 2,
+      borderRadius: 8,
+      borderColor: t.colors.primary,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkBoxChecked: { backgroundColor: t.colors.primary },
+    checkRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    checkLabel: { flex: 1 },
+    linkRow: {
+      minHeight: t.touch,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 12,
+    },
+    linkRowText: { ...t.type.bodyStrong, color: t.colors.primary, textDecorationLine: 'underline' },
     title: { ...t.type.title, color: t.colors.text },
     field: { gap: 4 },
     label: { ...t.type.bodyStrong, fontSize: 14, color: t.colors.text },
@@ -137,18 +167,91 @@ export function PrimaryButton({
   );
 }
 
-/** Pantalla de acceso, registro y onboarding: fondo de la marca, título y contenido. */
-export function Screen({ title, children }: { title: string; children: ReactNode }) {
+/**
+ * Pantalla de acceso, registro y onboarding: fondo de la marca, título y contenido. Con `back`
+ * lleva el botón «Volver» arriba y el contenido empieza desde arriba (FR-016).
+ */
+export function Screen({
+  title,
+  children,
+  back = false,
+}: {
+  title: string;
+  children: ReactNode;
+  back?: boolean;
+}) {
   const styles = useStyles(makeStyles);
   return (
     <ScreenBackground>
-      <View style={styles.screen}>
+      <View style={[styles.screen, back ? styles.screenTop : null]}>
+        {back ? (
+          <View style={styles.backRow}>
+            <BackButton />
+          </View>
+        ) : null}
         <Text role="heading" style={styles.title}>
           {title}
         </Text>
         {children}
       </View>
     </ScreenBackground>
+  );
+}
+
+/** Texto corrido de una pantalla, con el color del tema (sin esto saldría negro en modo oscuro). */
+export function Body({ children, muted = false }: { children: ReactNode; muted?: boolean }) {
+  const styles = useStyles(makeStyles);
+  return <Text style={muted ? styles.bodyMuted : styles.body}>{children}</Text>;
+}
+
+/** Vínculo de texto subrayado, de al menos 48 dp de alto. */
+export function LinkButton({ label, onPress }: { label: string; onPress(): void }) {
+  const styles = useStyles(makeStyles);
+  return (
+    <Pressable role="link" accessibilityLabel={label} onPress={onPress} style={styles.linkRow}>
+      <Text style={styles.linkRowText}>{label}</Text>
+    </Pressable>
+  );
+}
+
+/**
+ * Casilla con una marca visible cuando está elegida (no solo color, FR-026). `children` es el texto
+ * que va al lado; el nombre accesible de la casilla es `accessibilityLabel`.
+ */
+export function Checkbox({
+  checked,
+  onChange,
+  accessibilityLabel,
+  testIDPrefix,
+  children,
+}: {
+  checked: boolean;
+  onChange(next: boolean): void;
+  accessibilityLabel: string;
+  testIDPrefix: string;
+  children: ReactNode;
+}) {
+  const styles = useStyles(makeStyles);
+  return (
+    <View style={styles.checkRow}>
+      <Pressable
+        role="checkbox"
+        aria-checked={checked}
+        accessibilityLabel={accessibilityLabel}
+        onPress={() => onChange(!checked)}
+        style={styles.checkHit}
+      >
+        <View
+          testID={`${testIDPrefix}-box`}
+          style={[styles.checkBox, checked ? styles.checkBoxChecked : null]}
+        >
+          {checked ? (
+            <Icon icon={Check} size={16} color="onPrimary" testID={`${testIDPrefix}-check`} />
+          ) : null}
+        </View>
+      </Pressable>
+      <View style={styles.checkLabel}>{children}</View>
+    </View>
   );
 }
 
