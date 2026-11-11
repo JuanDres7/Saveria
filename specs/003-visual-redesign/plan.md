@@ -16,7 +16,7 @@ identidad en títulos y cifras grandes. El enfoque técnico:
 2. **Tema con dos paletas** que sigue el modo del teléfono; los colores salen de un hook, `useTheme()`.
 3. **Herramientas**: `lucide-react-native` (íconos), `react-native-svg` (los dibuja, más la forma de fondo y las
    nervaduras de la hoja) y dos archivos de letra incrustados con `expo-font`, que ya está instalada. Nada más.
-4. **Barra inferior de cuatro secciones con botón «+» central**, sobre `Tabs` de expo-router y sin mover rutas.
+4. **Barra inferior de cuatro secciones con botón «+» central**, propia, bajo la pila de pantallas de expo-router y sin mover rutas.
 5. **Estructura lista para lo que viene** según [docs/mapa-de-la-app.md](../../docs/mapa-de-la-app.md): barra armada
    como lista, Inicio por bloques, Registrar con lugar para las dos puertas, Movimientos y Cuentas como contenedores.
    No se construye ninguna función futura.
@@ -115,7 +115,7 @@ apps/mobile/
 │   │   ├── accounts/                     # BalanceCard, AccountTile, AccountList, AccountFields
 │   │   └── settings/                     # SettingsGroup
 │   └── app/
-│       ├── (app)/_layout.tsx             # Stack → Tabs con barra propia (rutas intactas)
+│       ├── (app)/_layout.tsx             # sigue con Stack y dibuja debajo la barra propia (rutas intactas)
 │       └── (auth), (onboarding), (app)   # pantallas restyle, sin cambiar su lógica
 └── tests/
     ├── theme-contrast.test.ts, theme-tokens.test.ts, theme-hook.test.tsx
@@ -166,8 +166,9 @@ la spec pidió (FR-008, FR-012, FR-014), no por comodidad.
 | `tests/us2-history.test.tsx:76` | El ingreso se ve como `$ 2.000.000` | `+$ 2.000.000`: los ingresos llevan signo «+» (FR-008) | US1 |
 | `tests/us2-history.test.tsx:121 y 142` | El total es un texto `Total: $ 80.000 COP` | Es el nombre accesible de la tarjeta de balance (`getByLabelText`); la cifra y la moneda van en textos separados (FR-012) | US1 |
 | `tests/us1-record.test.tsx:155` | `-$ 18.000` es único en Inicio | Se busca dentro de la fila del movimiento: el balance también muestra esa cifra | US1 |
-| `tests/us2-onboarding.test.tsx:347` | Sin moneda principal, Inicio no tiene «Registrar movimiento» | La regla se comprueba sobre el «+» en `us4-tabbar.test.tsx` | US4 |
-| `tests/us2-onboarding.test.tsx:357` | Con moneda principal, Inicio tiene «Registrar movimiento» | Igual: pasa al «+»; en Inicio se conserva la comprobación de «Efectivo» y su saldo | US4 |
+| `tests/us2-onboarding.test.tsx:347` | Sin moneda principal, Inicio no tiene «Registrar movimiento» | Se conserva (sigue siendo cierto) y la regla del «+» se comprueba en `us4-tabbar.test.tsx` | US4 |
+| `tests/us2-onboarding.test.tsx:357` | Con moneda principal, Inicio tiene «Registrar movimiento» | Se quita esa comprobación (el botón pasó al «+»); en Inicio se conserva la de «Efectivo» y su saldo | US4 |
+| `tests/guards.test.tsx` | Simula `Stack` y `Redirect` | Simula también `usePathname` y `router`, que el layout ahora usa para dibujar la barra | US4 |
 
 ## Matriz escenario → prueba
 
@@ -194,7 +195,7 @@ la spec pidió (FR-008, FR-012, FR-014), no por comodidad.
 
 | Riesgo | Cómo se controla |
 |---|---|
-| Pasar a `Tabs` de expo-router puede mostrar la barra en formularios, alterar el botón «atrás» o romper `guards.test.tsx` | Rutas y archivos intactos; barra propia que solo se pinta en las 4 secciones; se confirma si `Tabs.Protected` existe en expo-router ~58; emulador y `guards.test.tsx`. |
+| La barra puede verse en formularios o alterar el botón «atrás» | Se queda la pila de pantallas (no `Tabs`: los formularios ocultos quedarían montados con lo escrito, research D5); la barra solo se pinta cuando `usePathname()` es una de las 4 secciones; se prueba con el layout simulado y en emulador. |
 | Importar íconos de `lucide-react-native` puede agrandar el paquete | Importar solo los íconos usados y medir el paquete antes y después; si crece de forma desproporcionada, importar por archivo. |
 | La letra incrustada puede no tener cifras tabulares o pesar más de lo esperado | Se comprueba al traer los archivos (T003); si no sirve, la cifra del balance usa la del sistema. |
 | El «+» puede solaparse con el nombre de una sección en pantallas angostas o con letra al 150 % | Columna central de ancho fijo; se prueba en pantalla pequeña y con `font_scale 1.5`. |

@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { selectBalanceCard } from '../../features/accounts/balance-card';
 import { type HomeContext, visibleBlocks } from '../../features/home/blocks';
 import {
@@ -25,6 +24,8 @@ const makeStyles = (t: Theme) =>
       borderTopRightRadius: t.radius.sheet,
       paddingHorizontal: 16,
       paddingTop: 18,
+      // El botón «+» de la barra sobresale: deja sitio para que no tape el final de la lista.
+      paddingBottom: 40,
     },
   });
 
@@ -35,7 +36,6 @@ export default function Home() {
   const balances = useLedger((s) => s.balances);
   const recent = useLedger((s) => s.recent);
   const styles = useStyles(makeStyles);
-  const insets = useSafeAreaInsets();
 
   useEffect(() => refreshLedger(), []);
   if (!me) return null;
@@ -70,7 +70,7 @@ export default function Home() {
             </View>
           ))}
         </View>
-        <View style={[styles.sheet, { paddingBottom: 24 + insets.bottom }]}>
+        <View style={styles.sheet}>
           {visibleBlocks(ctx, 'sheet').map(({ key, node }) => (
             <View key={key} testID={key.startsWith('home-block-') ? key : undefined}>
               {node}

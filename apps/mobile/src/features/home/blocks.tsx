@@ -6,8 +6,7 @@ import { AccountsRow, type AccountTileItem } from '../accounts/AccountTile';
 import { BalanceCard } from '../accounts/BalanceCard';
 import type { BalanceCardData } from '../accounts/balance-card';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
-import { authService } from '../auth/auth-service';
-import { PrimaryButton, TextButton } from '../auth/components';
+import { TextButton } from '../auth/components';
 import type { DaySection } from '../transactions/ledger';
 import { DaySections } from '../transactions/RecentList';
 import { VerifyBanner } from '../verification/VerifyBanner';
@@ -73,7 +72,7 @@ function EmptyMessage() {
   const styles = useStyles(makeStyles);
   return (
     <Text style={styles.empty}>
-      Aún no tienes movimientos. Registra el primero con «Registrar movimiento».
+      Aún no tienes movimientos. Toca el botón + para registrar el primero.
     </Text>
   );
 }
@@ -81,8 +80,7 @@ function EmptyMessage() {
 /**
  * Los bloques de Inicio, en el orden fijo del mapa de la app (docs/mapa-de-la-app.md). Los bloques de
  * las funciones que llegan después (barra para contarle a Saveria, «Por confirmar», «Este mes»,
- * «Próximos») entrarán en su lugar sin mover a los demás. Los dos bloques «provisional» se retiran
- * cuando exista la barra inferior (historia 4).
+ * «Próximos») entrarán en su lugar sin mover a los demás.
  */
 export const HOME_BLOCKS: readonly HomeBlock[] = [
   {
@@ -114,18 +112,6 @@ export const HOME_BLOCKS: readonly HomeBlock[] = [
       ) : null,
   },
   {
-    // PROVISIONAL (historia 4 lo reemplaza por el botón «+» de la barra).
-    key: 'home-provisional-register',
-    zone: 'top',
-    visible: (ctx) => ctx.hasPrimaryCurrency,
-    render: () => (
-      <PrimaryButton
-        label="Registrar movimiento"
-        onPress={() => router.push('/transactions/new')}
-      />
-    ),
-  },
-  {
     key: 'home-block-accounts',
     zone: 'sheet',
     visible: (ctx) => ctx.tiles.length > 0,
@@ -151,19 +137,6 @@ export const HOME_BLOCKS: readonly HomeBlock[] = [
     zone: 'sheet',
     visible: (ctx) => ctx.sections.length === 0 && ctx.hasPrimaryCurrency,
     render: () => <EmptyMessage />,
-  },
-  {
-    // PROVISIONAL (historia 4: la barra inferior y Ajustes los reemplazan).
-    key: 'home-provisional-links',
-    zone: 'sheet',
-    visible: () => true,
-    render: () => (
-      <View>
-        <TextButton label="Cuentas de dinero" onPress={() => router.push('/accounts')} />
-        <TextButton label="Configuración" onPress={() => router.push('/settings')} />
-        <TextButton label="Cerrar sesión" onPress={() => void authService.logout()} />
-      </View>
-    ),
   },
 ];
 

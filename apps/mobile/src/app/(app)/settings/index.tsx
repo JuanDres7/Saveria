@@ -2,6 +2,7 @@ import { COUNTRIES, CURRENCIES } from '@saveria/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StatusBar, Text, View } from 'react-native';
+import { authService } from '../../../features/auth/auth-service';
 import {
   Banner,
   Field,
@@ -202,7 +203,7 @@ export default function Settings() {
         label="Borrar mi cuenta"
         onPress={() => router.push('/settings/delete-account')}
       />
-      <TextButton label="Volver" onPress={() => router.back()} />
+      <TextButton label="Cerrar sesión" onPress={() => void authService.logout()} />
     </ScrollView>
   );
 }

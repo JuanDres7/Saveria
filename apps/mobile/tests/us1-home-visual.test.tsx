@@ -165,9 +165,7 @@ describe('Inicio con identidad propia (historia 1)', () => {
       setupLedger([makeAccountRecord({ name: 'Efectivo', isDefault: true })]);
       await render(<Home />);
       expect(
-        screen.getByText(
-          'Aún no tienes movimientos. Registra el primero con «Registrar movimiento».',
-        ),
+        screen.getByText('Aún no tienes movimientos. Toca el botón + para registrar el primero.'),
       ).toBeTruthy();
       expect(screen.queryByText('Hoy')).toBeNull();
     },
@@ -211,15 +209,20 @@ describe('Inicio con identidad propia (historia 1)', () => {
     expect(router.push).toHaveBeenCalledWith('/transfer');
   });
 
-  it('mientras no exista la barra, Inicio conserva el registro y los enlaces de siempre', async () => {
+  it('Inicio ya no trae el botón de registrar ni los enlaces que pasaron a la barra y a Ajustes', async () => {
     signInVerified();
     twoAccounts();
     await render(<Home />);
-    await fireEvent.press(screen.getByRole('button', { name: 'Registrar movimiento' }));
-    expect(router.push).toHaveBeenCalledWith('/transactions/new');
-    for (const name of ['Cuentas de dinero', 'Configuración', 'Cerrar sesión', 'Ver todo']) {
-      expect(screen.getByRole('button', { name })).toBeTruthy();
+    for (const name of [
+      'Registrar movimiento',
+      'Cuentas de dinero',
+      'Configuración',
+      'Cerrar sesión',
+    ]) {
+      expect(screen.queryByRole('button', { name })).toBeNull();
     }
+    await fireEvent.press(screen.getByRole('button', { name: 'Ver todo' }));
+    expect(router.push).toHaveBeenCalledWith('/transactions');
   });
 });
 

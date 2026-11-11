@@ -43,7 +43,7 @@ transferencias y ajustes) usa `surfaceSoft` con `textMuted`. Los gastos ya no so
 ### Compatibilidad mientras se migran las pantallas
 
 `palettes.ts` define un bloque `legacyColors` sin colores nuevos, solo alias de los de arriba, para que lo que aún no
-se migró compile: `primarySoft` → `sage`, `textStrong` → `text`, `inverseAccent` → `primary`. `theme/index.ts` exporta
+se migró compile: `primarySoft` → `sage`, `textStrong` → `text`. `theme/index.ts` exporta
 `colors` (`@deprecated`) armado con `lightColors` más `legacyColors`. Se retira en la fase de cierre (tarea T061).
 
 ### Reglas de contraste (se prueban en `theme-contrast.test.ts`)

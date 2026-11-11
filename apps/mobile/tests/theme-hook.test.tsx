@@ -60,6 +60,5 @@ describe('useTheme (FR-027, FR-028)', () => {
     expect(legacyColorsExport.primary).toBe(lightColors.primary);
     expect(legacyColorsExport.primarySoft).toBe(lightColors.sage);
     expect(legacyColorsExport.textStrong).toBe(lightColors.text);
-    expect(legacyColorsExport.inverseAccent).toBe(lightColors.primary);
   });
 });

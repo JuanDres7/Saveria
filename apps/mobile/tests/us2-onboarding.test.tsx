@@ -342,19 +342,19 @@ describe('pantalla principal', () => {
   };
 
   it('2.6 sin moneda principal no aparece "registrar movimiento"', async () => {
+    // La entrada para registrar ahora es el «+» de la barra; su regla se prueba en us4-tabbar.test.tsx.
     setup({ me: meWith({ onboardingStep: 'done' }) });
     await render(<Home />);
     expect(screen.queryByRole('button', { name: 'Registrar movimiento' })).toBeNull();
   });
 
-  it('con moneda principal muestra "Efectivo" con saldo 0 y la entrada para registrar', async () => {
+  it('con moneda principal muestra "Efectivo" con saldo 0', async () => {
     setup({
       me: meWith({ onboardingStep: 'done', primaryCurrency: 'COP' }, { defaultAccount: account }),
     });
     await render(<Home />);
     expect(screen.getByText('Efectivo')).toBeTruthy();
     expect(screen.getByText(/0 COP/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Registrar movimiento' })).toBeTruthy();
   });
 
   it('FR-017 sin nombre para la IA, el saludo usa la parte del correo antes de la "@"', async () => {

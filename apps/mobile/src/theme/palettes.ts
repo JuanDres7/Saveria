@@ -126,5 +126,4 @@ export const darkColors: ThemeColors = {
 export const legacyColors = {
   primarySoft: lightColors.sage,
   textStrong: lightColors.text,
-  inverseAccent: lightColors.primary,
 } as const;

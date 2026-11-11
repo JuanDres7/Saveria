@@ -77,3 +77,23 @@ Recorrido en el emulador sin sesión: bienvenida → crear cuenta → los cinco 
 | Pruebas | 476 pruebas de la app en verde, `tsc` y lint sin errores. |
 
 Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas de la bienvenida, crear cuenta, onboarding e iniciar sesión.
+
+## Barra inferior (historia 4, T048), 2026-11-10
+
+Emulador con la API local, la cuenta `qs002.final@mail.com` (dos cuentas, movimientos de ejemplo).
+
+| Comprobación | Resultado |
+|---|---|
+| Barra | Cuatro secciones con ícono y nombre, la actual con píldora salvia y nombre en negrita; el «+» al centro con la forma de hoja y su sombra, sobresaliendo de la barra. En oscuro, píldora y «+» en oliva claro. |
+| Navegación | Tocar Movimientos, Cuentas y Ajustes abre cada sección; el «+» abre «Registrar movimiento» desde todas. En Registrar no hay barra y «Guardar» sigue a la vista. |
+| «Atrás» | Desde Registrar vuelve a la sección anterior (el primer «atrás» cierra el teclado que abre el monto); desde Ajustes vuelve a Cuentas. Dos «atrás» seguidos desde Inicio siguen saliendo de la app. |
+| Aviso «Deshacer» | Al borrar un movimiento aparece sobre la barra y sin tapar el «+»; se rehízo con los colores del tema (antes la acción casi no se veía). |
+| Ajustes | Ya no tiene «Volver» y trae «Cerrar sesión». El detalle de una cuenta tiene «Registrar movimiento». |
+| Pantalla pequeña y botones | Con 720×1280 y navegación de tres botones, la barra queda encima de los botones del sistema y nada se tapa. |
+| Letra al 150 % | El nombre «Movimientos» se partía a media palabra («Movimie-ntos»); ahora se achica para caber en una línea. |
+| Fondo de las pantallas | La pila de la app ahora pinta el fondo del tema, así que no se ve gris claro entre pantallas en modo oscuro. |
+| Pruebas | 505 pruebas de la app en verde, `tsc` y lint sin errores. |
+
+Pantallas sin migrar todavía (Historial, Cuentas, Ajustes): en modo oscuro su texto sigue negro hasta sus historias (5 y 6).
+
+Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas de la barra, el aviso «Deshacer», la pantalla pequeña y la letra al 150 %.

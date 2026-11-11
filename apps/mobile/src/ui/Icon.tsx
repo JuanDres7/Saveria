@@ -8,12 +8,14 @@ import { type ThemeColors, useTheme } from '../theme';
 export function Icon({
   icon: Glyph,
   size,
+  strokeWidth,
   color = 'text',
   label,
   testID,
 }: {
   icon: LucideIcon;
   size?: number;
+  strokeWidth?: number;
   color?: keyof ThemeColors;
   label?: string;
   testID?: string;
@@ -25,7 +27,7 @@ export function Icon({
       testID={testID}
       size={size ?? theme.icon.row}
       color={theme.colors[color]}
-      strokeWidth={theme.icon.stroke}
+      strokeWidth={strokeWidth ?? theme.icon.stroke}
       {...(decorative
         ? {
             accessibilityElementsHidden: true,

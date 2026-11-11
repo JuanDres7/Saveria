@@ -71,21 +71,22 @@ https://claude.ai/artifact/HeGUmjPATU7j8e3wmoWTfc.
   ejecución (puede mostrar la letra de respaldo un instante); una letra variable (pesa más y Android no la maneja bien).
 - **Constitución v1.2.0**: es una librería de interfaz sin red, que funciona sin conexión y se justifica en *Complexity Tracking*.
 
-### D5. Barra inferior: `Tabs` de expo-router con barra propia y botón «+»
+### D5. Barra inferior: barra propia bajo la pila de pantallas, con botón «+»
 
-- **Decisión**: `(app)/_layout.tsx` pasa de `Stack` a `Tabs` con cuatro pestañas (Inicio, Movimientos, Cuentas, Ajustes). Las
-  demás rutas (registrar, editar, transferir, nueva cuenta, ajustar, cambiar contraseña, etc.) quedan declaradas pero ocultas de la
-  barra. La barra se pinta con un componente propio (`TabBar`) con un botón «+» central que abre «Registrar movimiento» y que
-  solo aparece si hay moneda principal. Solo se muestra cuando la ruta actual es una de las cuatro secciones.
-- **Razón**: no se mueven archivos ni se cambian URLs, así que `guards.test.tsx` y las pantallas conservan su ruta; el «+» hace
-  que registrar, la acción central del producto, esté a un toque desde cualquier sección.
-- **Alternativas**: reorganizar en `(tabs)` con un `Stack` por sección (mueve ~15 archivos y rompe pruebas); botón ancho en
-  Inicio (hay que volver a Inicio para anotar un gasto); barra construida a mano fuera del router (pierde el estado de cada pestaña).
-- **Riesgo conocido**: el botón «atrás» entre pestañas y pantallas ocultas y confirmar si `Tabs.Protected` existe en expo-router
-  ~58. Se verifica en emulador y queda en el quickstart.
-- **El nombre accesible «Registrar movimiento»** pasa de Inicio al «+»; así no hay dos controles con el mismo nombre en una
-  pantalla. Las dos pruebas de `us2-onboarding.test.tsx` (líneas 347 y 357) se ajustan a propósito: la regla de moneda principal
-  pasa a comprobarse sobre el «+» en `us4-tabbar.test.tsx`.
+- **Decisión (ajustada al implementar la historia 4)**: `(app)/_layout.tsx` **sigue con `Stack`** y dibuja debajo la barra propia
+  (`TabBar`, con el botón «+» central), solo cuando la ruta actual (`usePathname()`) es una de las cuatro secciones. Tocar una
+  sección usa `router.navigate`, que vuelve a la sección si ya estaba abierta en vez de apilar otra. El «+» abre `/transactions/new`
+  y solo aparece si hay moneda principal. No se mueve ningún archivo ni cambia ninguna ruta.
+- **Por qué no `Tabs`** (lo que decía la primera versión de este plan): dentro de un navegador de pestañas los formularios ocultos
+  quedan montados al salir de ellos, así que «Registrar movimiento» reabriría con el monto y la categoría de la vez anterior (cambia
+  el comportamiento, FR-020), y habría que reescribir los guardias de sesión y `guards.test.tsx`. Con la pila nada de eso cambia.
+- **Comportamiento de «atrás»**: desde una sección, «atrás» vuelve a la anterior de las abiertas (Inicio → Movimientos → Cuentas y de
+  vuelta); dos «atrás» desde Inicio siguen saliendo de la app.
+- **Alternativas**: `Tabs` de expo-router (arriba); reorganizar en `(tabs)` con una pila por sección (mueve ~15 archivos y rompe
+  pruebas); botón ancho en Inicio (hay que volver a Inicio para anotar un gasto).
+- **El nombre accesible «Registrar movimiento»** pasa de Inicio al «+»; así no hay dos controles con el mismo nombre en una pantalla
+  (el detalle de una cuenta, que no tiene barra, lo conserva). Las dos pruebas de `us2-onboarding.test.tsx` (líneas 347 y 357) se
+  ajustan a propósito: la regla de moneda principal pasa a comprobarse sobre el «+» en `us4-tabbar.test.tsx`.
 
 ### D5b. Zonas seguras y tamaños de pantalla: `react-native-safe-area-context`
 
