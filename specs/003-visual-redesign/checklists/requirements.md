@@ -32,9 +32,10 @@
 ## Notes
 
 - Sin marcadores [NEEDS CLARIFICATION]. Las seis preguntas abiertas se resolvieron en
-  `/speckit-clarify` (sesión 2026-11-09): íconos (enmienda de la constitución), barra de cuatro
-  secciones, tarjeta de balance, modo claro y oscuro, tipografía del sistema y tono cercano y breve.
-  Quedan como valores por defecto para el plan: íconos de categoría y activación del modo oscuro.
+  `/speckit-clarify` (sesión 2026-11-09) y una revisión del mismo día, tras aprobar la segunda propuesta
+  visual («La hoja de Saveria») y el mapa de la app, ajustó cuatro puntos: letra de identidad en títulos y
+  cifras grandes, gastos en el color del texto, botón «+» central y lugar previsto para los módulos futuros.
+- La spec nombra `docs/mapa-de-la-app.md` (FR-032) como referencia de producto, no como detalle técnico.
 - La spec menciona "un solo lugar" para los colores (FR-007, SC-007) como objetivo de producto
   (cambiar la identidad sin editar cada pantalla), no como detalle técnico.
 - SC-002, SC-003 y SC-005 usan medidas de accesibilidad estándar (contraste, tamaño de toque, tamaño

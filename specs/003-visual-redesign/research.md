@@ -1,115 +1,145 @@
 # Investigación: Rediseño visual de la app
 
-**Fecha**: 2026-11-09 | **Plan**: [plan.md](plan.md)
+**Fecha**: 2026-11-09 (revisado con «La hoja de Saveria») | **Plan**: [plan.md](plan.md)
 
 No quedaron marcadores `NEEDS CLARIFICATION`. Lo que sigue registra lo que se verificó y las decisiones.
 
 ## Hechos verificados en el repositorio
 
-- `node_modules` no trae `@expo/vector-icons`, `react-native-svg` ni `expo-linear-gradient`. `apps/mobile/package.json`
-  solo tiene `expo-font`. Hoy la app no dibuja ningún ícono.
-- `expo/bundledNativeModules.json` (Expo 58) fija `react-native-svg` en **15.16.0** y `@expo/vector-icons` en `^15.0.2`.
-- `lucide-react-native` 1.70.0 declara como peer `react-native-svg` `^12 || ^13 || ^14 || ^15` y `react` hasta la 19, así que
-  es compatible con React 19.3 y con la 15.16.0 de Expo.
-- `apps/mobile/app.json` ya trae `"userInterfaceStyle": "automatic"`. La pantalla de arranque tiene fondo azul
-  `#208AEF` y el ícono adaptable `#E6F4FE`: ambos son colores de la plantilla, no de Saveria.
-- Solo 11 archivos importan `theme`, hay 15 `StyleSheet.create` y unos 34 usos de `colors.`; el rediseño es
-  abarcable sin tocar la lógica.
+- `node_modules` no trae `@expo/vector-icons`, `react-native-svg` ni `expo-linear-gradient`. Hoy la app no dibuja ningún ícono.
+- `expo/bundledNativeModules.json` (Expo 58) fija `react-native-svg` en **15.16.0**. `react-native-safe-area-context` ya está en
+  `package.json` (`~5.10.1`) pero ninguna pantalla la usa.
+- `lucide-react-native` 1.70.0 declara como peer `react-native-svg` `^12 || … || ^15` y `react` hasta la 19, y no tiene
+  dependencias propias: es compatible con React 19.3 y con la 15.16.0 de Expo.
+- `@expo-google-fonts/bricolage-grotesque` 0.4.1: sin dependencias, licencia MIT (código) y OFL-1.1 (la letra).
+- El plugin de `expo-font` instalado (`expo-font/plugin`) admite la opción `fonts` para Android: incrusta los archivos `.ttf`
+  al compilar, sin carga en ejecución.
+- `apps/mobile/app.json` ya trae `"userInterfaceStyle": "automatic"`, `reactCompiler: true`. La pantalla de arranque tiene fondo
+  azul `#208AEF` y el ícono adaptable `#E6F4FE`, ambos de la plantilla.
+- Solo 11 archivos importan `theme`, hay 15 `StyleSheet.create` y unos 34 usos de `colors.`; el rediseño es abarcable sin
+  tocar la lógica. El historial ya usa `SectionList`.
 - El catálogo tiene 18 categorías de gasto y 8 de ingreso con `slug` estable (`packages/shared/src/catalog/categories.ts`).
+- Pruebas que tocan lo que cambia: `tests/us2-history.test.tsx:164` comprueba el color del saldo negativo de una cuenta
+  (`#b91c1c`); `tests/us2-onboarding.test.tsx:347 y 357` comprueban que «Registrar movimiento» aparece o no en Inicio según la
+  moneda principal.
 
 ## Decisiones
 
 ### D1. Íconos: `lucide-react-native` sobre `react-native-svg`
 
-- **Decisión**: usar `lucide-react-native` para todos los íconos y `react-native-svg` para dibujarlos y para las formas de
-  fondo.
+- **Decisión**: `lucide-react-native` para todos los íconos y `react-native-svg` para dibujarlos y para las formas decorativas
+  (la forma orgánica de fondo y las nervaduras de la hoja).
 - **Razón**: la referencia usa íconos de línea fina y lucide es exactamente ese estilo, con trazo ajustable; cubre las 26
   categorías con un solo estilo; se importa ícono por ícono; es compatible con la versión de Expo.
-- **Alternativas**: `@expo/vector-icons` (ya viene con Expo): Feather es de línea pero tiene pocos íconos y las otras
-  familias mezclan estilos o son rellenas; dibujar los íconos a mano: trabajo y deuda propios sin beneficio.
+- **Alternativas**: `@expo/vector-icons` (Feather es de línea pero tiene pocos íconos; las otras familias son rellenas o mezclan
+  estilos); dibujar los íconos a mano (trabajo y deuda propios).
 
 ### D2. Modo claro y oscuro: `useColorScheme` + dos paletas
 
-- **Decisión**: el tema se resuelve con `useColorScheme()` de React Native (ya incluido) y un hook `useTheme()` que devuelve
-  la paleta activa. Cambia solo cuando cambia el modo del teléfono; no hay interruptor propio ni se guarda nada.
-- **Razón**: `userInterfaceStyle: "automatic"` ya está; sigue lo que el usuario ya eligió en su teléfono y elimina estado
-  y pantallas nuevas.
-- **Alternativas**: interruptor propio en Ajustes (queda fuera de alcance, FR-028); una librería de temas (innecesaria).
+- **Decisión**: el tema se resuelve con `useColorScheme()` de React Native y un hook `useTheme()`. Cambia solo cuando cambia el
+  modo del teléfono; no hay interruptor propio ni se guarda nada.
+- **Razón**: `userInterfaceStyle: "automatic"` ya está; sigue lo que el usuario ya eligió y elimina estado y pantallas nuevas.
+- **Alternativas**: interruptor propio en Ajustes (fuera de alcance, FR-028); una librería de temas (innecesaria).
 
-### D3. Paleta
+### D3. Paleta de «La hoja de Saveria»
 
-Paleta clara y oscura, con los contrastes calculados con la fórmula de WCAG 2.1. Valores completos en
-[data-model.md](data-model.md); maqueta aprobable en https://claude.ai/artifact/1P4JwJozqdxgfadBRe5vCT.
+Valores y contrastes completos en [data-model.md](data-model.md); maqueta aprobada en
+https://claude.ai/artifact/HeGUmjPATU7j8e3wmoWTfc.
 
-- **Claro**: crema `#F6F3EA` de fondo, tarjetas `#FCFBF7`, verde musgo `#3F4A28` para la acción principal y el ítem activo,
-  salvia `#DDE2C8` para círculos de categoría, texto `#1F2616`.
-- **Oscuro**: verde casi negro `#14180F` de fondo, tarjetas `#1D2217`, el verde de acción pasa a oliva claro `#B9C78C`
-  (con texto oscuro encima, 9,2:1), texto `#ECEBDD`.
-- **Regla**: el oliva medio `#8F9B6B` solo va en formas de fondo. Sobre el crema da 2,7:1, no sirve para texto ni íconos.
-- Rojo y verde del dinero cambian de tono en cada modo para conservar contraste (claro: `#B3261E` / `#2F6B2A`; oscuro:
-  `#F2A39B` / `#A5D68A`), y siempre van con signo (FR-008, FR-026).
-- **Resultado**: todos los pares de texto cumplen 4,5:1 y los bordes de campo 3:1 en los dos modos (rango 4,2–15).
+- **Claro**: crema `#F6F3EA`, verde musgo `#3F4A28` para la acción principal y para la tarjeta de balance, texto `#1F2616`.
+- **Oscuro**: verde casi negro `#14180F`; el botón principal pasa a oliva claro `#B9C78C` con texto oscuro (9,2:1) y la tarjeta
+  de balance a `#2C3720`.
+- **Gastos sin alarma**: el monto de un gasto va en el color del texto con signo «−»; verde con «+» para ingresos; el rojo
+  ladrillo (`#A63A24` claro, `#F0A493` oscuro) queda solo para saldos negativos y errores. Una lista llena de rojo se lee como si
+  todo estuviera mal. Esto cambia lo que decía la spec original (FR-008), ya reflejado en la spec.
+- **Cuatro tonos de categoría** (arena, niebla, arcilla y el verde salvia base) más un neutro; agrupan las categorías por tipo de
+  gasto para que la lista se recorra más rápido. Mapa en `data-model.md`.
+- **Resultado**: todos los pares de texto cumplen 4,5:1 y los bordes de campo y las tintas de ícono 3:1 en los dos modos.
+- Se retira el oliva medio `#8F9B6B`: las formas de fondo usan `sage` y la hoja de la tarjeta `heroShape`.
 
-### D4. Tipografía, sombras, formas
+### D4. Tipografía: del sistema para el texto, una letra de identidad para lo grande
 
-- **Fuente del sistema** (Roboto en Android), con escala fija de tamaños y pesos. No se descarga ni se incluye ninguna fuente,
-  así que `expo-font` no se usa.
-- **Sombras**: las nativas de React Native (`elevation` y `shadow*`), suaves en claro; en oscuro se usa una elevación mayor
-  más un tono de superficie más claro, porque la sombra casi no se ve.
-- **Formas orgánicas**: dos o tres círculos grandes de salvia con opacidad, dibujados con `react-native-svg` en un
-  componente `ScreenBackground`. Nunca quedan detrás de texto en tamaños que dificulten leerlo.
-- **No se usan degradados** (`expo-linear-gradient`): la referencia se logra con color plano y formas.
+- **Decisión**: texto corrido, campos, filas y montos de listas con la letra del sistema (Roboto en Android). Títulos, subtítulos y
+  cifras grandes con **Bricolage Grotesque** en dos pesos (SemiBold y Bold).
+- **Razón**: una letra con carácter solo en lo grande da identidad sin cargar cada pantalla; es algo angosta, así que caben
+  montos largos en pesos sin achicarse. Los montos de las listas se quedan en la del sistema para que las cifras alineen.
+- **Cómo se incluye** (sin parpadeo y sin red): los dos `.ttf` (licencia OFL) se copian a `apps/mobile/assets/fonts/` desde el
+  paquete `@expo-google-fonts/bricolage-grotesque` y se incrustan al compilar con la opción `fonts` del plugin de `expo-font`. No
+  hay `useFonts` en ejecución, así que no se muestra otra letra mientras carga. Si faltaran, la app usa la del sistema.
+- **Se comprueba al implementar**: que la letra tenga cifras tabulares; si no, la cifra del balance usa la del sistema.
+- **Alternativas**: solo la del sistema (más liviano, pero sin identidad en lo grande); cargar la letra con `useFonts` en
+  ejecución (puede mostrar la letra de respaldo un instante); una letra variable (pesa más y Android no la maneja bien).
+- **Constitución v1.2.0**: es una librería de interfaz sin red, que funciona sin conexión y se justifica en *Complexity Tracking*.
 
-### D5. Barra inferior: `Tabs` de expo-router con barra propia
+### D5. Barra inferior: `Tabs` de expo-router con barra propia y botón «+»
 
 - **Decisión**: `(app)/_layout.tsx` pasa de `Stack` a `Tabs` con cuatro pestañas (Inicio, Movimientos, Cuentas, Ajustes). Las
-  demás rutas (registrar, editar, transferir, nueva cuenta, ajustar, cambiar contraseña, etc.) quedan declaradas pero
-  ocultas de la barra. La barra se pinta con un componente propio (`TabBar`) y solo se muestra cuando la ruta actual es una de
-  las cuatro secciones, para que los formularios tengan todo el alto y el teclado no la empuje.
-- **Razón**: no se mueven archivos ni se cambian URLs, así que `guards.test.tsx` y las 15 pantallas conservan su ruta.
-- **Alternativas**: reorganizar en `(tabs)` con un `Stack` por sección (más fiel a navegación anidada pero mueve ~15 archivos y
-  rompe las pruebas); barra construida a mano fuera del router (pierde el estado de cada pestaña).
-- **Riesgo conocido**: el comportamiento del botón «atrás» entre pestañas y pantallas ocultas. Se verifica en emulador (ya se
-  sabe que dos «atrás» desde Inicio cierran la app) y queda en la lista de comprobaciones del quickstart.
+  demás rutas (registrar, editar, transferir, nueva cuenta, ajustar, cambiar contraseña, etc.) quedan declaradas pero ocultas de la
+  barra. La barra se pinta con un componente propio (`TabBar`) con un botón «+» central que abre «Registrar movimiento» y que
+  solo aparece si hay moneda principal. Solo se muestra cuando la ruta actual es una de las cuatro secciones.
+- **Razón**: no se mueven archivos ni se cambian URLs, así que `guards.test.tsx` y las pantallas conservan su ruta; el «+» hace
+  que registrar, la acción central del producto, esté a un toque desde cualquier sección.
+- **Alternativas**: reorganizar en `(tabs)` con un `Stack` por sección (mueve ~15 archivos y rompe pruebas); botón ancho en
+  Inicio (hay que volver a Inicio para anotar un gasto); barra construida a mano fuera del router (pierde el estado de cada pestaña).
+- **Riesgo conocido**: el botón «atrás» entre pestañas y pantallas ocultas y confirmar si `Tabs.Protected` existe en expo-router
+  ~58. Se verifica en emulador y queda en el quickstart.
+- **El nombre accesible «Registrar movimiento»** pasa de Inicio al «+»; así no hay dos controles con el mismo nombre en una
+  pantalla. Las dos pruebas de `us2-onboarding.test.tsx` (líneas 347 y 357) se ajustan a propósito: la regla de moneda principal
+  pasa a comprobarse sobre el «+» en `us4-tabbar.test.tsx`.
 
 ### D5b. Zonas seguras y tamaños de pantalla: `react-native-safe-area-context`
 
-- **Hecho**: ya está en `package.json` (`~5.10.1`, la que fija Expo 58) porque la trae expo-router, pero hoy ninguna
-  pantalla la usa. expo-router ya envuelve la app en su `SafeAreaProvider`, así que no hay que montar nada.
-- **Decisión**: `Screen` (auth y onboarding), `ScreenBackground`, `TabBar` y el aviso «Deshacer» leen `useSafeAreaInsets()` y
-  suman el margen superior (muesca, barra de estado) e inferior (barra de gestos o de botones). Los formularios con
-  teclado mantienen su botón «Guardar» fijo sobre el teclado, sin que lo tape la barra inferior.
-- **Razón**: con la barra inferior propia y las formas de fondo a pantalla completa, sin esto los botones y la barra
-  quedarían bajo la barra de gestos en algunos teléfonos.
-- **No se agrega nada nuevo**: no cambia `package.json`, así que no hace falta la enmienda para esto.
-- **Se comprueba** en el emulador con un perfil de pantalla pequeña y otro grande, y con navegación por gestos y por
-  tres botones (`adb shell cmd overlay enable-exclusive --category com.android.internal.systemui.navbar.gestural` y
-  `...threebutton`).
+- **Hecho**: ya está en `package.json` pero hoy ninguna pantalla la usa. expo-router ya envuelve la app en su `SafeAreaProvider`.
+- **Decisión**: `Screen`, `ScreenBackground`, `TabBar` y el aviso «Deshacer» leen `useSafeAreaInsets()` y suman el margen superior
+  (muesca, barra de estado) e inferior (barra de gestos o de botones). Los formularios con teclado mantienen su botón
+  «Guardar» fijo sobre el teclado, sin que lo tape la barra inferior.
+- **Se comprueba** en el emulador con un perfil de pantalla pequeña y otro grande, y con navegación por gestos y por tres botones
+  (`adb shell cmd overlay enable-exclusive --category com.android.internal.systemui.navbar.gestural` y `…threebutton`).
 
 ### D6. Pantalla de arranque y fondo del ícono
 
-- `expo-splash-screen` admite una variante `dark` en la configuración del plugin: se pone crema `#F6F3EA` en claro y
-  `#14180F` en oscuro con el ícono de Saveria, para que no destelle en blanco ni en azul (caso límite de la spec).
-- El fondo del ícono adaptable (`#E6F4FE`) pasa a crema; el cambio solo aplica al compilar una versión nueva.
+- `expo-splash-screen` admite una variante `dark`: crema `#F6F3EA` en claro y `#14180F` en oscuro con el ícono de Saveria, para
+  que no destelle en blanco ni en azul. El fondo del ícono adaptable (`#E6F4FE`) pasa a crema. Aplica al compilar de nuevo.
 
-### D7. Íconos por categoría
+### D7. Forma de hoja, sombras y lámina (optimización)
 
-Uno por `slug`, agrupados en dos familias de tono (gasto = salvia, ingreso = verde claro). El mapa completo está en
-[data-model.md](data-model.md). Una prueba garantiza que ninguna categoría se quede sin ícono si el catálogo cambia.
+- **Forma de hoja**: tarjeta de balance y botón «+» son vistas normales con radios distintos por esquina (34/12 y 20/8); no hace
+  falta imagen. Solo las nervaduras decorativas y la forma de fondo usan `react-native-svg`, estáticas y sin animación.
+- **Dos sombras por pantalla** (balance y «+») en vez de una por tarjeta: cada sombra cuesta al desplazar.
+- **Lámina única** de cuentas y movimientos con filas simples y una línea, no una tarjeta por fila: la lista de 5000 movimientos
+  dibuja menos piezas. Cuentas en una fila horizontal que se desliza, así con 3 o 20 cuentas la pantalla mide lo mismo.
+- **Sin nada más**: no hay degradados, desenfoques ni motores de animación o de dibujo aparte; Expo los ofrece pero agregan peso.
+  El historial sigue con `SectionList` (ya cumple lo medido en la 002) y se vuelve a medir.
+- **Íconos importados uno por uno** y tamaño del paquete medido antes y después.
 
 ### D8. Cómo se prueba el contraste y que no haya colores sueltos
 
-- `theme-contrast.test.ts` calcula la razón de contraste con la fórmula de WCAG sobre `palettes.ts` y falla si algún par baja
-  de 4,5 (3 en bordes e íconos). No necesita ninguna librería.
+- `theme-contrast.test.ts` calcula la razón de contraste con la fórmula de WCAG sobre `palettes.ts` (incluidos `hero` y los
+  tonos de categoría) y falla si algún par baja de 4,5 (3 en bordes e íconos). No necesita ninguna librería.
 - `theme-tokens.test.ts` recorre `src/` y falla si encuentra `#rrggbb`, `rgb(` o `rgba(` fuera de `theme/palettes.ts`.
+- `category-icons.test.ts` falla si alguna categoría no tiene ícono o tono.
 
 ### D9. Verificar los dos modos en el emulador
 
-`adb shell cmd uimode night yes` y `night no` cambian el modo del emulador sin tocar nada de la app, y permiten probar el
-cambio con la app abierta y con un formulario a medias (US7, escenario 3).
+`adb shell cmd uimode night yes` y `night no` cambian el modo del emulador sin tocar la app, y permiten probar el cambio con la
+app abierta y con un formulario a medias (US7, escenario 3). `adb shell settings put system font_scale 1.5` prueba el 150 % de
+letra (SC-005).
+
+### D10. Lugar para los módulos futuros (mapa de la app)
+
+- **Decisión**: el lugar de cada módulo de la visión (registro por IA, confirmación, resumen, recurrentes, deudas, metas,
+  asistente, presupuestos, notas de voz, plan) queda fijado en `docs/mapa-de-la-app.md`. Esta feature solo deja la
+  estructura: barra armada desde una lista, Inicio por bloques en orden fijo, encabezado propio en Registrar, Movimientos y
+  Cuentas como pantallas contenedoras y Ajustes por grupos.
+- **Razón**: la visión pone la entrada conversacional como forma principal de registro; si la navegación se diseña solo para
+  lo que existe hoy, habría que rehacerla al llegar la IA. Dejar la estructura cuesta poco y no agrega nada visible.
+- **Lo único que cambiará de lugar**: Ajustes pasa de la barra a un engranaje en Inicio cuando entre la pestaña Saveria
+  (feature 004). Hoy se queda en la barra para que esta quede completa y pareja.
+- **Alternativas**: diseñar solo para hoy (rehacer después); mostrar desde ya secciones «próximamente» (contradice FR-019 y
+  confunde).
 
 ## Fuera de esta feature (queda anotado)
 
 - Interruptor propio claro/oscuro y modo oscuro «forzado» desde Ajustes.
-- Gráficos, resumen del mes, metas, mapa, foto de perfil, tarjetas (FR-019).
-- Animaciones elaboradas e ilustraciones nuevas (solo formas de fondo e íconos).
+- Gráficos, resumen del mes, «gasto del mes», metas, mapa, foto de perfil, tarjetas (FR-019).
+- Animaciones elaboradas e ilustraciones nuevas (solo la forma de fondo, la hoja y los íconos).
