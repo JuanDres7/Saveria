@@ -24,7 +24,7 @@ Reglas:
 
 | Pieza | Propiedades | Obligaciones |
 |---|---|---|
-| `Icon` | `name`, `size?`, `color?` (token del tema) | Oculto para lectores de pantalla salvo que sea el único contenido de un control; color por defecto `text`. |
+| `Icon` | `icon` (componente de lucide), `size?`, `color?` (token del tema), `label?` | Oculto para lectores de pantalla salvo que sea el único contenido de un control; color por defecto `text`. |
 | `CategoryIcon` | `slug`, `size?` | Círculo con el tono de la categoría (`sage`, arena, niebla, arcilla o neutro) y su ícono en la tinta del tono. |
 | `Leaf` | `variant` (`balance` o `fab`), `children` | Vista con la forma de hoja (esquinas 34/12 o 20/8, opuestas); la variante `balance` dibuja las nervaduras con `react-native-svg` detrás del contenido, fuera del orden de foco. |
 | `Card` | `children`, `tone?` (`surface` o `soft`) | Radio `card`, plana (sin sombra); no es tocable por sí sola. |
@@ -53,6 +53,7 @@ Reglas:
 - Un mismo nombre accesible no se repite en una pantalla: «Registrar movimiento» vive solo en el «+» (y en el detalle de una cuenta, donde no hay barra).
 - Todo control tiene objetivo táctil ≥ 48 dp (FR-024).
 - El texto escala con el tamaño de letra del sistema sin cortarse (FR-025); la tarjeta de balance reduce la cifra antes de truncarla.
+- `RadioOption` marca la opción elegida con un ícono de verificación además del borde y el fondo (FR-026); un campo con error muestra un ícono de alerta junto al texto.
 - Gastos e ingresos siempre llevan signo («−», «+») además de color (FR-008, FR-026); los estados (error, aviso, seleccionado) llevan ícono o texto además de color.
 
 ## 4. Barra inferior: qué rutas pertenecen a qué sección

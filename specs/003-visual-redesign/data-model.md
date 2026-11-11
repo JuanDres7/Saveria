@@ -32,6 +32,7 @@ Todos los nombres se mantienen entre los dos modos; solo cambia el valor. Es el 
 | `positive` | ingresos (con signo «+») | `#2F6B2A` | `#A5D68A` |
 | `warningBackground` / `warningText` | avisos | `#F6E7B8` / `#5C4310` | `#3B3217` / `#F3DFA2` |
 | `inverse` / `onInverse` | aviso «Deshacer» | `#2B3320` / `#F6F3EA` | `#ECEBDD` / `#14180F` |
+| `shadow` | color de las dos sombras (balance y «+») | `#3F4A28` | `#000000` |
 | `toneSand` / `toneSandInk` | círculo de categoría: comida y compras | `#F1E4C3` / `#6B4E12` | `#3A321C` / `#E6C987` |
 | `toneMist` / `toneMistInk` | círculo de categoría: movilidad y viajes | `#D5E4DC` / `#2B5646` | `#223129` / `#A9CDB9` |
 | `toneClay` / `toneClayInk` | círculo de categoría: salud y personas | `#F3DACF` / `#8A3A24` | `#402A22` / `#F0B4A2` |

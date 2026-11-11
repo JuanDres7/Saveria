@@ -1,50 +1,78 @@
 /**
- * Colores y medidas de la app en un solo lugar. Cada color se llama por lo que significa
- * (`negative`, `primary`…), no por cómo se ve, para poder rediseñar la app cambiando este archivo.
- * Hoy los valores son los provisionales de las primeras pantallas; el rediseño los reemplaza.
+ * Tema de Saveria: dos paletas (clara y oscura) que siguen el modo del teléfono. Las pantallas piden
+ * el tema con `useTheme()` y sus estilos con `useStyles()`; ninguna escribe un color (FR-007).
  */
-export const colors = {
-  /** Acción principal: botones, enlaces, opciones elegidas */
-  primary: '#0f766e',
-  /** Texto e íconos sobre `primary` */
-  onPrimary: '#ffffff',
-  /** Fondo de una opción elegida */
-  primarySoft: '#f0fdfa',
+import { useColorScheme, type ViewStyle } from 'react-native';
+import { darkColors, legacyColors, lightColors, type ThemeColors } from './palettes';
+import { DISPLAY_FONT, icon, radius, shadowStyle, space, touch, type } from './tokens';
 
-  /** Fondo de barras y paneles fijos */
-  surface: '#ffffff',
-  /** Borde de campos, opciones y chips */
-  border: '#9ca3af',
-  /** Línea fina que separa filas y paneles */
-  divider: '#e5e7eb',
-  /** Botón deshabilitado */
-  disabled: '#9ca3af',
+export type { ThemeColors } from './palettes';
+export { DISPLAY_FONT, icon, radius, space, touch, type } from './tokens';
 
-  /** Texto principal */
-  text: '#111827',
-  /** Texto de apoyo: títulos de sección, detalles */
-  textStrong: '#374151',
-  /** Texto secundario: descripciones, ayudas */
-  textMuted: '#4b5563',
+export type Scheme = 'light' | 'dark';
 
-  /** Dinero que sale, saldos negativos y errores */
-  negative: '#b91c1c',
-  /** Dinero que entra */
-  positive: '#047857',
+export interface Theme {
+  scheme: Scheme;
+  colors: ThemeColors;
+  radius: typeof radius;
+  space: typeof space;
+  touch: number;
+  icon: typeof icon;
+  type: typeof type;
+  fonts: { display: string };
+  /** Las dos únicas sombras de la app */
+  shadow: { hero: ViewStyle; fab: ViewStyle };
+}
 
-  /** Aviso (por ejemplo, confirma tu correo) */
-  warningBackground: '#fef3c7',
-  warningText: '#78350f',
+function buildTheme(scheme: Scheme): Theme {
+  const colors = scheme === 'dark' ? darkColors : lightColors;
+  return {
+    scheme,
+    colors,
+    radius,
+    space,
+    touch,
+    icon,
+    type,
+    fonts: { display: DISPLAY_FONT },
+    shadow: {
+      hero: shadowStyle(colors.shadow, scheme, 'hero'),
+      fab: shadowStyle(colors.shadow, scheme, 'fab'),
+    },
+  };
+}
 
-  /** Aviso flotante oscuro (Deshacer) y su acción */
-  inverse: '#1f2937',
-  inverseAccent: '#5eead4',
-} as const;
+// Un objeto por modo, creado una sola vez: así `useTheme()` devuelve siempre el mismo y los estilos
+// memorizados no se rehacen mientras el modo no cambie.
+const themes: Record<Scheme, Theme> = { light: buildTheme('light'), dark: buildTheme('dark') };
 
-/** Radios de las esquinas */
-export const radius = {
-  /** Campos, botones y tarjetas */
-  md: 8,
-  /** Chips */
-  pill: 16,
-} as const;
+/** El tema del modo actual del teléfono. Si el sistema no informa modo, es el claro. */
+export function useTheme(): Theme {
+  return themes[useColorScheme() === 'dark' ? 'dark' : 'light'];
+}
+
+const styleCache = new WeakMap<(theme: Theme) => unknown, Partial<Record<Scheme, unknown>>>();
+
+/**
+ * Estilos de una pantalla o pieza, memorizados por modo. `factory` va definida FUERA del componente
+ * (a nivel de archivo) y se llama una vez por modo:
+ *
+ *   const makeStyles = (t: Theme) => StyleSheet.create({ box: { backgroundColor: t.colors.surface } });
+ *   const styles = useStyles(makeStyles);
+ */
+export function useStyles<T>(factory: (theme: Theme) => T): T {
+  const theme = useTheme();
+  let byScheme = styleCache.get(factory);
+  if (!byScheme) {
+    byScheme = {};
+    styleCache.set(factory, byScheme);
+  }
+  if (!(theme.scheme in byScheme)) byScheme[theme.scheme] = factory(theme);
+  return byScheme[theme.scheme] as T;
+}
+
+/**
+ * @deprecated La paleta clara con los nombres de antes del rediseño, para las pantallas que aún no
+ * usan `useTheme()`. Se retira en la tarea T061.
+ */
+export const colors = { ...lightColors, ...legacyColors } as const;

@@ -2,6 +2,7 @@ import { localToday } from '@saveria/shared';
 import { fireEvent, render, screen, within } from '@testing-library/react-native';
 import { router } from 'expo-router';
 import { refreshLedger } from '../src/features/transactions/ledger';
+import { lightColors } from '../src/theme/palettes';
 import {
   makeAccountRecord,
   makeTxRecord,
@@ -161,7 +162,9 @@ describe('historia 2: ver el historial y el saldo', () => {
     ledger.save(makeTxRecord(efectivo.id));
     refreshLedger();
     await render(<Home />);
-    expect(within(card('Efectivo')).getByText('-$ 18.000 COP')).toHaveStyle({ color: '#b91c1c' });
+    expect(within(card('Efectivo')).getByText('-$ 18.000 COP')).toHaveStyle({
+      color: lightColors.negative,
+    });
   });
 
   it('Inicio agrupa los últimos movimientos por día y "Ver todo" abre el historial', async () => {

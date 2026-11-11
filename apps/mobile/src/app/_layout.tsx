@@ -1,5 +1,7 @@
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import * as SystemUI from 'expo-system-ui';
 import { useEffect } from 'react';
 import { registerAccountHandlers } from '../features/accounts/account-service';
 import { authService } from '../features/auth/auth-service';
@@ -10,6 +12,7 @@ import { verificationService } from '../features/verification/verification-servi
 import { watchOutbox } from '../outbox/user-outbox';
 import { routeGroupFor } from '../session/guards';
 import { useSession, watchConnectivity } from '../session/session-store';
+import { useTheme } from '../theme';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,6 +20,12 @@ export default function RootLayout() {
   const status = useSession((s) => s.status);
   const me = useSession((s) => s.me);
   const isOnline = useSession((s) => s.isOnline);
+  const { colors } = useTheme();
+
+  // El fondo de la ventana sigue al tema: así no destella en blanco al abrir ni al cambiar de modo.
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(colors.background);
+  }, [colors.background]);
 
   useEffect(() => {
     const stopWatching = watchConnectivity();
@@ -57,18 +66,23 @@ export default function RootLayout() {
   if (group === 'splash') return null;
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      {/* Siempre disponible: decide a qué zona ir (ver src/app/index.tsx) */}
-      <Stack.Screen name="index" />
-      <Stack.Protected guard={group === 'auth'}>
-        <Stack.Screen name="(auth)" />
-      </Stack.Protected>
-      <Stack.Protected guard={group === 'onboarding'}>
-        <Stack.Screen name="(onboarding)" />
-      </Stack.Protected>
-      <Stack.Protected guard={group === 'app' || group === 'verify-gate'}>
-        <Stack.Screen name="(app)" />
-      </Stack.Protected>
-    </Stack>
+    <>
+      <StatusBar style="auto" />
+      <Stack
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+      >
+        {/* Siempre disponible: decide a qué zona ir (ver src/app/index.tsx) */}
+        <Stack.Screen name="index" />
+        <Stack.Protected guard={group === 'auth'}>
+          <Stack.Screen name="(auth)" />
+        </Stack.Protected>
+        <Stack.Protected guard={group === 'onboarding'}>
+          <Stack.Screen name="(onboarding)" />
+        </Stack.Protected>
+        <Stack.Protected guard={group === 'app' || group === 'verify-gate'}>
+          <Stack.Screen name="(app)" />
+        </Stack.Protected>
+      </Stack>
+    </>
   );
 }
