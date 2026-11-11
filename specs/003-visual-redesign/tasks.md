@@ -208,12 +208,12 @@ fallar antes de implementar. Toda prueba visual corre en modo claro y en modo os
 
 ### Tests for User Story 7 (escribirlas primero; deben fallar)
 
-- [ ] T054 [P] [US7] Escribir `apps/mobile/tests/us7-modes.test.tsx`: en `light` y en `dark`, Inicio, Registrar, Historial, Cuentas y la bienvenida se dibujan sin errores y con colores solo del tema (7.1, 7.2); cambiar el modo con «Registrar movimiento» abierto y un monto escrito mantiene la pantalla, el monto y la categoría elegida (7.3, FR-030); ingresos en `positive`, saldos negativos en `negative` y gastos en `text` con su signo en cada modo (7.4); avisos, lámina, chips y campos distinguibles del fondo (7.5)
+- [X] T054 [P] [US7] Escribir `apps/mobile/tests/us7-modes.test.tsx`: en `light` y en `dark`, Inicio, Registrar, Historial, Cuentas y la bienvenida se dibujan sin errores y con colores solo del tema (7.1, 7.2); cambiar el modo con «Registrar movimiento» abierto y un monto escrito mantiene la pantalla, el monto y la categoría elegida (7.3, FR-030); ingresos en `positive`, saldos negativos en `negative` y gastos en `text` con su signo en cada modo (7.4); avisos, lámina, chips y campos distinguibles del fondo (7.5)
 
 ### Implementation for User Story 7
 
-- [ ] T055 [US7] Corregir lo que T054 y el recorrido revelen en `apps/mobile/src/theme/palettes.ts` y en las piezas afectadas (solo ajustes de tokens o de uso del tema, sin colores sueltos)
-- [ ] T056 [US7] Recorrer en el emulador las pantallas de US1 a US5 en modo oscuro y en claro; con un formulario a medias correr `adb shell cmd uimode night yes` y `night no` y comprobar que sigue en la misma pantalla con lo escrito (7.3); abrir la app en frío en oscuro y comprobar que no destella en blanco; poner `font_scale 1.5` y comprobar que nada se corta ni se pierde ningún botón (SC-005); capturas y aprobación en `checklists/visual-review.md`
+- [X] T055 [US7] Corregir lo que T054 y el recorrido revelen en `apps/mobile/src/theme/palettes.ts` y en las piezas afectadas (solo ajustes de tokens o de uso del tema, sin colores sueltos)
+- [X] T056 [US7] Recorrer en el emulador las pantallas de US1 a US5 en modo oscuro y en claro; con un formulario a medias correr `adb shell cmd uimode night yes` y `night no` y comprobar que sigue en la misma pantalla con lo escrito (7.3); abrir la app en frío en oscuro y comprobar que no destella en blanco; poner `font_scale 1.5` y comprobar que nada se corta ni se pierde ningún botón (SC-005); capturas y aprobación en `checklists/visual-review.md`
 
 **Checkpoint**: claro y oscuro validados en todo lo hecho hasta aquí.
 

@@ -51,7 +51,13 @@ export function AccountTile({ item }: { item: AccountTileItem }) {
           {account.name}
         </Text>
       </View>
-      <Text numberOfLines={1} style={[styles.balance, negative ? styles.negative : null]}>
+      {/* Con letra grande el saldo se achica para verse completo, nunca se corta con «…». */}
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+        style={[styles.balance, negative ? styles.negative : null]}
+      >
         {`${formatAmount(balance, account.currency)} ${account.currency}`}
       </Text>
     </View>

@@ -114,3 +114,18 @@ Emulador con la API local y la cuenta `qs002.final@mail.com` con 5000 movimiento
 | Pruebas | 528 pruebas de la app en verde, `tsc` y lint sin errores. |
 
 Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas del historial, las cuentas, el detalle y la nueva cuenta.
+
+## Claro y oscuro de punta a punta (historia 7, T056), 2026-11-10
+
+| Comprobación | Resultado |
+|---|---|
+| Colores solo del tema | `us7-modes.test.tsx` recorre 20 pantallas (bienvenida, acceso, 5 pasos, Inicio, Registrar, Editar, Transferir, Historial, Cuentas, nueva, archivadas, detalle, ajustar y la barra) y el aviso «Deshacer», en claro y en oscuro: todos los colores que dibujan salen de la paleta del modo (ningún color suelto). |
+| Cambio de modo con un formulario a medias | En el emulador, con «Registrar movimiento» abierto, monto `25000`, «Transporte» y la cuenta Nequi elegidos, `adb shell cmd uimode night yes` cambió todo a oscuro al instante sin salir de la pantalla ni perder nada. En pruebas, lo mismo con Crear cuenta (correo y casilla). |
+| Arranque en frío en oscuro | Sin destello blanco ni azul (verificado en la base del tema, T024). |
+| Letra al 150 % | Inicio, Registrar, Historial y Cuentas se ven completas: nombres largos de categoría pasan a otra línea, la barra achica sus nombres y los saldos de las cuentas se achican en vez de cortarse con «…» (se encontró y se corrigió en este recorrido). |
+| Gasto, ingreso y saldo negativo | Gasto en el color del texto con «−», ingreso en verde con «+» y saldo negativo en rojo, en los dos modos. |
+| Pruebas | 578 pruebas de la app en verde, `tsc` y lint sin errores. |
+
+Quedan para la historia 6 Configuración, cambiar contraseña, borrar cuenta, el bloqueo de verificación y los demás avisos.
+
+Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas del cambio de modo y de la letra al 150 %.

@@ -94,6 +94,8 @@ describe('Inicio con identidad propia (historia 1)', () => {
         within(screen.getByLabelText('Saldo de Nequi')).getByText('$ 90.000 COP'),
       ).toBeTruthy();
       expect(screen.getByTestId('accounts-row').props.horizontal).toBe(true);
+      // Con letra grande el saldo se achica en vez de cortarse con «…» (SC-005).
+      expect(screen.getByText('$ 82.000 COP').props.adjustsFontSizeToFit).toBe(true);
     },
   );
 
