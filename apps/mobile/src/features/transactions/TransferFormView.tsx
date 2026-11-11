@@ -1,10 +1,10 @@
 import { DESCRIPTION_MAX, localToday } from '@saveria/shared';
 import { useState } from 'react';
-import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../theme';
+import { Keyboard, View } from 'react-native';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
-import { styles as base, Field, PrimaryButton } from '../auth/components';
+import { Banner, Field, FieldError, PrimaryButton } from '../auth/components';
 import { Chip, chipRow } from './Chip';
+import { AmountField, FormLabel, FormScreen } from './form-parts';
 import type { TransferForm } from './transaction-service';
 
 function yesterday(): string {
@@ -71,114 +71,98 @@ export function TransferFormView({
   }
 
   return (
-    <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text role="heading" style={base.title}>
-          {title}
-        </Text>
+    <FormScreen
+      title={title}
+      footer={
+        // Fuera del área que se desplaza: el botón siempre queda a la vista.
+        <>
+          <PrimaryButton
+            label={submitLabel}
+            onPress={() => {
+              Keyboard.dismiss();
+              submit();
+            }}
+          />
+          {footerExtra}
+        </>
+      }
+    >
+      <FormLabel label="Desde" />
+      <View style={chipRow}>
+        {accounts.map((account) => (
+          <Chip
+            key={account.id}
+            label={account.name}
+            checked={fromId === account.id}
+            onPress={() => chooseFrom(account)}
+          />
+        ))}
+      </View>
+      {errors.accountId ? <FieldError message={errors.accountId} /> : null}
 
-        <Text style={base.label}>Desde</Text>
-        <View style={chipRow}>
-          {accounts.map((account) => (
+      <FormLabel label="Hacia" />
+      <View style={chipRow}>
+        {accounts
+          .filter((account) => account.id !== fromId)
+          .map((account) => (
             <Chip
               key={account.id}
               label={account.name}
-              checked={fromId === account.id}
-              onPress={() => chooseFrom(account)}
+              accessibilityLabel={`Hacia ${account.name}`}
+              checked={toId === account.id}
+              onPress={() => setToId(account.id)}
             />
           ))}
-        </View>
-        {errors.accountId ? <Text style={base.error}>{errors.accountId}</Text> : null}
-
-        <Text style={base.label}>Hacia</Text>
-        <View style={chipRow}>
-          {accounts
-            .filter((account) => account.id !== fromId)
-            .map((account) => (
-              <Chip
-                key={account.id}
-                label={account.name}
-                accessibilityLabel={`Hacia ${account.name}`}
-                checked={toId === account.id}
-                onPress={() => setToId(account.id)}
-              />
-            ))}
-        </View>
-        {errors.toAccountId ? <Text style={base.error}>{errors.toAccountId}</Text> : null}
-
-        <Field
-          label={crossCurrency && from ? `Monto que sale (${from.currency})` : 'Monto'}
-          value={amountText}
-          onChangeText={setAmountText}
-          keyboardType="decimal-pad"
-          placeholder="100.000"
-          error={errors.amount}
-        />
-        {crossCurrency && to ? (
-          <>
-            <Text style={base.bannerText}>
-              Cada cuenta usa su moneda: no se calcula ninguna tasa
-            </Text>
-            <Field
-              label={`Monto que entra (${to.currency})`}
-              value={toAmountText}
-              onChangeText={setToAmountText}
-              keyboardType="decimal-pad"
-              error={errors.toAmount}
-            />
-          </>
-        ) : null}
-
-        <Text style={base.label}>Fecha</Text>
-        <View style={chipRow}>
-          <Chip label="Hoy" checked={occurredOn === today} onPress={() => setOccurredOn(today)} />
-          <Chip
-            label="Ayer"
-            checked={occurredOn === yesterday()}
-            onPress={() => setOccurredOn(yesterday())}
-          />
-        </View>
-        <Field
-          label="Otra fecha (AAAA-MM-DD)"
-          value={otherDay ? occurredOn : ''}
-          onChangeText={(text) => setOccurredOn(text || today)}
-          placeholder="2026-10-01"
-          error={errors.occurredOn}
-        />
-
-        <Field
-          label="Descripción (opcional)"
-          value={description}
-          onChangeText={setDescription}
-          maxLength={DESCRIPTION_MAX}
-          autoCapitalize="sentences"
-          error={errors.description}
-        />
-        {errors.body ? <Text style={base.error}>{errors.body}</Text> : null}
-      </ScrollView>
-      {/* Fuera del área que se desplaza: el botón siempre queda a la vista. */}
-      <View style={styles.footer}>
-        <PrimaryButton
-          label={submitLabel}
-          onPress={() => {
-            Keyboard.dismiss();
-            submit();
-          }}
-        />
-        {footerExtra}
       </View>
-    </View>
+      {errors.toAccountId ? <FieldError message={errors.toAccountId} /> : null}
+
+      <AmountField
+        label={crossCurrency && from ? `Monto que sale (${from.currency})` : 'Monto'}
+        caption={from && !crossCurrency ? `Monto en ${from.currency}` : undefined}
+        value={amountText}
+        onChangeText={setAmountText}
+        placeholder="100.000"
+        error={errors.amount}
+      />
+      {crossCurrency && to ? (
+        <>
+          <Banner message="Cada cuenta usa su moneda: no se calcula ninguna tasa" />
+          <Field
+            label={`Monto que entra (${to.currency})`}
+            value={toAmountText}
+            onChangeText={setToAmountText}
+            keyboardType="decimal-pad"
+            error={errors.toAmount}
+          />
+        </>
+      ) : null}
+
+      <FormLabel label="Fecha" />
+      <View style={chipRow}>
+        <Chip label="Hoy" checked={occurredOn === today} onPress={() => setOccurredOn(today)} />
+        <Chip
+          label="Ayer"
+          checked={occurredOn === yesterday()}
+          onPress={() => setOccurredOn(yesterday())}
+        />
+      </View>
+      <Field
+        label="Otra fecha (AAAA-MM-DD)"
+        value={otherDay ? occurredOn : ''}
+        onChangeText={(text) => setOccurredOn(text || today)}
+        placeholder="2026-10-01"
+        error={errors.occurredOn}
+      />
+
+      <Field
+        label="Descripción (opcional)"
+        value={description}
+        onChangeText={setDescription}
+        maxLength={DESCRIPTION_MAX}
+        autoCapitalize="sentences"
+        error={errors.description}
+      />
+      {errors.body ? <FieldError message={errors.body} /> : null}
+    </FormScreen>
   );
 }
-
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  content: { padding: 24, gap: 12 },
-  footer: {
-    padding: 16,
-    gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-    backgroundColor: colors.surface,
-  },
-});

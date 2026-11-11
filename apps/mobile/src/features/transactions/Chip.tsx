@@ -49,7 +49,9 @@ export function Chip({
       onPress={onPress}
       style={[styles.chip, checked ? styles.chipChecked : null]}
     >
-      {icon ? <Icon icon={icon} size={16} color={checked ? 'onPrimary' : 'text'} /> : null}
+      {icon ? (
+        <Icon icon={icon} size={16} color={checked ? 'onPrimary' : 'text'} testID="chip-icon" />
+      ) : null}
       <Text style={[styles.text, checked ? styles.textChecked : null]}>{label}</Text>
     </Pressable>
   );

@@ -73,6 +73,17 @@ const makeStyles = (t: Theme) =>
     bannerText: { ...t.type.body, color: t.colors.warningText },
   });
 
+/** Mensaje de error junto a un campo: ícono y texto, no solo color (FR-026). */
+export function FieldError({ message }: { message: string }) {
+  const styles = useStyles(makeStyles);
+  return (
+    <View style={styles.errorRow}>
+      <Icon icon={CircleAlert} size={16} color="negative" testID="field-error-icon" />
+      <Text style={styles.error}>{message}</Text>
+    </View>
+  );
+}
+
 /** Campo de texto con etiqueta y error; la etiqueta también es su nombre accesible. */
 export function Field({
   label,
@@ -89,15 +100,12 @@ export function Field({
         autoCapitalize="none"
         autoCorrect={false}
         placeholderTextColor={theme.colors.textMuted}
+        cursorColor={theme.colors.primary}
+        selectionColor={theme.colors.primary}
         style={[styles.input, error ? styles.inputError : null]}
         {...input}
       />
-      {error ? (
-        <View style={styles.errorRow}>
-          <Icon icon={CircleAlert} size={16} color="negative" testID="field-error-icon" />
-          <Text style={styles.error}>{error}</Text>
-        </View>
-      ) : null}
+      {error ? <FieldError message={error} /> : null}
     </View>
   );
 }

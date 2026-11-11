@@ -42,3 +42,22 @@ Cuenta `qs002.final@mail.com` en el emulador, con la API local y 14 movimientos 
 | Pruebas | 435 de la app en verde, `tsc` y lint sin errores. |
 
 Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas de claro y oscuro.
+
+## Registrar, editar y transferir (historia 2, T037), 2026-11-10
+
+Emulador con la API local y la cuenta `qs002.final@mail.com` (dos cuentas: Nequi y Efectivo).
+
+| Comprobación | Resultado |
+|---|---|
+| Encabezado | Círculo «Volver» y título en la letra de identidad, en Registrar, Editar y Transferir; «atrás» del sistema también vuelve. |
+| Selector Gasto / Ingreso | Una sola píldora con la opción elegida en verde de acción (oliva claro con texto oscuro en modo oscuro). |
+| Monto | Grande y centrado en la letra de identidad, con «Monto en COP» debajo; el ejemplo `18.000` va en un tono claro para no confundirse con lo escrito; el cursor es del verde de acción. |
+| Categorías | Dieciocho chips con su ícono de línea, el elegido relleno; con el teclado abierto, tocar una categoría lo cierra. |
+| «Guardar» a la vista | Fijo en el pie. Se descubrió que, con el borde a borde de Android, el teclado lo tapaba mientras se escribía el monto: el pie ahora sube con el teclado (`KeyboardAvoidingView`) y se ve «Guardar» encima de él. |
+| Flujo típico | Monto `18000` + categoría + «Guardar»: 2 toques más el monto. El movimiento aparece en Inicio y el total se actualiza antes de 1,5 s (medida a ojo con un volcado a los 1,5 s, no con el método fino de la 002). |
+| Editar y borrar | «Editar movimiento» con los datos cargados y «Guardar cambios» + «Borrar» en el pie; borrar muestra «Movimiento borrado · Deshacer». |
+| Transferir | Chips «Desde» y «Hacia» (el origen no aparece en «Hacia»), monto grande y fecha, mismos elementos que Registrar. |
+| Modo oscuro | Revisado en los tres formularios; todo se lee. |
+| Pruebas | 451 pruebas de la app en verde, `tsc` y lint sin errores. |
+
+Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas de Registrar, Editar y Transferir.
