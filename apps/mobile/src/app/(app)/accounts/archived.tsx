@@ -1,9 +1,9 @@
 import { toE4 } from '@saveria/shared';
 import { useEffect } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
 import { AccountList } from '../../../features/accounts/AccountList';
-import { styles as base } from '../../../features/auth/components';
+import { Body } from '../../../features/auth/components';
 import { refreshLedger, useLedger } from '../../../features/transactions/ledger';
+import { Page } from '../../../ui/Page';
 
 /**
  * Cuentas archivadas con su saldo (FR-021): no suman en el total ni aparecen al registrar, pero
@@ -22,14 +22,9 @@ export default function ArchivedAccounts() {
     });
 
   return (
-    <ScrollView contentContainerStyle={styles.content}>
-      <Text role="heading" style={base.title}>
-        Cuentas archivadas
-      </Text>
-      {archived.length === 0 ? <Text>No tienes cuentas archivadas.</Text> : null}
+    <Page title="Cuentas archivadas" back>
+      {archived.length === 0 ? <Body muted>No tienes cuentas archivadas.</Body> : null}
       <AccountList items={archived} />
-    </ScrollView>
+    </Page>
   );
 }
-
-const styles = StyleSheet.create({ content: { padding: 24, paddingTop: 48, gap: 12 } });

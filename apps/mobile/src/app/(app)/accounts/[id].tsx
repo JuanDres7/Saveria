@@ -1,12 +1,16 @@
 import { formatAmount } from '@saveria/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text } from 'react-native';
 import { AccountFields, GeneralErrors } from '../../../features/accounts/AccountFields';
 import { type AccountForm, accountService } from '../../../features/accounts/account-service';
-import { styles as base, PrimaryButton, TextButton } from '../../../features/auth/components';
+import { Banner, Body, PrimaryButton, TextButton } from '../../../features/auth/components';
 import { openLedgerContext, refreshLedger, useLedger } from '../../../features/transactions/ledger';
-import { colors } from '../../../theme';
+import { type Theme, useStyles } from '../../../theme';
+import { Page } from '../../../ui/Page';
+
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({ hint: { ...t.type.bodyStrong, color: t.colors.primary } });
 
 /**
  * Detalle de una cuenta de dinero (historia 3): editar, volverla la cuenta por defecto, archivar
@@ -14,6 +18,7 @@ import { colors } from '../../../theme';
  */
 export default function AccountDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const styles = useStyles(makeStyles);
   const account = useLedger((s) => s.accounts.find((a) => a.id === id));
   const balance = useLedger((s) => (id ? s.balances[id] : undefined));
   const [form, setForm] = useState<AccountForm | null>(null);
@@ -57,11 +62,8 @@ export default function AccountDetail() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text role="heading" style={base.title}>
-        {account.name}
-      </Text>
-      <Text>{`Saldo: ${shownBalance}`}</Text>
+    <Page title={account.name} back>
+      <Body>{`Saldo: ${shownBalance}`}</Body>
       {archived ? <Text style={styles.hint}>Esta cuenta está archivada.</Text> : null}
       {account.isDefault ? <Text style={styles.hint}>Cuenta por defecto</Text> : null}
 
@@ -100,23 +102,18 @@ export default function AccountDetail() {
             />
           )}
           {confirmArchive ? (
-            <View style={base.banner}>
-              <Text style={base.bannerText}>
-                {`Esta cuenta tiene ${shownBalance}. Al archivarla deja de sumar en el total y no aparece al registrar movimientos; sus movimientos se conservan.`}
-              </Text>
+            <>
+              <Banner
+                message={`Esta cuenta tiene ${shownBalance}. Al archivarla deja de sumar en el total y no aparece al registrar movimientos; sus movimientos se conservan.`}
+              />
               <TextButton label="Sí, archivar" onPress={() => done(accountService.archive(id))} />
               <TextButton label="Cancelar" onPress={() => setConfirmArchive(false)} />
-            </View>
+            </>
           ) : (
             <TextButton label="Archivar" onPress={startArchive} />
           )}
         </>
       )}
-    </ScrollView>
+    </Page>
   );
 }
-
-const styles = StyleSheet.create({
-  content: { padding: 24, paddingTop: 48, gap: 12 },
-  hint: { color: colors.primary },
-});

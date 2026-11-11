@@ -1,7 +1,8 @@
 import { type AccountType, CURRENCIES } from '@saveria/shared';
-import { Text, View } from 'react-native';
-import { styles as base, Field } from '../auth/components';
+import { View } from 'react-native';
+import { Body, Field, FieldError } from '../auth/components';
 import { Chip, chipRow } from '../transactions/Chip';
+import { FormLabel } from '../transactions/form-parts';
 import type { AccountForm } from './account-service';
 
 export const ACCOUNT_TYPE_LABELS: Record<AccountType, string> = {
@@ -37,7 +38,7 @@ export function AccountFields({
         error={errors.name}
       />
 
-      <Text style={base.label}>Tipo</Text>
+      <FormLabel label="Tipo" />
       <View style={chipRow}>
         {(Object.keys(ACCOUNT_TYPE_LABELS) as AccountType[]).map((type) => (
           <Chip
@@ -49,13 +50,11 @@ export function AccountFields({
         ))}
       </View>
 
-      <Text style={base.label}>Moneda</Text>
+      <FormLabel label="Moneda" />
       {currencyLocked ? (
         <>
-          <Text>{form.currency}</Text>
-          <Text style={base.error}>
-            No puedes cambiar la moneda de una cuenta que ya tiene movimientos
-          </Text>
+          <Body>{form.currency}</Body>
+          <FieldError message="No puedes cambiar la moneda de una cuenta que ya tiene movimientos" />
         </>
       ) : (
         <View style={chipRow}>
@@ -69,7 +68,7 @@ export function AccountFields({
           ))}
         </View>
       )}
-      {errors.currency ? <Text style={base.error}>{errors.currency}</Text> : null}
+      {errors.currency ? <FieldError message={errors.currency} /> : null}
 
       <Field
         label="Saldo inicial"
@@ -91,9 +90,7 @@ export function GeneralErrors({ errors }: { errors: Record<string, string> }) {
   return (
     <>
       {general.map((message) => (
-        <Text key={message} style={base.error}>
-          {message}
-        </Text>
+        <FieldError key={message} message={message ?? ''} />
       ))}
     </>
   );

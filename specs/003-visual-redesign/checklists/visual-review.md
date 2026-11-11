@@ -97,3 +97,20 @@ Emulador con la API local, la cuenta `qs002.final@mail.com` (dos cuentas, movimi
 Pantallas sin migrar todavía (Historial, Cuentas, Ajustes): en modo oscuro su texto sigue negro hasta sus historias (5 y 6).
 
 Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas de la barra, el aviso «Deshacer», la pantalla pequeña y la letra al 150 %.
+
+## Historial y cuentas (historia 5, T053), 2026-11-10
+
+Emulador con la API local y la cuenta `qs002.final@mail.com` con 5000 movimientos sembrados (`EXPO_PUBLIC_SEED_TRANSACTIONS=5000`, 57 s en sembrarse, solo desarrollo).
+
+| Comprobación | Resultado |
+|---|---|
+| Historial | Título en la letra de identidad, filtros «Todas / Nequi / Efectivo» como chips y «Mostrando N movimientos»; la lista va sobre la lámina clara con filas simples, círculo de categoría y monto con signo. |
+| Cuentas | Tarjetas suaves con el ícono del tipo, nombre, «Cuenta por defecto» en texto y el saldo en su moneda (negativo en rojo con signo). «Nueva cuenta» ancho y «Cuentas archivadas» como vínculo. |
+| Detalle, nueva, archivadas y ajustar | Con «Volver», título, campos y chips de la misma familia que los formularios de Registrar; el aviso de moneda bloqueada lleva ícono y texto. |
+| Rechazos del servidor | Se ven con ícono y su motivo en la fila (movimiento o cuenta). |
+| Consultas con 5000 movimientos | Saldos de 2 cuentas en **4 ms** y primera página (50) en **5 ms**; en la 002 fueron 8 ms y 11 ms. |
+| Paginación | Al desplazar el historial carga de 50 en 50 (se llegó a «Mostrando 200 movimientos»). |
+| Fluidez al desplazar | Informativa: con 14 deslizamientos seguidos en el emulador (dibujo por software), `gfxinfo` dio 543 cuadros, 7,7 % lentos, percentil 50 de 30 ms y 90 de 42 ms. La 002 no midió cuadros, solo consultas, así que no hay punto de comparación; en un teléfono real el dibujo es mucho más rápido. |
+| Pruebas | 528 pruebas de la app en verde, `tsc` y lint sin errores. |
+
+Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas del historial, las cuentas, el detalle y la nueva cuenta.

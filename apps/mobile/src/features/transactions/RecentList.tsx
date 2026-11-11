@@ -5,7 +5,7 @@ import { type Theme, useStyles } from '../../theme';
 import { CategoryIcon } from '../../ui/CategoryIcon';
 import { ADJUSTMENT_VISUAL, TRANSFER_VISUAL, visualForSlug } from '../../ui/category-icons';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
-import { TextButton } from '../auth/components';
+import { FieldError, TextButton } from '../auth/components';
 import type { DaySection } from './ledger';
 import type { LocalTransactionRecord } from './local-transactions';
 import { DELETE_REJECTED_PREFIX, transactionService } from './transaction-service';
@@ -79,7 +79,6 @@ const makeStyles = (t: Theme) =>
       marginTop: 12,
       marginBottom: 2,
     },
-    error: { ...t.type.caption, color: t.colors.negative },
   });
 
 /**
@@ -119,9 +118,11 @@ export function TransactionRow({
         <Text style={[styles.amount, tone === 'in' ? styles.in : null]}>{amount}</Text>
       </Pressable>
       {tx.syncState === 'rejected' ? (
-        <Text style={styles.error}>
-          {deleteRejected ? tx.syncError : `No se pudo guardar: ${tx.syncError ?? ''}`}
-        </Text>
+        <FieldError
+          message={
+            deleteRejected ? (tx.syncError ?? '') : `No se pudo guardar: ${tx.syncError ?? ''}`
+          }
+        />
       ) : null}
       {tx.syncState === 'rejected' && deleteRejected ? (
         <TextButton label="Reintentar borrado" onPress={() => transactionService.remove(tx.id)} />
