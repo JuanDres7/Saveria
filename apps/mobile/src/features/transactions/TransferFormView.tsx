@@ -1,4 +1,4 @@
-import { DESCRIPTION_MAX, localToday } from '@saveria/shared';
+import { currencySymbol, DESCRIPTION_MAX, localToday } from '@saveria/shared';
 import { useState } from 'react';
 import { Keyboard, View } from 'react-native';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
@@ -119,6 +119,7 @@ export function TransferFormView({
       <AmountField
         label={crossCurrency && from ? `Monto que sale (${from.currency})` : 'Monto'}
         caption={from && !crossCurrency ? `Monto en ${from.currency}` : undefined}
+        symbol={from ? currencySymbol(from.currency) : undefined}
         value={amountText}
         onChangeText={setAmountText}
         placeholder="100.000"

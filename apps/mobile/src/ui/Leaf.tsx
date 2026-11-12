@@ -7,7 +7,16 @@ import { type Theme, useStyles, useTheme } from '../theme';
  * Nervaduras de la hoja (FR-031): una forma suave y unas líneas finas, dibujadas una sola vez y sin
  * animación. Son solo adorno: no entran en el orden de foco ni se leen.
  */
-export function Veins({ shape, line }: { shape?: string; line?: string }) {
+export function Veins({
+  shape,
+  line,
+  style,
+}: {
+  shape?: string;
+  line?: string;
+  /** Lugar y tamaño propios (la bienvenida las dibuja más grandes y pegadas abajo) */
+  style?: ViewStyle;
+}) {
   const theme = useTheme();
   return (
     <View
@@ -15,7 +24,7 @@ export function Veins({ shape, line }: { shape?: string; line?: string }) {
       accessibilityElementsHidden
       importantForAccessibility="no-hide-descendants"
       pointerEvents="none"
-      style={veinStyle}
+      style={style ?? veinStyle}
     >
       <Svg width="100%" height="100%" viewBox="0 0 200 140" preserveAspectRatio="none">
         <Path d="M210 -10 C120 0 70 60 86 150 L210 150 Z" fill={shape ?? theme.colors.heroShape} />

@@ -75,7 +75,7 @@ describe('historia 2: ver el historial y el saldo', () => {
     expect(screen.getByText('Salario')).toBeTruthy();
     expect(screen.getByText('+$ 2.000.000')).toBeTruthy();
     expect(screen.getByText('Efectivo · Quincena')).toBeTruthy();
-    expect(screen.getByText('-$ 3.700')).toBeTruthy();
+    expect(screen.getByText('−$ 3.700')).toBeTruthy();
     expect(screen.getByText('Transporte')).toBeTruthy();
   });
 
@@ -152,7 +152,7 @@ describe('historia 2: ver el historial y el saldo', () => {
     refreshLedger();
     await render(<Home />);
     expect(screen.getByText(/sin red/)).toBeTruthy();
-    expect(within(card('Efectivo')).getByText('-$ 18.000 COP')).toBeTruthy();
+    expect(within(card('Efectivo')).getByText('−$ 18.000 COP')).toBeTruthy();
   });
 
   it('FR-014 un saldo negativo se muestra destacado en rojo', async () => {
@@ -162,7 +162,7 @@ describe('historia 2: ver el historial y el saldo', () => {
     ledger.save(makeTxRecord(efectivo.id));
     refreshLedger();
     await render(<Home />);
-    expect(within(card('Efectivo')).getByText('-$ 18.000 COP')).toHaveStyle({
+    expect(within(card('Efectivo')).getByText('−$ 18.000 COP')).toHaveStyle({
       color: lightColors.negative,
     });
   });

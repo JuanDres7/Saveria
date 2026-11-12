@@ -1,8 +1,8 @@
-import { formatAmount } from '@saveria/shared';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { type Theme, useStyles } from '../../theme';
 import { Icon } from '../../ui/Icon';
 import { Banknote, Landmark, type LucideIcon, Smartphone } from '../../ui/icons';
+import { formatMoney } from '../../ui/money';
 
 /** Lo mínimo que una cuenta necesita para dibujarse: sirve la de la base local y la del perfil. */
 export interface AccountTileItem {
@@ -58,7 +58,7 @@ export function AccountTile({ item }: { item: AccountTileItem }) {
         minimumFontScale={0.7}
         style={[styles.balance, negative ? styles.negative : null]}
       >
-        {`${formatAmount(balance, account.currency)} ${account.currency}`}
+        {`${formatMoney(balance, account.currency)} ${account.currency}`}
       </Text>
     </View>
   );

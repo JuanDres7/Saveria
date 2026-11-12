@@ -18,11 +18,14 @@ const makeStyles = (t: Theme) =>
 export function ScreenBackground({
   children,
   edges = ['top', 'bottom'],
+  blob = true,
   style,
   testID = 'screen-background',
 }: {
   children?: ReactNode;
   edges?: ('top' | 'bottom')[];
+  /** La forma de la esquina. Los formularios no la llevan, como en la maqueta. */
+  blob?: boolean;
   style?: ViewStyle;
   testID?: string;
 }) {
@@ -41,21 +44,23 @@ export function ScreenBackground({
         style,
       ]}
     >
-      <View
-        testID="screen-blob"
-        accessibilityElementsHidden
-        importantForAccessibility="no-hide-descendants"
-        pointerEvents="none"
-        style={styles.blob}
-      >
-        <Svg width="100%" height="100%" viewBox="0 0 250 210">
-          <Path
-            d="M40 22 C120 -22 232 10 250 92 C264 152 200 204 130 196 C58 188 -12 122 40 22 Z"
-            fill={theme.colors.sage}
-            opacity={theme.scheme === 'dark' ? 0.55 : 0.75}
-          />
-        </Svg>
-      </View>
+      {blob ? (
+        <View
+          testID="screen-blob"
+          accessibilityElementsHidden
+          importantForAccessibility="no-hide-descendants"
+          pointerEvents="none"
+          style={styles.blob}
+        >
+          <Svg width="100%" height="100%" viewBox="0 0 250 210">
+            <Path
+              d="M40 22 C120 -22 232 10 250 92 C264 152 200 204 130 196 C58 188 -12 122 40 22 Z"
+              fill={theme.colors.sage}
+              opacity={theme.scheme === 'dark' ? 0.55 : 0.75}
+            />
+          </Svg>
+        </View>
+      ) : null}
       {children}
     </View>
   );

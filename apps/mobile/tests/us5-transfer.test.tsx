@@ -177,7 +177,7 @@ describe('historia 5: transferir entre cuentas', () => {
 
     await fireEvent.press(screen.getByRole('radio', { name: 'Efectivo' }));
     expect(screen.getAllByText('Transferencia')).toHaveLength(1);
-    expect(screen.getByText('-$ 100.000')).toBeTruthy();
+    expect(screen.getByText('−$ 100.000')).toBeTruthy();
 
     await fireEvent.press(screen.getByRole('radio', { name: 'Nequi' }));
     expect(screen.getAllByText('Transferencia')).toHaveLength(1);

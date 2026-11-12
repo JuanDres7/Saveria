@@ -66,7 +66,7 @@ describe('Historial con el nuevo estilo (5.1)', () => {
       await render(<History />);
       const colors = palette(mode);
 
-      expect(flat(screen.getByRole('heading', { name: 'Historial' })).fontFamily).toBe(
+      expect(flat(screen.getByRole('heading', { name: 'Movimientos' })).fontFamily).toBe(
         DISPLAY_FONT,
       );
       expect(screen.getByText('Mostrando 2 movimientos')).toBeTruthy();
@@ -77,7 +77,7 @@ describe('Historial con el nuevo estilo (5.1)', () => {
         within(gasto).getByTestId('category-icon', { includeHiddenElements: true }),
       ).toBeTruthy();
       expect(within(gasto).getByText('Efectivo · almuerzo')).toBeTruthy();
-      expect(flat(within(gasto).getByText('-$ 18.000')).color).toBe(colors.text);
+      expect(flat(within(gasto).getByText('−$ 18.000')).color).toBe(colors.text);
       const ingreso = screen.getByRole('button', { name: 'Salario 40000' });
       expect(flat(within(ingreso).getByText('+$ 40.000')).color).toBe(colors.positive);
     },
@@ -107,7 +107,7 @@ describe('Historial con el nuevo estilo (5.1)', () => {
 
 describe('Cuentas con el nuevo estilo (5.2)', () => {
   renderInBothModes(
-    'cada cuenta es una tarjeta con nombre, saldo en su moneda y «por defecto» con texto',
+    'cada cuenta es una fila con nombre, saldo en su moneda y «por defecto» con texto',
     async (mode) => {
       signInWith();
       const efectivo = makeAccountRecord({
@@ -120,9 +120,7 @@ describe('Cuentas con el nuevo estilo (5.2)', () => {
       await render(<Accounts />);
       const colors = palette(mode);
 
-      expect(flat(screen.getByRole('heading', { name: 'Cuentas de dinero' })).fontFamily).toBe(
-        DISPLAY_FONT,
-      );
+      expect(flat(screen.getByRole('heading', { name: 'Cuentas' })).fontFamily).toBe(DISPLAY_FONT);
       const ef = screen.getByRole('button', { name: 'Abrir Efectivo' });
       expect(within(ef).getByText('Efectivo')).toBeTruthy();
       expect(within(ef).getByText('$ 100.000 COP')).toBeTruthy();
@@ -130,15 +128,13 @@ describe('Cuentas con el nuevo estilo (5.2)', () => {
       expect(Number(flat(ef).minHeight)).toBeGreaterThanOrEqual(48);
 
       const nq = screen.getByRole('button', { name: 'Abrir Nequi' });
-      expect(flat(within(nq).getByText('-$ 5.000 COP')).color).toBe(colors.negative);
+      expect(flat(within(nq).getByText('−$ 5.000 COP')).color).toBe(colors.negative);
       expect(within(nq).queryByText('Cuenta por defecto')).toBeNull();
 
       await fireEvent.press(ef);
       expect(router.push).toHaveBeenCalledWith(`/accounts/${efectivo.id}`);
-      expect(flat(screen.getByRole('button', { name: 'Nueva cuenta' }))).toMatchObject({
-        width: '100%',
-        backgroundColor: colors.primary,
-      });
+      await fireEvent.press(screen.getByRole('button', { name: 'Nueva cuenta' }));
+      expect(router.push).toHaveBeenCalledWith('/accounts/new');
       expect(screen.getByRole('button', { name: 'Cuentas archivadas' })).toBeTruthy();
     },
   );

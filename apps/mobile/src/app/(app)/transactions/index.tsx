@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { SectionList, StyleSheet, Text, View } from 'react-native';
+import { ScrollView, SectionList, StyleSheet, Text, View } from 'react-native';
 import { Body } from '../../../features/auth/components';
-import { Chip, chipRow } from '../../../features/transactions/Chip';
+import { Chip } from '../../../features/transactions/Chip';
 import {
   groupByDay,
   openLedgerContext,
@@ -17,7 +17,11 @@ const PAGE = 50;
 
 const makeStyles = (t: Theme) =>
   StyleSheet.create({
-    top: { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 14, gap: 10 },
+    top: { paddingHorizontal: 16, paddingTop: 18, paddingBottom: 14, gap: 12 },
+    heading: { gap: 2 },
+    // La fila de filtros llega hasta los bordes y deja sitio al área de toque de cada chip.
+    filters: { flexGrow: 0, marginHorizontal: -16, marginVertical: -7 },
+    filtersContent: { gap: 8, paddingHorizontal: 16, paddingVertical: 7 },
     title: { ...t.type.title, color: t.colors.text },
     count: { ...t.type.caption, color: t.colors.textMuted },
     sheet: {
@@ -32,7 +36,7 @@ const makeStyles = (t: Theme) =>
   });
 
 /**
- * Historial completo (historia 2): por día, del más reciente al más antiguo, de 50 en 50 y con
+ * Movimientos: el historial completo (historia 2): por día, del más reciente al más antiguo, de 50 en 50 y con
  * filtro por cuenta. Todo sale de la base local, así que funciona sin conexión (2.6). Es una
  * sección de la barra inferior.
  */
@@ -62,10 +66,19 @@ export default function History() {
   return (
     <ScreenBackground edges={['top']}>
       <View style={styles.top}>
-        <Text role="heading" style={styles.title}>
-          Historial
-        </Text>
-        <View style={chipRow}>
+        <View testID="history-heading" style={styles.heading}>
+          <Text role="heading" style={styles.title}>
+            Movimientos
+          </Text>
+          <Text style={styles.count}>{`Mostrando ${rows.length} movimientos`}</Text>
+        </View>
+        <ScrollView
+          horizontal
+          testID="history-filters"
+          showsHorizontalScrollIndicator={false}
+          style={styles.filters}
+          contentContainerStyle={styles.filtersContent}
+        >
           <Chip
             label="Todas"
             checked={accountId === undefined}
@@ -79,8 +92,7 @@ export default function History() {
               onPress={() => setAccountId(account.id)}
             />
           ))}
-        </View>
-        <Text style={styles.count}>{`Mostrando ${rows.length} movimientos`}</Text>
+        </ScrollView>
       </View>
       <View style={styles.sheet}>
         <SectionList

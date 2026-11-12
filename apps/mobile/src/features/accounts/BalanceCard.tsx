@@ -1,9 +1,9 @@
-import { formatAmount } from '@saveria/shared';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { type Theme, useStyles } from '../../theme';
 import { Icon } from '../../ui/Icon';
 import { ArrowLeftRight } from '../../ui/icons';
 import { Leaf } from '../../ui/Leaf';
+import { formatMoney } from '../../ui/money';
 import type { BalanceCardData } from './balance-card';
 
 const makeStyles = (t: Theme) =>
@@ -54,8 +54,8 @@ export function BalanceCard({
   const currency = card.currency;
   const label = isTotal ? 'Tu balance total' : `Saldo de ${card.name}`;
   const accessibilityLabel = isTotal
-    ? `Total: ${formatAmount(amount, currency)} ${currency}`
-    : `${label}: ${formatAmount(amount, currency)} ${currency}`;
+    ? `Total: ${formatMoney(amount, currency)} ${currency}`
+    : `${label}: ${formatMoney(amount, currency)} ${currency}`;
   const note = isTotal
     ? `En ${card.accountCount} ${card.accountCount === 1 ? 'cuenta' : 'cuentas'}`
     : card.otherCurrencies
@@ -73,7 +73,7 @@ export function BalanceCard({
             minimumFontScale={0.6}
             style={styles.figure}
           >
-            {formatAmount(amount, currency)}
+            {formatMoney(amount, currency)}
           </Text>
           <Text style={styles.currency}>{currency}</Text>
         </View>

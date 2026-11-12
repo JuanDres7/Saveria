@@ -38,6 +38,7 @@ const makeStyles = (t: Theme) =>
       paddingHorizontal: 12,
     },
     linkRowText: { ...t.type.bodyStrong, color: t.colors.primary, textDecorationLine: 'underline' },
+    linkRowPlain: { ...t.type.bodyStrong, fontWeight: '700', color: t.colors.primary },
     title: { ...t.type.title, color: t.colors.text },
     field: { gap: 4 },
     label: { ...t.type.bodyStrong, fontSize: 14, color: t.colors.text },
@@ -204,12 +205,23 @@ export function Body({ children, muted = false }: { children: ReactNode; muted?:
   return <Text style={muted ? styles.bodyMuted : styles.body}>{children}</Text>;
 }
 
-/** Vínculo de texto subrayado, de al menos 48 dp de alto. */
-export function LinkButton({ label, onPress }: { label: string; onPress(): void }) {
+/**
+ * Vínculo de texto, de al menos 48 dp de alto. Va subrayado; sin `underline` es la acción secundaria
+ * en negrita que acompaña a un botón principal (la bienvenida).
+ */
+export function LinkButton({
+  label,
+  onPress,
+  underline = true,
+}: {
+  label: string;
+  onPress(): void;
+  underline?: boolean;
+}) {
   const styles = useStyles(makeStyles);
   return (
     <Pressable role="link" accessibilityLabel={label} onPress={onPress} style={styles.linkRow}>
-      <Text style={styles.linkRowText}>{label}</Text>
+      <Text style={underline ? styles.linkRowText : styles.linkRowPlain}>{label}</Text>
     </Pressable>
   );
 }

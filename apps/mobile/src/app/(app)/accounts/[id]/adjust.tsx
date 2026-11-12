@@ -1,4 +1,3 @@
-import { formatAmount } from '@saveria/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
@@ -7,6 +6,7 @@ import { previewAdjustment } from '../../../../features/transactions/adjustment'
 import { refreshLedger, useLedger } from '../../../../features/transactions/ledger';
 import { transactionService } from '../../../../features/transactions/transaction-service';
 import { type Theme, useStyles } from '../../../../theme';
+import { formatMoney } from '../../../../ui/money';
 import { Page } from '../../../../ui/Page';
 
 const makeStyles = (t: Theme) =>
@@ -31,7 +31,7 @@ export default function AdjustBalance() {
   if (!account || !id) return null;
 
   const current = balance ?? account.initialBalance;
-  const show = (amount: string) => formatAmount(amount, account.currency);
+  const show = (amount: string) => formatMoney(amount, account.currency);
   const preview =
     realText.trim() === '' ? null : previewAdjustment(current, realText, account.currency);
   const canAdjust = preview?.status === 'diff';
