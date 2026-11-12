@@ -17,7 +17,8 @@ export function currencyDecimals(currency: string): number {
   return CURRENCIES.find((c) => c.code === currency)?.decimals ?? 2;
 }
 
-function currencySymbol(currency: string): string {
+/** Símbolo de una moneda del catálogo (su código si no se conoce). */
+export function currencySymbol(currency: string): string {
   return CURRENCIES.find((c) => c.code === currency)?.symbol ?? currency;
 }
 
