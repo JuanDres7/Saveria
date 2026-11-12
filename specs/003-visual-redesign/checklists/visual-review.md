@@ -170,5 +170,4 @@ Verificado en el emulador en claro y en oscuro (Inicio, Movimientos, Cuentas, Re
 
 Pruebas que cambiaron a propósito: las que esperaban «-$» ahora esperan «−$» (`us1-home-visual`, `us1-record`, `us2-history`, `us5-lists-visual`, `us5-transfer`, `us6-adjust`, `us7-modes`); `us5-lists-visual` espera los títulos «Movimientos» y «Cuentas» y ya no un botón ancho de «Nueva cuenta»; `us2-record-visual` comprueba el mensaje de error del monto en vez del color de la línea; `us7-modes` comprueba la lámina de Cuentas en vez del fondo de cada tarjeta. Pruebas nuevas en `us8-mockup-match.test.tsx` (una por cada punto). Total de la app: 610 en verde, `tsc` y lint sin errores; `packages/shared` 118 (se exportó `currencySymbol`).
 
-Pendiente de aprobación del dueño del proyecto (SC-008).
-
+Aprobado por el dueño del proyecto el 2026-11-12 (SC-008) con las capturas de Inicio, Movimientos, Cuentas, Registrar y Bienvenida.
