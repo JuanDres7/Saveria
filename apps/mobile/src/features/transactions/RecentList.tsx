@@ -1,9 +1,10 @@
-import { categoryBySlug, formatAmount } from '@saveria/shared';
+import { categoryBySlug } from '@saveria/shared';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { type Theme, useStyles } from '../../theme';
 import { CategoryIcon } from '../../ui/CategoryIcon';
 import { ADJUSTMENT_VISUAL, TRANSFER_VISUAL, visualForSlug } from '../../ui/category-icons';
+import { formatMoney, MINUS } from '../../ui/money';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
 import { FieldError, TextButton } from '../auth/components';
 import type { DaySection } from './ledger';
@@ -40,20 +41,20 @@ type Tone = 'out' | 'in' | 'neutral';
 function signedAmount(tx: LocalTransactionRecord, fromAccountId?: string): [string, Tone] {
   switch (tx.type) {
     case 'expense':
-      return [`-${formatAmount(tx.amount, tx.currency)}`, 'out'];
+      return [`${MINUS}${formatMoney(tx.amount, tx.currency)}`, 'out'];
     case 'income':
-      return [`+${formatAmount(tx.amount, tx.currency)}`, 'in'];
+      return [`+${formatMoney(tx.amount, tx.currency)}`, 'in'];
     case 'adjustment':
       return tx.amount.startsWith('-')
-        ? [formatAmount(tx.amount, tx.currency), 'out']
-        : [`+${formatAmount(tx.amount, tx.currency)}`, 'in'];
+        ? [formatMoney(tx.amount, tx.currency), 'out']
+        : [`+${formatMoney(tx.amount, tx.currency)}`, 'in'];
     case 'transfer':
       if (fromAccountId === tx.toAccountId && tx.toAmount && tx.toCurrency) {
-        return [`+${formatAmount(tx.toAmount, tx.toCurrency)}`, 'in'];
+        return [`+${formatMoney(tx.toAmount, tx.toCurrency)}`, 'in'];
       }
       if (fromAccountId === tx.accountId)
-        return [`-${formatAmount(tx.amount, tx.currency)}`, 'out'];
-      return [formatAmount(tx.amount, tx.currency), 'neutral'];
+        return [`${MINUS}${formatMoney(tx.amount, tx.currency)}`, 'out'];
+      return [formatMoney(tx.amount, tx.currency), 'neutral'];
   }
 }
 

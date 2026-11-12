@@ -1,56 +1,71 @@
 import { router } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import {
+  Pressable,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+  type ViewStyle,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Banner, Body, LinkButton, PrimaryButton } from '../../features/auth/components';
 import { useSession } from '../../session/session-store';
 import { type Theme, useStyles } from '../../theme';
-import { Icon } from '../../ui/Icon';
-import { Leaf as LeafIcon } from '../../ui/icons';
+import { BrandMark } from '../../ui/BrandMark';
 import { Veins } from '../../ui/Leaf';
 import { ScreenBackground } from '../../ui/ScreenBackground';
 
 const makeStyles = (t: Theme) =>
   StyleSheet.create({
     hero: {
-      height: 300,
       backgroundColor: t.colors.hero,
-      borderBottomRightRadius: 150,
       borderBottomLeftRadius: t.radius.control,
       paddingHorizontal: 24,
       overflow: 'hidden',
     },
-    brand: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-    mark: {
-      width: 40,
-      height: 40,
-      backgroundColor: t.colors.onHero,
-      borderTopLeftRadius: 16,
-      borderBottomRightRadius: 16,
-      borderTopRightRadius: 6,
-      borderBottomLeftRadius: 6,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    brandText: { ...t.type.title, fontSize: 24, color: t.colors.onHero },
+    brand: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    brandText: { ...t.type.title, fontSize: 28, color: t.colors.onHero },
     body: { flex: 1, paddingHorizontal: 24, paddingTop: 28, paddingBottom: 12, gap: 12 },
-    title: { ...t.type.title, fontSize: 29, color: t.colors.text },
+    title: { ...t.type.title, fontSize: 34, color: t.colors.text },
     spacer: { flex: 1 },
   });
+
+// Las nervaduras de la bienvenida: más grandes que las de la tarjeta de balance y pegadas abajo.
+const VEINS: ViewStyle = {
+  position: 'absolute',
+  right: -10,
+  bottom: 0,
+  width: '86%',
+  height: '78%',
+};
 
 export default function Welcome() {
   const notice = useSession((s) => s.notice);
   const setNotice = useSession((s) => s.setNotice);
   const styles = useStyles(makeStyles);
   const insets = useSafeAreaInsets();
+  const { width, height, fontScale } = useWindowDimensions();
+  // La hoja ocupa media pantalla, como en la maqueta, y deja sitio al texto y a los dos botones
+  // (más sitio si la letra del teléfono es grande).
+  const room = 360 * Math.min(Math.max(fontScale, 1), 1.5);
+  const heroHeight = Math.round(Math.max(240, Math.min(height * 0.52, height - room)));
 
   return (
-    <ScreenBackground edges={['bottom']}>
-      <View testID="welcome-hero" style={[styles.hero, { paddingTop: insets.top + 28 }]}>
-        <Veins />
+    <ScreenBackground edges={['bottom']} blob={false}>
+      <View
+        testID="welcome-hero"
+        style={[
+          styles.hero,
+          {
+            height: heroHeight,
+            paddingTop: insets.top + 36,
+            borderBottomRightRadius: Math.round(width * 0.55),
+          },
+        ]}
+      >
+        <Veins style={VEINS} />
         <View style={styles.brand}>
-          <View style={styles.mark}>
-            <Icon icon={LeafIcon} color="hero" size={22} />
-          </View>
+          <BrandMark size={48} tone="onHero" />
           <Text style={styles.brandText}>Saveria</Text>
         </View>
       </View>
@@ -67,7 +82,11 @@ export default function Welcome() {
         ) : null}
         <View style={styles.spacer} />
         <PrimaryButton label="Crear cuenta" onPress={() => router.push('/register')} />
-        <LinkButton label="Ya tengo cuenta" onPress={() => router.push('/login')} />
+        <LinkButton
+          label="Ya tengo cuenta"
+          underline={false}
+          onPress={() => router.push('/login')}
+        />
       </View>
     </ScreenBackground>
   );

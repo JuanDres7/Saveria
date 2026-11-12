@@ -31,9 +31,9 @@ export const icon = { row: 20, bar: 24, fab: 23, stroke: 1.75, fabStroke: 2 } as
  * sistema (FR-004). Los montos de las listas llevan cifras tabulares para que alineen.
  */
 export const type = {
-  title: { fontFamily: DISPLAY_FONT, fontSize: 26, fontWeight: '700' },
+  title: { fontFamily: DISPLAY_FONT, fontSize: 30, fontWeight: '700' },
   subtitle: { fontFamily: DISPLAY_FONT, fontSize: 17, fontWeight: '600' },
-  figure: { fontFamily: DISPLAY_FONT, fontSize: 34, fontWeight: '700' },
+  figure: { fontFamily: DISPLAY_FONT, fontSize: 44, fontWeight: '700' },
   amountInput: { fontFamily: DISPLAY_FONT, fontSize: 44, fontWeight: '700' },
   body: { fontSize: 15, fontWeight: '400' },
   bodyStrong: { fontSize: 15, fontWeight: '600' },

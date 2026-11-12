@@ -51,7 +51,7 @@ describe('historia 6: ajustar el saldo', () => {
     expect(screen.getByText('Saldo actual: $ 120.000 COP')).toBeTruthy();
 
     await type('Saldo real', '115.000');
-    expect(screen.getByText('Diferencia: -$ 5.000')).toBeTruthy();
+    expect(screen.getByText('Diferencia: −$ 5.000')).toBeTruthy();
     await fireEvent.press(button('Ajustar saldo'));
 
     expect(ledger.rows).toHaveLength(1);
@@ -94,7 +94,7 @@ describe('historia 6: ajustar el saldo', () => {
     refreshLedger();
     await render(<History />);
     expect(screen.getByText('Ajuste de saldo')).toBeTruthy();
-    expect(screen.getByText('-$ 5.000')).toBeTruthy();
+    expect(screen.getByText('−$ 5.000')).toBeTruthy();
     expect(ledger.rows.filter((t) => t.type === 'expense' || t.type === 'income')).toHaveLength(0);
     expect(ledger.rows[0]?.categorySlug).toBeNull();
   });

@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { type ComponentRef, type ReactNode, useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Pressable,
@@ -45,17 +45,16 @@ const makeStyles = (t: Theme) =>
     segmentText: { ...t.type.bodyStrong, fontWeight: '500', color: t.colors.textMuted },
     segmentTextChecked: { color: t.colors.onPrimary, fontWeight: '700' },
     amountWrap: { alignItems: 'center', gap: 4, paddingVertical: 4 },
-    amount: {
-      ...t.type.amountInput,
+    amountRow: {
       alignSelf: 'stretch',
-      textAlign: 'center',
       minHeight: 64,
-      color: t.colors.text,
-      borderWidth: 0,
-      borderBottomWidth: 2,
-      borderColor: t.colors.border,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 8,
     },
-    amountError: { borderColor: t.colors.negative },
+    amountSymbol: { ...t.type.amountInput },
+    amount: { ...t.type.amountInput, minWidth: 48, padding: 0, color: t.colors.text },
     caption: { ...t.type.caption, color: t.colors.textMuted },
     label: { ...t.type.bodyStrong, fontSize: 14, color: t.colors.text },
   });
@@ -89,7 +88,7 @@ export function FormScreen({
   const styles = useStyles(makeStyles);
   const insets = useSafeAreaInsets();
   return (
-    <ScreenBackground edges={['top']}>
+    <ScreenBackground edges={['top']} blob={false}>
       {/* Con el teclado abierto el pie sube con él: «Guardar» nunca queda tapado. */}
       <KeyboardAvoidingView behavior="padding" style={styles.flex}>
         <ScrollView
@@ -142,10 +141,14 @@ export function SegmentedControl<T extends string>({
   );
 }
 
-/** Monto grande y centrado, con su moneda debajo. La etiqueta es su nombre accesible. */
+/**
+ * Monto grande y centrado, con el símbolo de su moneda delante y la moneda debajo. La etiqueta es su
+ * nombre accesible. Tocar cualquier parte de la fila lleva a escribir el monto.
+ */
 export function AmountField({
   label,
   caption,
+  symbol,
   value,
   onChangeText,
   placeholder,
@@ -154,6 +157,8 @@ export function AmountField({
 }: {
   label: string;
   caption?: string;
+  /** Símbolo de la moneda («$») */
+  symbol?: string;
   value: string;
   onChangeText(text: string): void;
   placeholder?: string;
@@ -162,20 +167,36 @@ export function AmountField({
 }) {
   const theme = useTheme();
   const styles = useStyles(makeStyles);
+  const input = useRef<ComponentRef<typeof TextInput>>(null);
   return (
     <View style={styles.amountWrap}>
-      <TextInput
-        accessibilityLabel={label}
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType="decimal-pad"
-        autoFocus={autoFocus}
-        placeholder={placeholder}
-        placeholderTextColor={theme.colors.border}
-        cursorColor={theme.colors.primary}
-        selectionColor={theme.colors.primary}
-        style={[styles.amount, error ? styles.amountError : null]}
-      />
+      <Pressable accessible={false} onPress={() => input.current?.focus()} style={styles.amountRow}>
+        {symbol ? (
+          <Text
+            testID="amount-symbol"
+            style={[
+              styles.amountSymbol,
+              // Sin monto va apagado, como el ejemplo; con monto, en el color del texto.
+              { color: value ? theme.colors.text : theme.colors.border },
+            ]}
+          >
+            {symbol}
+          </Text>
+        ) : null}
+        <TextInput
+          ref={input}
+          accessibilityLabel={label}
+          value={value}
+          onChangeText={onChangeText}
+          keyboardType="decimal-pad"
+          autoFocus={autoFocus}
+          placeholder={placeholder}
+          placeholderTextColor={theme.colors.border}
+          cursorColor={theme.colors.primary}
+          selectionColor={theme.colors.primary}
+          style={styles.amount}
+        />
+      </Pressable>
       {caption ? <Text style={styles.caption}>{caption}</Text> : null}
       {error ? <FieldError message={error} /> : null}
     </View>

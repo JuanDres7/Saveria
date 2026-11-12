@@ -1,4 +1,3 @@
-import { formatAmount } from '@saveria/shared';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text } from 'react-native';
@@ -7,6 +6,7 @@ import { type AccountForm, accountService } from '../../../features/accounts/acc
 import { Banner, Body, PrimaryButton, TextButton } from '../../../features/auth/components';
 import { openLedgerContext, refreshLedger, useLedger } from '../../../features/transactions/ledger';
 import { type Theme, useStyles } from '../../../theme';
+import { formatMoney } from '../../../ui/money';
 import { Page } from '../../../ui/Page';
 
 const makeStyles = (t: Theme) =>
@@ -40,7 +40,7 @@ export default function AccountDetail() {
   if (!account || !form || !id) return null;
   const archived = account.archivedAt !== null;
   const hasTransactions = openLedgerContext()?.ledger.existsForAccount(id) ?? false;
-  const shownBalance = `${formatAmount(balance ?? account.initialBalance, account.currency)} ${account.currency}`;
+  const shownBalance = `${formatMoney(balance ?? account.initialBalance, account.currency)} ${account.currency}`;
 
   /** Muestra los errores o, si salió bien, vuelve atrás. */
   function done(result: ReturnType<typeof accountService.update>) {

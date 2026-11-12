@@ -1,4 +1,4 @@
-import { categoriesFor, DESCRIPTION_MAX, localToday } from '@saveria/shared';
+import { categoriesFor, currencySymbol, DESCRIPTION_MAX, localToday } from '@saveria/shared';
 import { useState } from 'react';
 import { Keyboard, View } from 'react-native';
 import { visualForSlug } from '../../ui/category-icons';
@@ -108,6 +108,7 @@ export function TransactionForm({
       <AmountField
         label="Monto"
         caption={currency ? `Monto en ${currency}` : undefined}
+        symbol={currency ? currencySymbol(currency) : undefined}
         value={amountText}
         onChangeText={setAmountText}
         autoFocus={autoFocusAmount}

@@ -2,11 +2,12 @@ import { router } from 'expo-router';
 import type { ReactNode } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { type Theme, useStyles } from '../../theme';
+import { BrandMark } from '../../ui/BrandMark';
+import { type SectionAction, SectionHeader } from '../../ui/SectionHeader';
 import { AccountsRow, type AccountTileItem } from '../accounts/AccountTile';
 import { BalanceCard } from '../accounts/BalanceCard';
 import type { BalanceCardData } from '../accounts/balance-card';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
-import { TextButton } from '../auth/components';
 import type { DaySection } from '../transactions/ledger';
 import { DaySections } from '../transactions/RecentList';
 import { VerifyBanner } from '../verification/VerifyBanner';
@@ -38,10 +39,10 @@ interface HomeBlock {
 
 const makeStyles = (t: Theme) =>
   StyleSheet.create({
-    greeting: { gap: 2 },
+    greeting: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    greetingText: { flex: 1, gap: 2 },
     title: { ...t.type.title, color: t.colors.text },
     subtitle: { ...t.type.caption, color: t.colors.textMuted },
-    heading: { ...t.type.subtitle, color: t.colors.text },
     empty: { ...t.type.body, color: t.colors.textMuted },
     block: { gap: 8 },
   });
@@ -50,19 +51,28 @@ function Greeting({ name }: { name: string }) {
   const styles = useStyles(makeStyles);
   return (
     <View style={styles.greeting}>
-      <Text role="heading" style={styles.title}>{`Hola, ${name}`}</Text>
-      <Text style={styles.subtitle}>Así va tu plata hoy</Text>
+      <View style={styles.greetingText}>
+        <Text role="heading" style={styles.title}>{`Hola, ${name}`}</Text>
+        <Text style={styles.subtitle}>Así va tu plata hoy</Text>
+      </View>
+      <BrandMark />
     </View>
   );
 }
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Section({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: SectionAction;
+  children: ReactNode;
+}) {
   const styles = useStyles(makeStyles);
   return (
     <View style={styles.block}>
-      <Text role="heading" style={styles.heading}>
-        {title}
-      </Text>
+      <SectionHeader title={title} action={action} />
       {children}
     </View>
   );
@@ -116,7 +126,14 @@ export const HOME_BLOCKS: readonly HomeBlock[] = [
     zone: 'sheet',
     visible: (ctx) => ctx.tiles.length > 0,
     render: (ctx) => (
-      <Section title="Tus cuentas">
+      <Section
+        title="Tus cuentas"
+        action={{
+          label: 'Ver todas',
+          accessibilityLabel: 'Ver todas las cuentas',
+          onPress: () => router.push('/accounts'),
+        }}
+      >
         <AccountsRow items={ctx.tiles} />
       </Section>
     ),
@@ -126,9 +143,11 @@ export const HOME_BLOCKS: readonly HomeBlock[] = [
     zone: 'sheet',
     visible: (ctx) => ctx.sections.length > 0,
     render: (ctx) => (
-      <Section title="Últimos movimientos">
+      <Section
+        title="Últimos movimientos"
+        action={{ label: 'Ver todo', onPress: () => router.push('/transactions') }}
+      >
         <DaySections sections={ctx.sections} accounts={ctx.accounts} />
-        <TextButton label="Ver todo" onPress={() => router.push('/transactions')} />
       </Section>
     ),
   },

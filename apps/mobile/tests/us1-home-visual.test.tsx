@@ -140,7 +140,7 @@ describe('Inicio con identidad propia (historia 1)', () => {
       ).toBeTruthy();
       expect(within(gasto).getByText('Restaurantes y domicilios')).toBeTruthy();
       expect(within(gasto).getByText('Efectivo · almuerzo')).toBeTruthy();
-      expect(flat(within(gasto).getByText('-$ 18.000')).color).toBe(colors.text);
+      expect(flat(within(gasto).getByText('−$ 18.000')).color).toBe(colors.text);
 
       const ingreso = screen.getByRole('button', { name: 'Salario 40000' });
       expect(within(ingreso).getByText('Nequi')).toBeTruthy();
@@ -157,7 +157,7 @@ describe('Inicio con identidad propia (historia 1)', () => {
     refreshLedger();
     await render(<Home />);
     const tile = within(screen.getByLabelText('Saldo de Efectivo'));
-    expect(flat(tile.getByText('-$ 18.000 COP')).color).toBe(palette(mode).negative);
+    expect(flat(tile.getByText('−$ 18.000 COP')).color).toBe(palette(mode).negative);
   });
 
   renderInBothModes(
@@ -189,7 +189,7 @@ describe('Inicio con identidad propia (historia 1)', () => {
     twoAccounts();
     await render(<Home />);
     expect(screen.getByLabelText('Total: $ 172.000 COP')).toBeTruthy();
-    expect(screen.getByText('-$ 18.000')).toBeTruthy();
+    expect(screen.getByText('−$ 18.000')).toBeTruthy();
     expect(screen.getByText('+$ 40.000')).toBeTruthy();
   });
 

@@ -147,3 +147,27 @@ Emulador con la API local y la cuenta `qs002.final@mail.com` (correo sin verific
 
 Aprobado por el dueño del proyecto el 2026-11-11 (SC-008) con las capturas de Configuración, borrar cuenta, el aviso de correo y «Deshacer».
 
+## Ajuste a la maqueta (después de integrar la 003), 2026-11-12
+
+Se comparó la app con la maqueta aprobada «La hoja de Saveria» pantalla por pantalla y se corrigieron 12 diferencias. Quedan igual, por decisión del dueño del proyecto, el título de cada movimiento (la categoría) y el «COP» en el saldo de las cuentas. Rama `fix/003-match-mockup`.
+
+| # | Dónde | Cambio |
+|---|---|---|
+| 1 | Todas | Título de pantalla de 26 a 30 y cifra del balance de 34 a 44 (se achica sola si el monto no cabe): la maqueta se dibujó en un teléfono angosto y en uno real se veían pequeños |
+| 2 | Bienvenida | La hoja verde ocupa cerca de la mitad de la pantalla (deja siempre sitio al texto y a los botones) y su curva mide el 55 % del ancho; nervaduras más grandes y pegadas abajo |
+| 3 | Inicio | Marca de hoja a la derecha del saludo (adorno, no se lee) |
+| 4 | Inicio | «Ver todas» junto a «Tus cuentas» (abre Cuentas) y «Ver todo» junto a «Últimos movimientos» |
+| 5 | Movimientos | Título «Movimientos» (antes «Historial») y el conteo justo debajo, antes de los filtros |
+| 6 | Registrar, editar, transferir | Monto con el símbolo de la moneda delante y sin línea; el error se lee en su mensaje con ícono |
+| 7 | Cuentas | Título «Cuentas», una sola lámina con las cuentas en filas, «Nueva» como vínculo arriba (nombre accesible «Nueva cuenta») y «Cuentas archivadas» al final |
+| 8 | Montos | Signo menos tipográfico («−$ 18.000») en listas, saldos y diferencias |
+| 9 | Movimientos | Filtros en una sola fila que se desliza |
+| 10 | Formularios y bienvenida | Sin la forma de fondo de la esquina |
+| 11 | Bienvenida | «Ya tengo cuenta» en negrita y sin subrayar |
+| 12 | Barra | Ícono de lista en Movimientos y de controles en Ajustes |
+
+Verificado en el emulador en claro y en oscuro (Inicio, Movimientos, Cuentas, Registrar con un monto escrito y Bienvenida) y con la letra al 150 % en Inicio.
+
+Pruebas que cambiaron a propósito: las que esperaban «-$» ahora esperan «−$» (`us1-home-visual`, `us1-record`, `us2-history`, `us5-lists-visual`, `us5-transfer`, `us6-adjust`, `us7-modes`); `us5-lists-visual` espera los títulos «Movimientos» y «Cuentas» y ya no un botón ancho de «Nueva cuenta»; `us2-record-visual` comprueba el mensaje de error del monto en vez del color de la línea; `us7-modes` comprueba la lámina de Cuentas en vez del fondo de cada tarjeta. Pruebas nuevas en `us8-mockup-match.test.tsx` (una por cada punto). Total de la app: 610 en verde, `tsc` y lint sin errores; `packages/shared` 118 (se exportó `currencySymbol`).
+
+Aprobado por el dueño del proyecto el 2026-11-12 (SC-008) con las capturas de Inicio, Movimientos, Cuentas, Registrar y Bienvenida.

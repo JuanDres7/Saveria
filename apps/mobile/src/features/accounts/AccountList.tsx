@@ -1,9 +1,9 @@
-import { formatAmount } from '@saveria/shared';
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { type Theme, useStyles } from '../../theme';
 import { Icon } from '../../ui/Icon';
 import { Banknote, Landmark, type LucideIcon, Smartphone } from '../../ui/icons';
+import { formatMoney } from '../../ui/money';
 import { FieldError } from '../auth/components';
 import type { AccountBalance } from '../transactions/ledger';
 
@@ -15,13 +15,13 @@ const TYPE_ICONS: Record<string, LucideIcon> = {
 
 const makeStyles = (t: Theme) =>
   StyleSheet.create({
-    card: {
-      minHeight: t.touch,
+    item: {
+      minHeight: 56,
+      justifyContent: 'center',
       gap: 6,
-      borderRadius: t.radius.control,
-      backgroundColor: t.colors.surfaceSoft,
-      paddingHorizontal: 14,
-      paddingVertical: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: t.colors.divider,
+      paddingVertical: 8,
     },
     row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
     icon: {
@@ -39,18 +39,18 @@ const makeStyles = (t: Theme) =>
     negative: { color: t.colors.negative, fontWeight: '600' },
   });
 
-/** Tarjetas de cuentas con su saldo; al tocarlas se abre el detalle de la cuenta. */
+/** Cuentas con su saldo, en filas simples como los movimientos; al tocarlas se abre su detalle. */
 export function AccountList({ items }: { items: readonly AccountBalance[] }) {
   const styles = useStyles(makeStyles);
   return (
-    <View style={{ gap: 10 }}>
+    <View>
       {items.map(({ account, balance, negative }) => (
         <Pressable
           key={account.id}
           role="button"
           accessibilityLabel={`Abrir ${account.name}`}
           onPress={() => router.push(`/accounts/${account.id}`)}
-          style={styles.card}
+          style={styles.item}
         >
           <View style={styles.row}>
             <View style={styles.icon}>
@@ -61,7 +61,7 @@ export function AccountList({ items }: { items: readonly AccountBalance[] }) {
               {account.isDefault ? <Text style={styles.hint}>Cuenta por defecto</Text> : null}
             </View>
             <Text style={[styles.balance, negative ? styles.negative : null]}>
-              {`${formatAmount(balance, account.currency)} ${account.currency}`}
+              {`${formatMoney(balance, account.currency)} ${account.currency}`}
             </Text>
           </View>
           {account.syncState === 'rejected' ? (

@@ -219,7 +219,7 @@ describe('claro y oscuro de punta a punta (historia 7)', () => {
       seed();
       await render(<History />);
       const colors = palette(mode);
-      expect(flat(screen.getByText('-$ 18.000')).color).toBe(colors.text);
+      expect(flat(screen.getByText('−$ 18.000')).color).toBe(colors.text);
       expect(flat(screen.getByText('+$ 40.000')).color).toBe(colors.positive);
     },
   );
@@ -228,7 +228,7 @@ describe('claro y oscuro de punta a punta (historia 7)', () => {
     signInWith();
     setupLedger([makeAccountRecord({ name: 'Nequi', isDefault: true, initialBalance: '-5000' })]);
     await render(<Accounts />);
-    expect(flat(screen.getByText('-$ 5.000 COP')).color).toBe(palette(mode).negative);
+    expect(flat(screen.getByText('−$ 5.000 COP')).color).toBe(palette(mode).negative);
   });
 
   renderInBothModes(
@@ -242,8 +242,8 @@ describe('claro y oscuro de punta a punta (historia 7)', () => {
       expect(colors.surfaceSoft).not.toBe(colors.background);
       expect(colors.hero).not.toBe(colors.background);
       await render(<Accounts />);
-      const tile = screen.getByRole('button', { name: 'Abrir Efectivo' });
-      expect(flat(tile).backgroundColor).toBe(colors.surfaceSoft);
+      // Cuentas ya no usa tarjetas: las filas van sobre una sola lámina, distinta del fondo.
+      expect(flat(screen.getByTestId('accounts-sheet')).backgroundColor).toBe(colors.surface);
     },
   );
 });

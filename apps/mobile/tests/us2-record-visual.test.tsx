@@ -129,7 +129,7 @@ describe('Registrar un movimiento con el nuevo estilo (historia 2)', () => {
     // Falta el monto y falta la categoría: dos errores, cada uno con su ícono.
     expect(icons.length).toBeGreaterThanOrEqual(2);
     expect(router.back).not.toHaveBeenCalled();
-    expect(flat(screen.getByLabelText('Monto')).borderColor).toBe(palette(mode).negative);
+    expect(flat(screen.getByText('Escribe un monto')).color).toBe(palette(mode).negative);
   });
 
   renderInBothModes(
