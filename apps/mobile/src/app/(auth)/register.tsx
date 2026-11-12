@@ -3,13 +3,22 @@ import { emailSchema, PRIVACY_POLICY_PATH, passwordSchema } from '@saveria/share
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Linking, Pressable, Text, View } from 'react-native';
+import { Linking, StyleSheet, Text } from 'react-native';
 import { z } from 'zod';
 import { API_URL } from '../../api/instance';
 import { AuthError, authService } from '../../features/auth/auth-service';
-import { Banner, Field, PrimaryButton, Screen, styles } from '../../features/auth/components';
+import {
+  Banner,
+  Body,
+  Checkbox,
+  Field,
+  FieldError,
+  LinkButton,
+  PrimaryButton,
+  Screen,
+} from '../../features/auth/components';
 import { useSession } from '../../session/session-store';
-import { colors } from '../../theme';
+import { type Theme, useStyles } from '../../theme';
 
 const schema = z.object({
   email: emailSchema,
@@ -20,7 +29,14 @@ const schema = z.object({
 type FormInput = z.input<typeof schema>;
 type FormOutput = z.output<typeof schema>;
 
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    policy: { ...t.type.body, color: t.colors.text },
+    link: { color: t.colors.primary, textDecorationLine: 'underline' },
+  });
+
 export default function Register() {
+  const styles = useStyles(makeStyles);
   const isOnline = useSession((s) => s.isOnline);
   const [serverError, setServerError] = useState<string | null>(null);
   const { control, handleSubmit, setError, watch, formState } = useForm<
@@ -52,7 +68,7 @@ export default function Register() {
   });
 
   return (
-    <Screen title="Crea tu cuenta">
+    <Screen title="Crea tu cuenta" back>
       {!isOnline ? <Banner message="Para crear tu cuenta necesitas internet." /> : null}
       <Controller
         control={control}
@@ -84,28 +100,19 @@ export default function Register() {
           />
         )}
       />
-      <Text>Mínimo 8 caracteres, con al menos una letra y un número.</Text>
+      <Body muted>Mínimo 8 caracteres, con al menos una letra y un número.</Body>
 
       <Controller
         control={control}
         name="policyAccepted"
         render={({ field }) => (
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-            <Pressable
-              role="checkbox"
-              aria-checked={field.value}
-              accessibilityLabel="Acepto la política de tratamiento de datos"
-              onPress={() => field.onChange(!field.value)}
-              style={{
-                width: 24,
-                height: 24,
-                borderWidth: 2,
-                borderRadius: 4,
-                borderColor: colors.primary,
-                backgroundColor: field.value ? colors.primary : 'transparent',
-              }}
-            />
-            <Text style={{ flex: 1 }}>
+          <Checkbox
+            checked={field.value}
+            onChange={field.onChange}
+            accessibilityLabel="Acepto la política de tratamiento de datos"
+            testIDPrefix="policy"
+          >
+            <Text style={styles.policy}>
               Acepto la{' '}
               <Text
                 role="link"
@@ -115,19 +122,17 @@ export default function Register() {
                 política de tratamiento de datos
               </Text>
             </Text>
-          </View>
+          </Checkbox>
         )}
       />
 
-      {serverError ? <Text style={styles.error}>{serverError}</Text> : null}
+      {serverError ? <FieldError message={serverError} /> : null}
       <PrimaryButton
         label="Crear cuenta"
         onPress={onSubmit}
         disabled={!policyAccepted || !isOnline || formState.isSubmitting}
       />
-      <Pressable role="link" onPress={() => router.push('/login')}>
-        <Text style={styles.link}>Ya tengo cuenta</Text>
-      </Pressable>
+      <LinkButton label="Ya tengo cuenta" onPress={() => router.push('/login')} />
     </Screen>
   );
 }

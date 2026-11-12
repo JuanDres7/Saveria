@@ -1,10 +1,11 @@
 import { categoriesFor, DESCRIPTION_MAX, localToday } from '@saveria/shared';
 import { useState } from 'react';
-import { Keyboard, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { colors } from '../../theme';
+import { Keyboard, View } from 'react-native';
+import { visualForSlug } from '../../ui/category-icons';
 import type { LocalAccountRecord } from '../accounts/local-accounts';
-import { styles as base, Field, PrimaryButton } from '../auth/components';
+import { Banner, Field, FieldError, PrimaryButton } from '../auth/components';
 import { Chip, chipRow } from './Chip';
+import { AmountField, FormLabel, FormScreen, SegmentedControl } from './form-parts';
 import type { RecordForm } from './transaction-service';
 
 export type FormKind = RecordForm['type'];
@@ -89,103 +90,94 @@ export function TransactionForm({
     if (result) setErrors(result);
   }
 
+  const currency = accounts.find((a) => a.id === accountId)?.currency;
+
   return (
-    <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text role="heading" style={base.title}>
-          {title}
-        </Text>
+    <FormScreen
+      title={title}
+      footer={
+        // Fuera del área que se desplaza: "Guardar" siempre queda a la vista (FR-002).
+        <>
+          <PrimaryButton label={submitLabel} onPress={submit} />
+          {footerExtra}
+        </>
+      }
+    >
+      <SegmentedControl options={KINDS} value={kind} onChange={changeKind} />
 
-        <View style={chipRow}>
-          <Chip label="Gasto" checked={kind === 'expense'} onPress={() => changeKind('expense')} />
-          <Chip label="Ingreso" checked={kind === 'income'} onPress={() => changeKind('income')} />
-        </View>
+      <AmountField
+        label="Monto"
+        caption={currency ? `Monto en ${currency}` : undefined}
+        value={amountText}
+        onChangeText={setAmountText}
+        autoFocus={autoFocusAmount}
+        placeholder="18.000"
+        error={errors.amount}
+      />
+      {currencyNotice ? <Banner message={currencyNotice} /> : null}
 
-        <Field
-          label="Monto"
-          value={amountText}
-          onChangeText={setAmountText}
-          keyboardType="decimal-pad"
-          autoFocus={autoFocusAmount}
-          placeholder="18.000"
-          error={errors.amount}
-        />
-        {currencyNotice ? <Text style={base.bannerText}>{currencyNotice}</Text> : null}
-
-        <Text style={base.label}>Categoría</Text>
-        <View style={chipRow}>
-          {categoriesFor(kind).map((category) => (
-            <Chip
-              key={category.slug}
-              label={category.name}
-              checked={categorySlug === category.slug}
-              onPress={() => {
-                setCategorySlug(category.slug);
-                // El monto ya está escrito: se cierra el teclado para dejar "Guardar" a la vista.
-                Keyboard.dismiss();
-              }}
-            />
-          ))}
-        </View>
-        {errors.categorySlug ? <Text style={base.error}>{errors.categorySlug}</Text> : null}
-
-        <Text style={base.label}>Cuenta</Text>
-        <View style={chipRow}>
-          {accounts.map((account) => (
-            <Chip
-              key={account.id}
-              label={account.name}
-              checked={accountId === account.id}
-              onPress={() => chooseAccount(account)}
-            />
-          ))}
-        </View>
-        {errors.accountId ? <Text style={base.error}>{errors.accountId}</Text> : null}
-
-        <Text style={base.label}>Fecha</Text>
-        <View style={chipRow}>
-          <Chip label="Hoy" checked={occurredOn === today} onPress={() => setOccurredOn(today)} />
+      <FormLabel label="Categoría" />
+      <View style={chipRow}>
+        {categoriesFor(kind).map((category) => (
           <Chip
-            label="Ayer"
-            checked={occurredOn === yesterday()}
-            onPress={() => setOccurredOn(yesterday())}
+            key={category.slug}
+            label={category.name}
+            icon={visualForSlug(category.slug).icon}
+            checked={categorySlug === category.slug}
+            onPress={() => {
+              setCategorySlug(category.slug);
+              // El monto ya está escrito: se cierra el teclado para dejar "Guardar" a la vista.
+              Keyboard.dismiss();
+            }}
           />
-        </View>
-        <Field
-          label="Otra fecha (AAAA-MM-DD)"
-          value={otherDay ? occurredOn : ''}
-          onChangeText={(text) => setOccurredOn(text || today)}
-          placeholder="2026-10-01"
-          error={errors.occurredOn}
-        />
-
-        <Field
-          label="Descripción (opcional)"
-          value={description}
-          onChangeText={setDescription}
-          maxLength={DESCRIPTION_MAX}
-          autoCapitalize="sentences"
-          error={errors.description}
-        />
-        {errors.body ? <Text style={base.error}>{errors.body}</Text> : null}
-      </ScrollView>
-      {/* Fuera del área que se desplaza: "Guardar" siempre queda a la vista (FR-002). */}
-      <View style={styles.footer}>
-        <PrimaryButton label={submitLabel} onPress={submit} />
-        {footerExtra}
+        ))}
       </View>
-    </View>
+      {errors.categorySlug ? <FieldError message={errors.categorySlug} /> : null}
+
+      <FormLabel label="Cuenta" />
+      <View style={chipRow}>
+        {accounts.map((account) => (
+          <Chip
+            key={account.id}
+            label={account.name}
+            checked={accountId === account.id}
+            onPress={() => chooseAccount(account)}
+          />
+        ))}
+      </View>
+      {errors.accountId ? <FieldError message={errors.accountId} /> : null}
+
+      <FormLabel label="Fecha" />
+      <View style={chipRow}>
+        <Chip label="Hoy" checked={occurredOn === today} onPress={() => setOccurredOn(today)} />
+        <Chip
+          label="Ayer"
+          checked={occurredOn === yesterday()}
+          onPress={() => setOccurredOn(yesterday())}
+        />
+      </View>
+      <Field
+        label="Otra fecha (AAAA-MM-DD)"
+        value={otherDay ? occurredOn : ''}
+        onChangeText={(text) => setOccurredOn(text || today)}
+        placeholder="2026-10-01"
+        error={errors.occurredOn}
+      />
+
+      <Field
+        label="Descripción (opcional)"
+        value={description}
+        onChangeText={setDescription}
+        maxLength={DESCRIPTION_MAX}
+        autoCapitalize="sentences"
+        error={errors.description}
+      />
+      {errors.body ? <FieldError message={errors.body} /> : null}
+    </FormScreen>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1 },
-  content: { padding: 24, gap: 12 },
-  footer: {
-    padding: 16,
-    gap: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-    backgroundColor: colors.surface,
-  },
-});
+const KINDS = [
+  { value: 'expense', label: 'Gasto' },
+  { value: 'income', label: 'Ingreso' },
+] as const;

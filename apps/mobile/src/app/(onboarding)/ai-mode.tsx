@@ -1,7 +1,14 @@
 import { useState } from 'react';
-import { Text } from 'react-native';
-import { Banner, PrimaryButton, RadioOption, Screen, styles } from '../../features/auth/components';
+import {
+  Banner,
+  Body,
+  FieldError,
+  PrimaryButton,
+  RadioOption,
+  Screen,
+} from '../../features/auth/components';
 import { completeOnboarding } from '../../features/onboarding/complete';
+import { StepProgress } from '../../features/onboarding/StepProgress';
 import { profileService } from '../../features/profile/profile-service';
 import { useSession } from '../../session/session-store';
 
@@ -27,7 +34,8 @@ export default function AiMode() {
 
   return (
     <Screen title="¿Cómo quieres que trabaje la IA?">
-      <Text>Paso 5 de 5. Puedes cambiarlo cuando quieras en Configuración.</Text>
+      <StepProgress step={5} />
+      <Body muted>Puedes cambiarlo cuando quieras en Configuración.</Body>
       <RadioOption
         label="Manual"
         description="La IA te propone los movimientos y te pregunta antes de guardar."
@@ -43,7 +51,7 @@ export default function AiMode() {
       {mode === 'auto' ? (
         <Banner message="Con el modo automático, las acciones de la IA se guardan sin preguntarte. Siempre se pueden deshacer desde el historial." />
       ) : null}
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <FieldError message={error} /> : null}
       <PrimaryButton
         label={mode === 'auto' ? 'Activar el modo automático y terminar' : 'Terminar'}
         onPress={() => void finish()}

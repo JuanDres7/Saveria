@@ -1,8 +1,15 @@
 import { COUNTRIES } from '@saveria/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, Text } from 'react-native';
-import { PrimaryButton, RadioOption, Screen, styles } from '../../features/auth/components';
+import { ScrollView } from 'react-native';
+import {
+  Body,
+  FieldError,
+  PrimaryButton,
+  RadioOption,
+  Screen,
+} from '../../features/auth/components';
+import { StepProgress } from '../../features/onboarding/StepProgress';
 import { profileService } from '../../features/profile/profile-service';
 import { useSession } from '../../session/session-store';
 
@@ -24,7 +31,8 @@ export default function Country() {
 
   return (
     <Screen title="¿En qué país estás?">
-      <Text>Paso 2 de 5. Lo usamos para sugerirte la moneda.</Text>
+      <StepProgress step={2} />
+      <Body muted>Lo usamos para sugerirte la moneda.</Body>
       <ScrollView style={{ flexGrow: 0, maxHeight: '60%' }} contentContainerStyle={{ gap: 8 }}>
         {COUNTRIES.map((country) => (
           <RadioOption
@@ -35,7 +43,7 @@ export default function Country() {
           />
         ))}
       </ScrollView>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <FieldError message={error} /> : null}
       <PrimaryButton label="Continuar" disabled={!selected} onPress={() => void next()} />
     </Screen>
   );

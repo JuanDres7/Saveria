@@ -1,15 +1,13 @@
 import { passwordSchema } from '@saveria/shared';
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text } from 'react-native';
 import { AuthError, authService } from '../../../features/auth/auth-service';
 import {
   Banner,
+  Body,
   Field,
+  FieldError,
   PrimaryButton,
   Screen,
-  styles,
-  TextButton,
 } from '../../../features/auth/components';
 import { useSession } from '../../../session/session-store';
 
@@ -60,7 +58,7 @@ export default function ChangePassword() {
   }
 
   return (
-    <Screen title="Cambiar contraseña">
+    <Screen title="Cambiar contraseña" back>
       {!isOnline ? <Banner message="Para cambiar tu contraseña necesitas internet." /> : null}
       <Field
         label="Contraseña actual"
@@ -77,17 +75,16 @@ export default function ChangePassword() {
         onChangeText={setNewPassword}
         error={newError ?? undefined}
       />
-      <Text>Mínimo 8 caracteres, con al menos una letra y un número.</Text>
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      <Body muted>Mínimo 8 caracteres, con al menos una letra y un número.</Body>
+      {error ? <FieldError message={error} /> : null}
       {done ? (
-        <Text>Listo. Cambiamos tu contraseña y cerramos la sesión en tus otros dispositivos.</Text>
+        <Body>Listo. Cambiamos tu contraseña y cerramos la sesión en tus otros dispositivos.</Body>
       ) : null}
       <PrimaryButton
         label="Cambiar contraseña"
         disabled={!isOnline || sending || currentPassword === ''}
         onPress={() => void submit()}
       />
-      <TextButton label="Volver" onPress={() => router.back()} />
     </Screen>
   );
 }

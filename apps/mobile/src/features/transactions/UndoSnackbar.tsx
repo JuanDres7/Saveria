@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { create } from 'zustand';
-import { colors } from '../../theme';
+import { type Theme, useStyles } from '../../theme';
 import { transactionService } from './transaction-service';
 
 /** Cuánto tiempo se ofrece "Deshacer" (FR-026: al menos 5 segundos). */
@@ -24,7 +24,8 @@ export const useUndo = create<UndoState>((set) => ({
  * Aviso inferior "Movimiento borrado · Deshacer". Vive fuera de las pantallas (en el layout de la
  * app) para seguir visible después de volver a la lista. Cada borrado reinicia el tiempo.
  */
-export function UndoSnackbar() {
+export function UndoSnackbar({ bottomOffset = 24 }: { bottomOffset?: number }) {
+  const styles = useStyles(makeStyles);
   const id = useUndo((s) => s.id);
   const clear = useUndo((s) => s.clear);
 
@@ -36,7 +37,11 @@ export function UndoSnackbar() {
 
   if (id === null) return null;
   return (
-    <View style={styles.bar} accessibilityLiveRegion="polite">
+    <View
+      testID="undo-snackbar"
+      style={[styles.bar, { bottom: bottomOffset }]}
+      accessibilityLiveRegion="polite"
+    >
       <Text style={styles.text}>Movimiento borrado</Text>
       <Pressable
         role="button"
@@ -45,26 +50,37 @@ export function UndoSnackbar() {
           transactionService.restore(id);
           clear();
         }}
+        style={styles.action}
       >
-        <Text style={styles.action}>Deshacer</Text>
+        <Text style={styles.actionText}>Deshacer</Text>
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  bar: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    bottom: 24,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    backgroundColor: colors.inverse,
-    borderRadius: 8,
-    padding: 14,
-  },
-  text: { color: colors.onPrimary },
-  action: { color: colors.inverseAccent, fontWeight: '700' },
-});
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    bar: {
+      position: 'absolute',
+      left: 16,
+      right: 16,
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      backgroundColor: t.colors.inverse,
+      borderRadius: t.radius.control,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    text: { ...t.type.body, color: t.colors.onInverse },
+    action: {
+      minHeight: t.touch,
+      justifyContent: 'center',
+      paddingLeft: 12,
+    },
+    actionText: {
+      ...t.type.bodyStrong,
+      color: t.colors.onInverse,
+      textDecorationLine: 'underline',
+    },
+  });

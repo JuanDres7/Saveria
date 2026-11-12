@@ -1,14 +1,14 @@
 import { emailSchema } from '@saveria/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text } from 'react-native';
 import { AuthError, authService } from '../../features/auth/auth-service';
 import {
   Banner,
+  Body,
   Field,
+  FieldError,
   PrimaryButton,
   Screen,
-  styles,
   TextButton,
 } from '../../features/auth/components';
 import { useSession } from '../../session/session-store';
@@ -44,18 +44,18 @@ export default function ForgotPassword() {
   }
 
   return (
-    <Screen title="Recupera tu contraseña">
+    <Screen title="Recupera tu contraseña" back>
       {!isOnline ? <Banner message="Para recuperar tu contraseña necesitas internet." /> : null}
       {sent ? (
         <>
-          <Text>{sent}</Text>
-          <Text>
+          <Body>{sent}</Body>
+          <Body muted>
             Abre el enlace del correo, crea tu contraseña nueva y vuelve a la app para entrar.
-          </Text>
+          </Body>
         </>
       ) : (
         <>
-          <Text>Escribe el correo de tu cuenta y te enviaremos un enlace.</Text>
+          <Body>Escribe el correo de tu cuenta y te enviaremos un enlace.</Body>
           <Field
             label="Correo"
             keyboardType="email-address"
@@ -64,7 +64,7 @@ export default function ForgotPassword() {
             onChangeText={setEmail}
             error={emailError ?? undefined}
           />
-          {error ? <Text style={styles.error}>{error}</Text> : null}
+          {error ? <FieldError message={error} /> : null}
           <PrimaryButton
             label="Enviar enlace"
             disabled={!isOnline || sending}

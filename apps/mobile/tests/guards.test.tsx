@@ -17,7 +17,12 @@ jest.mock('expo-router', () => {
   );
   // `Redirect` se dibuja como un elemento con su destino, para poder comprobarlo.
   const Redirect = ({ href }: { href: string }) => React.createElement('Redirect', { href });
-  return { Stack, Redirect };
+  return {
+    Stack,
+    Redirect,
+    usePathname: () => '/home',
+    router: { navigate: jest.fn(), push: jest.fn() },
+  };
 });
 jest.mock('expo-splash-screen', () => ({
   preventAutoHideAsync: jest.fn(),

@@ -1,13 +1,22 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useMemo } from 'react';
 import { ScrollView, StyleSheet, Text } from 'react-native';
-import { styles as base, TextButton } from '../../../features/auth/components';
+import { TextButton } from '../../../features/auth/components';
+import { RegisterHeader } from '../../../features/transactions/form-parts';
 import { openLedgerContext, refreshLedger, useLedger } from '../../../features/transactions/ledger';
 import { transactionTitle } from '../../../features/transactions/RecentList';
 import { TransactionForm } from '../../../features/transactions/TransactionForm';
 import { TransferFormView } from '../../../features/transactions/TransferFormView';
 import { transactionService } from '../../../features/transactions/transaction-service';
 import { useUndo } from '../../../features/transactions/UndoSnackbar';
+import { type Theme, useStyles } from '../../../theme';
+import { ScreenBackground } from '../../../ui/ScreenBackground';
+
+const makeStyles = (t: Theme) =>
+  StyleSheet.create({
+    content: { padding: 16, gap: 14 },
+    note: { ...t.type.body, color: t.colors.text },
+  });
 
 /**
  * Editar o borrar un movimiento (historia 4). Borrar es inmediato y ofrece "Deshacer": no pide
@@ -16,6 +25,7 @@ import { useUndo } from '../../../features/transactions/UndoSnackbar';
  */
 export default function EditTransaction() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const styles = useStyles(makeStyles);
   const accounts = useLedger((s) => s.accounts);
   useEffect(() => refreshLedger(), []);
 
@@ -71,13 +81,13 @@ export default function EditTransaction() {
   // Los ajustes no se editan, solo se borran (historia 6).
   if (transaction.type !== 'expense' && transaction.type !== 'income') {
     return (
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text role="heading" style={base.title}>
-          {transactionTitle(transaction)}
-        </Text>
-        <Text>Los ajustes no se editan: bórralo y haz uno nuevo.</Text>
-        {deleteButton}
-      </ScrollView>
+      <ScreenBackground edges={['top']}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <RegisterHeader title={transactionTitle(transaction)} />
+          <Text style={styles.note}>Los ajustes no se editan: bórralo y haz uno nuevo.</Text>
+          {deleteButton}
+        </ScrollView>
+      </ScreenBackground>
     );
   }
 
@@ -106,5 +116,3 @@ export default function EditTransaction() {
     />
   );
 }
-
-const styles = StyleSheet.create({ content: { padding: 24, paddingTop: 48, gap: 12 } });

@@ -1,10 +1,10 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ScrollView, StyleSheet, Text } from 'react-native';
 import { AccountFields, GeneralErrors } from '../../../features/accounts/AccountFields';
 import { type AccountForm, accountService } from '../../../features/accounts/account-service';
-import { styles as base, PrimaryButton, RadioOption } from '../../../features/auth/components';
+import { PrimaryButton, RadioOption } from '../../../features/auth/components';
 import { useSession } from '../../../session/session-store';
+import { Page } from '../../../ui/Page';
 
 /** Crear una cuenta de dinero (3.1): la moneda viene preseleccionada con la principal (3.2). */
 export default function NewAccount() {
@@ -28,10 +28,7 @@ export default function NewAccount() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-      <Text role="heading" style={base.title}>
-        Nueva cuenta de dinero
-      </Text>
+    <Page title="Nueva cuenta de dinero" back>
       <AccountFields form={form} onChange={setForm} errors={errors} />
       <RadioOption
         role="checkbox"
@@ -42,8 +39,6 @@ export default function NewAccount() {
       />
       <GeneralErrors errors={errors} />
       <PrimaryButton label="Crear cuenta" onPress={create} />
-    </ScrollView>
+    </Page>
   );
 }
-
-const styles = StyleSheet.create({ content: { padding: 24, paddingTop: 48, gap: 12 } });

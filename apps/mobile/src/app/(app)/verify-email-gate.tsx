@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Text } from 'react-native';
 import { AuthError, authService } from '../../features/auth/auth-service';
-import { PrimaryButton, Screen, styles, TextButton } from '../../features/auth/components';
+import { Body, PrimaryButton, Screen, TextButton } from '../../features/auth/components';
+import { FormLabel } from '../../features/transactions/form-parts';
 import { ChangeEmailForm } from '../../features/verification/ChangeEmailForm';
 import { verificationService } from '../../features/verification/verification-service';
 import { useSession } from '../../session/session-store';
@@ -40,10 +40,10 @@ export default function VerifyEmailGate() {
 
   return (
     <Screen title="Confirma tu correo para continuar">
-      <Text>
+      <Body>
         {`Pasaron 7 días y tu correo ${email} sigue sin confirmar. Abre el enlace que te enviamos para seguir usando Saveria. Tus datos están a salvo.`}
-      </Text>
-      {message ? <Text>{message}</Text> : null}
+      </Body>
+      {message ? <Body>{message}</Body> : null}
       <PrimaryButton
         label="Ya confirmé mi correo"
         disabled={busy}
@@ -51,7 +51,7 @@ export default function VerifyEmailGate() {
       />
       <TextButton label="Reenviar correo" onPress={() => void resend()} />
 
-      <Text style={styles.label}>¿Escribiste mal tu correo?</Text>
+      <FormLabel label="¿Escribiste mal tu correo?" />
       <ChangeEmailForm />
       <TextButton label="Cerrar sesión" onPress={() => void authService.logout()} />
     </Screen>

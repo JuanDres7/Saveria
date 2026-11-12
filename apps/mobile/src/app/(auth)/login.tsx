@@ -3,10 +3,16 @@ import { emailSchema } from '@saveria/shared';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Pressable, Text } from 'react-native';
 import { z } from 'zod';
 import { AuthError, authService } from '../../features/auth/auth-service';
-import { Banner, Field, PrimaryButton, Screen, styles } from '../../features/auth/components';
+import {
+  Banner,
+  Field,
+  FieldError,
+  LinkButton,
+  PrimaryButton,
+  Screen,
+} from '../../features/auth/components';
 import { useSession } from '../../session/session-store';
 
 const schema = z.object({
@@ -46,7 +52,7 @@ export default function Login() {
   });
 
   return (
-    <Screen title="Entra a tu cuenta">
+    <Screen title="Entra a tu cuenta" back>
       {!isOnline ? <Banner message="Para entrar necesitas internet." /> : null}
       <Controller
         control={control}
@@ -78,18 +84,14 @@ export default function Login() {
           />
         )}
       />
-      {serverError ? <Text style={styles.error}>{serverError}</Text> : null}
+      {serverError ? <FieldError message={serverError} /> : null}
       <PrimaryButton
         label="Entrar"
         onPress={onSubmit}
         disabled={!isOnline || formState.isSubmitting}
       />
-      <Pressable role="link" onPress={() => router.push('/forgot-password')}>
-        <Text style={styles.link}>Olvidé mi contraseña</Text>
-      </Pressable>
-      <Pressable role="link" onPress={() => router.push('/register')}>
-        <Text style={styles.link}>Crear una cuenta</Text>
-      </Pressable>
+      <LinkButton label="Olvidé mi contraseña" onPress={() => router.push('/forgot-password')} />
+      <LinkButton label="Crear una cuenta" onPress={() => router.push('/register')} />
     </Screen>
   );
 }

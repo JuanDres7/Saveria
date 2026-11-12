@@ -1,8 +1,8 @@
 import { emailSchema } from '@saveria/shared';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 import { AuthError } from '../auth/auth-service';
-import { Field, styles, TextButton } from '../auth/components';
+import { Body, Field, TextButton } from '../auth/components';
 import { verificationService } from './verification-service';
 
 function messageFor(error: unknown): string {
@@ -50,7 +50,7 @@ export function ChangeEmailForm() {
   }
 
   return (
-    <View style={styles.field}>
+    <View style={{ gap: 4 }}>
       <Field
         label="Correo correcto"
         keyboardType="email-address"
@@ -59,7 +59,7 @@ export function ChangeEmailForm() {
         onChangeText={setEmail}
         error={error ?? undefined}
       />
-      {message ? <Text>{message}</Text> : null}
+      {message ? <Body>{message}</Body> : null}
       {sending ? null : <TextButton label="Cambiar correo" onPress={() => void submit()} />}
     </View>
   );

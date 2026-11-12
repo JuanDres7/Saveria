@@ -15,7 +15,19 @@ conexión y con registro manual.
 |---|---|
 | [001 — Registro, inicio de sesión y onboarding](specs/001-auth-onboarding/spec.md) | Implementada (historias 1–6) |
 | [002 — Cuentas y movimientos manuales](specs/002-accounts-transactions/spec.md) | Implementada (historias 1–6): gastos e ingresos, historial y saldos, cuentas, editar y borrar con "Deshacer", transferencias y ajuste de saldo |
-| Registro por IA, sincronización entre dispositivos, resumen del mes, tasas de cambio, rediseño | Pendientes |
+| [003 — Rediseño visual](specs/003-visual-redesign/spec.md) | Implementada (historias 1–7): identidad «La hoja de Saveria», modo claro y oscuro, barra inferior con «+», íconos y letra propia; sin funciones nuevas |
+| Registro por IA, sincronización entre dispositivos, resumen del mes, tasas de cambio | Pendientes |
+
+## La app: tema, letra e íconos
+
+- **Colores y medidas** viven solo en `apps/mobile/src/theme/` (paletas clara y oscura, medidas, tipografía). Las pantallas
+  los leen con `useTheme()` o `useStyles()`; una prueba falla si aparece un color suelto fuera de `palettes.ts`.
+- **Modo claro u oscuro**: sigue al teléfono. En el emulador se cambia sin tocar la app:
+  `adb shell cmd uimode night yes` (oscuro) y `adb shell cmd uimode night no` (claro). Para probar letra grande:
+  `adb shell settings put system font_scale 1.5` (y `1.0` para volver).
+- **Letra**: Bricolage Grotesque (licencia OFL, en `apps/mobile/assets/fonts/`) para títulos y cifras grandes; el cuerpo usa la del sistema.
+- **Íconos**: `lucide-react-native` y `react-native-svg`, importados uno por uno desde `apps/mobile/src/ui/icons.ts` (importar
+  el índice de lucide agranda el paquete y una prueba lo impide). Cambiar de íconos o de letra pide reconstruir la app de desarrollo.
 
 ## Estructura del monorepo
 
