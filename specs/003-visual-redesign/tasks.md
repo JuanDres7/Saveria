@@ -227,13 +227,13 @@ fallar antes de implementar. Toda prueba visual corre en modo claro y en modo os
 
 ### Tests for User Story 6 (escribirlas primero; deben fallar)
 
-- [ ] T057 [P] [US6] Escribir `apps/mobile/tests/us6-settings-visual.test.tsx` con `renderInBothModes`: Configuración agrupa sus opciones en grupos con ícono (6.1); los textos de borrar la cuenta, borrar un movimiento y cerrar sesión con cambios pendientes siguen siendo inequívocos, sin tono motivador (6.2, FR-018); el aviso «Movimiento borrado · Deshacer» y el de correo sin verificar son legibles, y «Deshacer» dura los mismos 6 s y queda por encima de la barra (6.3); el bloqueo por correo sin verificar conserva su comportamiento y sus acciones (6.4); cambiar contraseña y borrar cuenta tienen `BackButton`
+- [X] T057 [P] [US6] Escribir `apps/mobile/tests/us6-settings-visual.test.tsx` con `renderInBothModes`: Configuración agrupa sus opciones en grupos con ícono (6.1); los textos de borrar la cuenta, borrar un movimiento y cerrar sesión con cambios pendientes siguen siendo inequívocos, sin tono motivador (6.2, FR-018); el aviso «Movimiento borrado · Deshacer» y el de correo sin verificar son legibles, y «Deshacer» dura los mismos 6 s y queda por encima de la barra (6.3); el bloqueo por correo sin verificar conserva su comportamiento y sus acciones (6.4); cambiar contraseña y borrar cuenta tienen `BackButton`
 
 ### Implementation for User Story 6
 
-- [ ] T058 [P] [US6] Crear `apps/mobile/src/features/settings/SettingsGroup.tsx` (grupo con título y filas con `Icon`) y restyle de `apps/mobile/src/app/(app)/settings/index.tsx` por grupos, de `apps/mobile/src/app/(app)/settings/change-password.tsx` y de `apps/mobile/src/app/(app)/settings/delete-account.tsx` (texto definitivo e inequívoco), con `BackButton` en las dos últimas
-- [ ] T059 [P] [US6] Restyle de `apps/mobile/src/app/(app)/verify-email-gate.tsx`, `apps/mobile/src/features/verification/VerifyBanner.tsx` (ícono `Mail`) y `apps/mobile/src/features/transactions/UndoSnackbar.tsx` (colores `inverse`/`onInverse`, por encima de la barra y del «+» con el margen del sistema, misma duración de 6 s)
-- [ ] T060 [US6] Verificar en el emulador, en claro y oscuro: Configuración, cambiar contraseña, borrar cuenta (sin confirmar), bloqueo de verificación (cuenta sin verificar), aviso «Deshacer» y el aviso de que no se pudo guardar; capturas y aprobación en `checklists/visual-review.md`
+- [X] T058 [P] [US6] Crear `apps/mobile/src/features/settings/SettingsGroup.tsx` (grupo con título y filas con `Icon`) y restyle de `apps/mobile/src/app/(app)/settings/index.tsx` por grupos, de `apps/mobile/src/app/(app)/settings/change-password.tsx` y de `apps/mobile/src/app/(app)/settings/delete-account.tsx` (texto definitivo e inequívoco), con `BackButton` en las dos últimas
+- [X] T059 [P] [US6] Restyle de `apps/mobile/src/app/(app)/verify-email-gate.tsx`, `apps/mobile/src/features/verification/VerifyBanner.tsx` (ícono `Mail`) y `apps/mobile/src/features/transactions/UndoSnackbar.tsx` (colores `inverse`/`onInverse`, por encima de la barra y del «+» con el margen del sistema, misma duración de 6 s)
+- [X] T060 [US6] Verificar en el emulador, en claro y oscuro: Configuración, cambiar contraseña, borrar cuenta (sin confirmar), bloqueo de verificación (cuenta sin verificar), aviso «Deshacer» y el aviso de que no se pudo guardar; capturas y aprobación en `checklists/visual-review.md`
 
 **Checkpoint**: las 23 pantallas tienen la identidad nueva.
 

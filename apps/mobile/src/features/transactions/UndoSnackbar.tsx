@@ -37,7 +37,11 @@ export function UndoSnackbar({ bottomOffset = 24 }: { bottomOffset?: number }) {
 
   if (id === null) return null;
   return (
-    <View style={[styles.bar, { bottom: bottomOffset }]} accessibilityLiveRegion="polite">
+    <View
+      testID="undo-snackbar"
+      style={[styles.bar, { bottom: bottomOffset }]}
+      accessibilityLiveRegion="polite"
+    >
       <Text style={styles.text}>Movimiento borrado</Text>
       <Pressable
         role="button"

@@ -1,14 +1,12 @@
-import { router } from 'expo-router';
 import { useState } from 'react';
-import { Text } from 'react-native';
 import { AuthError, authService } from '../../../features/auth/auth-service';
 import {
   Banner,
+  Body,
   Field,
+  FieldError,
   PrimaryButton,
   Screen,
-  styles,
-  TextButton,
 } from '../../../features/auth/components';
 import { useSession } from '../../../session/session-store';
 
@@ -53,14 +51,14 @@ export default function DeleteAccount() {
   }
 
   return (
-    <Screen title="Borrar mi cuenta">
+    <Screen title="Borrar mi cuenta" back>
       {!isOnline ? <Banner message="Para borrar tu cuenta necesitas internet." /> : null}
-      <Text>
+      <Body>
         Se borrarán tu cuenta y todos tus datos: movimientos, cuentas, relatos y preferencias, en
         este dispositivo y en el servidor.
-      </Text>
-      <Text style={styles.error}>Esta acción no se puede deshacer.</Text>
-      {pending > 0 ? <Text>{pendingWarning(pending)}</Text> : null}
+      </Body>
+      <FieldError message="Esta acción no se puede deshacer." />
+      {pending > 0 ? <Body>{pendingWarning(pending)}</Body> : null}
       <Field
         label="Contraseña"
         secureTextEntry
@@ -68,13 +66,12 @@ export default function DeleteAccount() {
         value={password}
         onChangeText={setPassword}
       />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <FieldError message={error} /> : null}
       <PrimaryButton
         label="Borrar mi cuenta"
         disabled={!isOnline || sending || password === ''}
         onPress={() => void submit()}
       />
-      <TextButton label="Volver" onPress={() => router.back()} />
     </Screen>
   );
 }

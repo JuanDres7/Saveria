@@ -129,3 +129,21 @@ Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas del 
 Quedan para la historia 6 Configuración, cambiar contraseña, borrar cuenta, el bloqueo de verificación y los demás avisos.
 
 Aprobado por el dueño del proyecto el 2026-11-10 (SC-008) con las capturas del cambio de modo y de la letra al 150 %.
+
+## Configuración y avisos (historia 6, T060), 2026-11-11
+
+Emulador con la API local y la cuenta `qs002.final@mail.com` (correo sin verificar), en claro y en oscuro.
+
+| Comprobación | Resultado |
+|---|---|
+| Configuración | Título en la letra de identidad y tres tarjetas con ícono: «Saveria», «País y moneda» y «Tu cuenta». Cada opción conserva su nombre; «Guardar cambios» ancho en verde y «Cerrar sesión» dentro de «Tu cuenta». Sin «Volver» (es una pestaña). |
+| Cambiar contraseña | «Volver» redondo, campos y regla de la clave en texto suave; el botón sigue apagado hasta llenar los campos. |
+| Borrar mi cuenta | Sigue siendo inequívoco: texto normal, «Esta acción no se puede deshacer.» en rojo con ícono de alerta, contraseña obligatoria y botón apagado sin ella. Sin tono motivador. No se confirmó el borrado. |
+| Aviso de correo sin verificar (Inicio) | Tarjeta ámbar suave con título, fecha límite y los dos vínculos «Reenviar correo» y «Corregir mi correo»; legible en oscuro. |
+| «Movimiento borrado · Deshacer» | Barra clara sobre fondo oscuro, «Deshacer» subrayado y de 48 px de alto; queda por encima de la barra inferior y del «+». Dura los mismos 6 s. |
+| Error de monto en el formulario | «Escribe un monto» con ícono y en rojo suave, subrayado del campo en rojo; legible en oscuro. |
+| Bloqueo de verificación | Cubierto por pruebas (`us6-settings-visual.test.tsx`): mismo texto, mismos botones y «Cerrar sesión» funcionando con el estilo nuevo. |
+| Pruebas | 591 pruebas de la app en verde, `tsc` y lint sin errores. |
+
+Aprobado por el dueño del proyecto el 2026-11-11 (SC-008) con las capturas de Configuración, borrar cuenta, el aviso de correo y «Deshacer».
+
