@@ -82,8 +82,8 @@ se migró compile: `primarySoft` → `sage`, `textStrong` → `text`. `theme/ind
 
 | Uso | Letra | Tamaño / peso |
 |---|---|---|
-| Título de pantalla, subtítulo de sección | de identidad (Bricolage Grotesque) | 26 / SemiBold-Bold; 17 / SemiBold |
-| Cifra del balance y monto del formulario | de identidad | 34 / Bold y 44 / Bold |
+| Título de pantalla, subtítulo de sección | de identidad (Bricolage Grotesque) | 30 / Bold; 17 / SemiBold (la bienvenida usa 34) |
+| Cifra del balance y monto del formulario | de identidad | 44 / Bold y 44 / Bold (la cifra se achica si no cabe) |
 | Texto, campos, chips, filas | del sistema | 15 / 400-500 |
 | Montos de las listas y de las tarjetas de cuenta | del sistema, cifras tabulares | 15 / 500 |
 | Ayuda y etiquetas pequeñas | del sistema | 13 / 400 |
