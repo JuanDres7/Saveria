@@ -1,11 +1,11 @@
 import { router } from 'expo-router';
-import { Leaf as LeafIcon } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Banner, Body, LinkButton, PrimaryButton } from '../../features/auth/components';
 import { useSession } from '../../session/session-store';
 import { type Theme, useStyles } from '../../theme';
 import { Icon } from '../../ui/Icon';
+import { Leaf as LeafIcon } from '../../ui/icons';
 import { Veins } from '../../ui/Leaf';
 import { ScreenBackground } from '../../ui/ScreenBackground';
 

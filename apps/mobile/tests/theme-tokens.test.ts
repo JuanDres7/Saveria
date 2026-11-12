@@ -67,6 +67,16 @@ describe('colores en un solo lugar (FR-007, SC-007)', () => {
       .map(({ name }) => name);
     expect(offenders).toEqual([]);
   });
+
+  it('los íconos se importan solo desde `ui/icons.ts`, uno por uno: el índice de lucide infla el paquete', () => {
+    const offenders = files
+      .filter(({ name }) => !name.endsWith(['ui', 'icons.ts'].join(sep)))
+      .filter(({ text }) =>
+        /^(import|export)\s+(?!type\b)[^;]*from 'lucide-react-native'/m.test(text),
+      )
+      .map(({ name }) => name);
+    expect(offenders).toEqual([]);
+  });
 });
 
 describe('react-native-svg sin red (constitución v1.2.0, condición 2)', () => {

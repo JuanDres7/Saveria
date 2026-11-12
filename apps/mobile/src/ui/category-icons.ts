@@ -29,7 +29,7 @@ import {
   Users,
   Utensils,
   Zap,
-} from 'lucide-react-native';
+} from './icons';
 
 /**
  * Tono del círculo de una categoría (FR-009): `sand` comida y compras, `mist` movilidad y viajes,

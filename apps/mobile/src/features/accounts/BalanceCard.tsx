@@ -1,8 +1,8 @@
 import { formatAmount } from '@saveria/shared';
-import { ArrowLeftRight } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { type Theme, useStyles } from '../../theme';
 import { Icon } from '../../ui/Icon';
+import { ArrowLeftRight } from '../../ui/icons';
 import { Leaf } from '../../ui/Leaf';
 import type { BalanceCardData } from './balance-card';
 

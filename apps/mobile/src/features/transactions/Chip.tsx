@@ -1,7 +1,7 @@
-import type { LucideIcon } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text } from 'react-native';
 import { type Theme, useStyles } from '../../theme';
 import { Icon } from '../../ui/Icon';
+import type { LucideIcon } from '../../ui/icons';
 
 const makeStyles = (t: Theme) =>
   StyleSheet.create({

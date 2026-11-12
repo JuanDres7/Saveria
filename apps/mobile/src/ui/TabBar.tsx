@@ -1,8 +1,8 @@
-import { House, type LucideIcon, Plus, ReceiptText, Settings, Wallet } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type Theme, useStyles } from '../theme';
 import { Icon } from './Icon';
+import { House, type LucideIcon, Plus, ReceiptText, Settings, Wallet } from './icons';
 import { Leaf } from './Leaf';
 
 /** Una sección de la barra. `badge` dibuja un punto de aviso (hoy sin uso, docs/mapa-de-la-app.md). */

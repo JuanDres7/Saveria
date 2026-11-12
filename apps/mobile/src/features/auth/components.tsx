@@ -1,9 +1,9 @@
-import { Check, CircleAlert, type LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, type TextInputProps, View } from 'react-native';
 import { type Theme, useStyles, useTheme } from '../../theme';
 import { BackButton } from '../../ui/BackButton';
 import { Icon } from '../../ui/Icon';
+import { Check, CircleAlert, type LucideIcon } from '../../ui/icons';
 import { ScreenBackground } from '../../ui/ScreenBackground';
 
 const makeStyles = (t: Theme) =>

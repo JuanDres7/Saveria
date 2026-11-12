@@ -1,6 +1,5 @@
 import { COUNTRIES, CURRENCIES } from '@saveria/shared';
 import { router } from 'expo-router';
-import { Globe, Sparkles, UserRound } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 import { authService } from '../../../features/auth/auth-service';
@@ -16,6 +15,7 @@ import { profileService } from '../../../features/profile/profile-service';
 import { SettingsGroup } from '../../../features/settings/SettingsGroup';
 import { FormLabel } from '../../../features/transactions/form-parts';
 import { useSession } from '../../../session/session-store';
+import { Globe, Sparkles, UserRound } from '../../../ui/icons';
 import { Page } from '../../../ui/Page';
 
 const MAX_REFERENCES = 2;

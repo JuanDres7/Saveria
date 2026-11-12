@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
-import { ChevronLeft } from 'lucide-react-native';
 import { Pressable, StyleSheet } from 'react-native';
 import { type Theme, useStyles } from '../theme';
 import { Icon } from './Icon';
+import { ChevronLeft } from './icons';
 
 const makeStyles = (t: Theme) =>
   StyleSheet.create({

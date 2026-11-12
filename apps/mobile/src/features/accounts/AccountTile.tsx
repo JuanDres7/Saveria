@@ -1,8 +1,8 @@
 import { formatAmount } from '@saveria/shared';
-import { Banknote, Landmark, type LucideIcon, Smartphone } from 'lucide-react-native';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { type Theme, useStyles } from '../../theme';
 import { Icon } from '../../ui/Icon';
+import { Banknote, Landmark, type LucideIcon, Smartphone } from '../../ui/icons';
 
 /** Lo mínimo que una cuenta necesita para dibujarse: sirve la de la base local y la del perfil. */
 export interface AccountTileItem {

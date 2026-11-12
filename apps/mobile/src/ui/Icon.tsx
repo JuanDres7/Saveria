@@ -1,5 +1,5 @@
-import type { LucideIcon } from 'lucide-react-native';
 import { type ThemeColors, useTheme } from '../theme';
+import type { LucideIcon } from './icons';
 
 /**
  * Ícono de línea con el color de un token del tema. Los íconos son decorativos y no se leen en voz

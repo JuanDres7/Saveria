@@ -1,9 +1,9 @@
 import { formatAmount } from '@saveria/shared';
 import { router } from 'expo-router';
-import { Banknote, Landmark, type LucideIcon, Smartphone } from 'lucide-react-native';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { type Theme, useStyles } from '../../theme';
 import { Icon } from '../../ui/Icon';
+import { Banknote, Landmark, type LucideIcon, Smartphone } from '../../ui/icons';
 import { FieldError } from '../auth/components';
 import type { AccountBalance } from '../transactions/ledger';
 
