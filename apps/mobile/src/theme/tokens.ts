@@ -16,8 +16,6 @@ export const radius = {
   card: 24,
   control: 16,
   pill: 999,
-  /** @deprecated Radio de las pantallas anteriores al rediseño; se retira con el resto de lo provisional (T061) */
-  md: 8,
 } as const;
 
 export const space = { xs: 4, sm: 8, md: 12, lg: 16, xl: 20, xxl: 24, xxxl: 32 } as const;

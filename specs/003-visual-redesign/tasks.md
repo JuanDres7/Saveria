@@ -243,7 +243,7 @@ fallar antes de implementar. Toda prueba visual corre en modo claro y en modo os
 
 **Purpose**: Cierre, limpieza del tema y registro de resultados
 
-- [ ] T061 Retirar la exportación `colors` `@deprecated` de `apps/mobile/src/theme/index.ts` y `legacyColors` de `apps/mobile/src/theme/palettes.ts`; reemplazar los usos que queden por `useTheme()`; agregar a `apps/mobile/tests/theme-tokens.test.ts` que ningún archivo de `src/` importa `colors` de `../theme`
+- [X] T061 Retirar la exportación `colors` `@deprecated` de `apps/mobile/src/theme/index.ts` y `legacyColors` de `apps/mobile/src/theme/palettes.ts`; reemplazar los usos que queden por `useTheme()`; agregar a `apps/mobile/tests/theme-tokens.test.ts` que ningún archivo de `src/` importa `colors` de `../theme`
 - [ ] T062 Recorrer completo `quickstart.md` en el emulador, en claro y en oscuro, y registrar el resultado en `specs/003-visual-redesign/checklists/quickstart-run.md`, incluidos los pasos de pantallas de otro tamaño, letra al 150 % y sin conexión
 - [ ] T063 Medir y registrar en `checklists/quickstart-run.md`: registrar un gasto (máx. 3 toques más el monto, menos de 5 s, y ≤ 1,5 s como en la 002), desplazar 5000 movimientos (≤ 8 ms / 11 ms por cuadro) y el tamaño del paquete frente al de T001 (anotar la diferencia; si crece de forma desproporcionada, importar los íconos por archivo)
 - [ ] T064 [P] Revisar los registros de la app y de la API durante el recorrido: sin montos, correos ni tokens (misma comprobación de la 001 y la 002); anotar el resultado en `checklists/quickstart-run.md`

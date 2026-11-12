@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react-native';
 import { Text } from 'react-native';
-import { colors as legacyColorsExport, useStyles, useTheme } from '../src/theme';
+import { useStyles, useTheme } from '../src/theme';
 import { darkColors, lightColors } from '../src/theme/palettes';
 import { renderInBothModes, setColorScheme } from './support/color-scheme';
 
@@ -54,11 +54,5 @@ describe('useTheme (FR-027, FR-028)', () => {
     expect(last).not.toBe(seen[0]);
     expect(last.box.backgroundColor).toBe(darkColors.surface);
     await setColorScheme('light');
-  });
-
-  it('mientras se migran las pantallas, `colors` sigue siendo la paleta clara con los nombres viejos', () => {
-    expect(legacyColorsExport.primary).toBe(lightColors.primary);
-    expect(legacyColorsExport.primarySoft).toBe(lightColors.sage);
-    expect(legacyColorsExport.textStrong).toBe(lightColors.text);
   });
 });

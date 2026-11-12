@@ -3,7 +3,7 @@
  * el tema con `useTheme()` y sus estilos con `useStyles()`; ninguna escribe un color (FR-007).
  */
 import { useColorScheme, type ViewStyle } from 'react-native';
-import { darkColors, legacyColors, lightColors, type ThemeColors } from './palettes';
+import { darkColors, lightColors, type ThemeColors } from './palettes';
 import { DISPLAY_FONT, icon, radius, shadowStyle, space, touch, type } from './tokens';
 
 export type { ThemeColors } from './palettes';
@@ -70,9 +70,3 @@ export function useStyles<T>(factory: (theme: Theme) => T): T {
   if (!(theme.scheme in byScheme)) byScheme[theme.scheme] = factory(theme);
   return byScheme[theme.scheme] as T;
 }
-
-/**
- * @deprecated La paleta clara con los nombres de antes del rediseño, para las pantallas que aún no
- * usan `useTheme()`. Se retira en la tarea T061.
- */
-export const colors = { ...lightColors, ...legacyColors } as const;

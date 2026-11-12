@@ -1,4 +1,4 @@
-import { darkColors, legacyColors, lightColors } from '../src/theme/palettes';
+import { darkColors, lightColors } from '../src/theme/palettes';
 
 // La app no incluye los tipos de Node (rompen los de `fetch`), así que se declaran solo los usados.
 declare const __dirname: string;
@@ -50,9 +50,22 @@ describe('colores en un solo lugar (FR-007, SC-007)', () => {
     }
   });
 
-  it('legacyColors solo repite colores que ya existen en la paleta clara', () => {
-    const existing = new Set(Object.values(lightColors));
-    for (const value of Object.values(legacyColors)) expect(existing.has(value)).toBe(true);
+  it('ya no quedan los nombres provisionales de antes del rediseño', () => {
+    const offenders = files
+      .filter(({ text }) => /\b(legacyColors|primarySoft|textStrong)\b|\bradius\.md\b/.test(text))
+      .map(({ name }) => name);
+    expect(offenders).toEqual([]);
+  });
+
+  it('ninguna pantalla importa la paleta fija `colors` ni los estilos fijos de antes del rediseño', () => {
+    const offenders = files
+      .filter(
+        ({ text }) =>
+          /import \{[^}]*\bcolors\b[^}]*\} from '[^']*\/theme'/.test(text) ||
+          /import \{[^}]*\bstyles\b[^}]*\} from '[^']*auth\/components'/.test(text),
+      )
+      .map(({ name }) => name);
+    expect(offenders).toEqual([]);
   });
 });
 

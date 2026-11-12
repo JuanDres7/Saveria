@@ -118,12 +118,3 @@ export const darkColors: ThemeColors = {
   toneClay: '#402A22',
   toneClayInk: '#F0B4A2',
 };
-
-/**
- * Nombres que usaban las pantallas antes del rediseño. Son alias de colores que ya existen, no
- * colores nuevos, y se retiran cuando todas las pantallas usen `useTheme()` (tarea T061).
- */
-export const legacyColors = {
-  primarySoft: lightColors.sage,
-  textStrong: lightColors.text,
-} as const;

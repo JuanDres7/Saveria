@@ -1,7 +1,7 @@
 import { Check, CircleAlert, type LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, TextInput, type TextInputProps, View } from 'react-native';
-import { colors, radius, type Theme, useStyles, useTheme } from '../../theme';
+import { type Theme, useStyles, useTheme } from '../../theme';
 import { BackButton } from '../../ui/BackButton';
 import { Icon } from '../../ui/Icon';
 import { ScreenBackground } from '../../ui/ScreenBackground';
@@ -305,25 +305,3 @@ export function Banner({ message }: { message: string }) {
     </View>
   );
 }
-
-/**
- * @deprecated Estilos de antes del rediseño, fijos en la paleta clara, para las pantallas que aún no
- * usan `useStyles()`. Cada pantalla se migra en su historia y esto se retira en la tarea T061.
- */
-export const styles = StyleSheet.create({
-  field: { gap: 4 },
-  title: { fontSize: 26, fontWeight: '700' },
-  label: { fontSize: 14, fontWeight: '600' },
-  error: { color: colors.negative, fontSize: 13 },
-  link: { color: colors.primary, textDecorationLine: 'underline' },
-  option: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    padding: 12,
-    gap: 4,
-  },
-  optionLabel: { fontSize: 16, fontWeight: '600' },
-  banner: { backgroundColor: colors.warningBackground, borderRadius: radius.md, padding: 12 },
-  bannerText: { color: colors.warningText },
-});
