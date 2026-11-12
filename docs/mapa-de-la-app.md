@@ -77,17 +77,21 @@ De arriba abajo. Cada bloque aparece solo cuando su función existe y tiene algo
   (principio 5 de la visión): «+», categoría, guardar.
 - Las dos puertas terminan en el mismo caso de uso (Constitución I).
 
-## Qué deja listo el rediseño (feature 003)
+## Qué dejó listo el rediseño (feature 003)
 
-Solo estructura; nada de esto es visible ni agrega funciones:
+Solo estructura; nada de esto agrega funciones. Quedó así en el código:
 
-- **Barra armada como una lista** de secciones, cada una con ícono, nombre, ruta y un punto de aviso opcional.
-- **Inicio por bloques** en el orden de arriba; hoy solo existen 1, 2, 3, 7 y 9.
-- **Registrar** con un encabezado propio donde irá el selector de las dos puertas.
-- **Movimientos y Cuentas como contenedores**: la lista es una parte, de modo que «Programados», «Metas» y «Deudas»
-  entren como partes nuevas.
-- **Ajustes por grupos**, para que «Saveria», «Tu plan» y «Sincronización» entren como grupos.
-- **Tono arena** reservado para la marca de dato sugerido.
+- **Barra armada como una lista** de secciones (`TAB_ITEMS` en `ui/TabBar.tsx`), cada una con ícono, nombre, ruta y un
+  punto de aviso opcional. Hoy: Inicio, Movimientos, «+», Cuentas y Ajustes.
+- **Inicio por bloques** (`HOME_BLOCKS` en `features/home/blocks.tsx`) en el orden de arriba; hoy solo existen 1, 2, 3, 7 y 9.
+- **Registrar** con un encabezado propio (`RegisterHeader` en `features/transactions/form-parts.tsx`) donde irá el
+  selector de las dos puertas.
+- **Movimientos y Cuentas como contenedores** (`ui/Page.tsx` y las listas por partes): la lista es una parte, de modo que
+  «Programados», «Metas» y «Deudas» entren como partes nuevas.
+- **Ajustes por grupos** (`SettingsGroup` en `features/settings/`), para que «Saveria», «Tu plan» y «Sincronización»
+  entren como grupos sin reordenar la pantalla.
+- **Tono arena** (`toneSand` en el tema) reservado para la marca de dato sugerido.
+- **Íconos** en un solo archivo (`ui/icons.ts`): para sumar uno se agrega una línea ahí.
 
 ## Cuándo se actualiza este documento
 

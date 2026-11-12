@@ -244,12 +244,12 @@ fallar antes de implementar. Toda prueba visual corre en modo claro y en modo os
 **Purpose**: Cierre, limpieza del tema y registro de resultados
 
 - [X] T061 Retirar la exportación `colors` `@deprecated` de `apps/mobile/src/theme/index.ts` y `legacyColors` de `apps/mobile/src/theme/palettes.ts`; reemplazar los usos que queden por `useTheme()`; agregar a `apps/mobile/tests/theme-tokens.test.ts` que ningún archivo de `src/` importa `colors` de `../theme`
-- [ ] T062 Recorrer completo `quickstart.md` en el emulador, en claro y en oscuro, y registrar el resultado en `specs/003-visual-redesign/checklists/quickstart-run.md`, incluidos los pasos de pantallas de otro tamaño, letra al 150 % y sin conexión
-- [ ] T063 Medir y registrar en `checklists/quickstart-run.md`: registrar un gasto (máx. 3 toques más el monto, menos de 5 s, y ≤ 1,5 s como en la 002), desplazar 5000 movimientos (≤ 8 ms / 11 ms por cuadro) y el tamaño del paquete frente al de T001 (anotar la diferencia; si crece de forma desproporcionada, importar los íconos por archivo)
-- [ ] T064 [P] Revisar los registros de la app y de la API durante el recorrido: sin montos, correos ni tokens (misma comprobación de la 001 y la 002); anotar el resultado en `checklists/quickstart-run.md`
-- [ ] T065 [P] Actualizar `README.md` (sección de la app: tema claro/oscuro, letra, íconos y cómo cambiar de modo en el emulador), marcar en `docs/mapa-de-la-app.md` qué estructura quedó lista y revisar `specs/003-visual-redesign/checklists/requirements.md`
-- [ ] T066 Correr todas las pruebas y comprobaciones (`bun run test`, `bun run test:sqlite`, `bun run lint`, `bunx tsc --noEmit` en `apps/mobile`; `bun test` en `apps/api` y `packages/shared`), confirmar que no hay menos pruebas que en `baseline.md` (salvo las dos comprobaciones movidas a `us4-tabbar.test.tsx`) y marcar todas las tareas
-- [ ] T067 Actualizar la memoria del proyecto (`project-workflow-and-git.md`) con el estado de la 003 y dejar la rama lista para su PR a `develop` (sin abrirlo hasta que el usuario lo pida)
+- [X] T062 Recorrer completo `quickstart.md` en el emulador, en claro y en oscuro, y registrar el resultado en `specs/003-visual-redesign/checklists/quickstart-run.md`, incluidos los pasos de pantallas de otro tamaño, letra al 150 % y sin conexión
+- [X] T063 Medir y registrar en `checklists/quickstart-run.md`: registrar un gasto (máx. 3 toques más el monto, menos de 5 s, y ≤ 1,5 s como en la 002), desplazar 5000 movimientos (≤ 8 ms / 11 ms por cuadro) y el tamaño del paquete frente al de T001 (anotar la diferencia; si crece de forma desproporcionada, importar los íconos por archivo)
+- [X] T064 [P] Revisar los registros de la app y de la API durante el recorrido: sin montos, correos ni tokens (misma comprobación de la 001 y la 002); anotar el resultado en `checklists/quickstart-run.md`
+- [X] T065 [P] Actualizar `README.md` (sección de la app: tema claro/oscuro, letra, íconos y cómo cambiar de modo en el emulador), marcar en `docs/mapa-de-la-app.md` qué estructura quedó lista y revisar `specs/003-visual-redesign/checklists/requirements.md`
+- [X] T066 Correr todas las pruebas y comprobaciones (`bun run test`, `bun run test:sqlite`, `bun run lint`, `bunx tsc --noEmit` en `apps/mobile`; `bun test` en `apps/api` y `packages/shared`), confirmar que no hay menos pruebas que en `baseline.md` (salvo las dos comprobaciones movidas a `us4-tabbar.test.tsx`) y marcar todas las tareas
+- [X] T067 Actualizar la memoria del proyecto (`project-workflow-and-git.md`) con el estado de la 003 y dejar la rama lista para su PR a `develop` (sin abrirlo hasta que el usuario lo pida)
 
 ---
 
